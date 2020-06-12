@@ -4,9 +4,8 @@ import numpy as np
 from tqdm import tqdm
 
 
-def template_matching(input_file):
+def template_matching(img_rgb):
     template_dir = '/Users/kyle/Documents/UT/ACVPR/Rebelo Dataset/database/syn/notes/'
-    img_rgb = cv.imread(input_file)
     img_gray = cv.cvtColor(img_rgb, cv.COLOR_BGR2GRAY)
 
     # for file in listdir(template_dir):

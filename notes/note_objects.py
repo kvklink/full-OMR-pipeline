@@ -22,8 +22,10 @@ class Head:
         self.h = template.h
         self.w = template.w
         
-        self.pitch = 0
+        self.pitch = float('NaN')
         self.note = ''
+        self.octave = float('NaN')
+        self.accidental = float('NaN')
         
     def find_pitch(self, staff, x, y):
         line_vals = []
@@ -52,7 +54,7 @@ class Head:
                 pitch = line_vals.index(s)*2
             else: pitch = line_vals.index(e)*2-1
     
-        return pitch+1
+        return pitch
         
     def set_pitch(self, staff):
         mid_x = int(self.x+0.5*self.w)
@@ -60,7 +62,11 @@ class Head:
         self.pitch = self.find_pitch(staff,mid_x,mid_y)
         
     def set_note(self,measure):
-        self.note = measure.notes[self.pitch]
+        self.note = measure.notes[self.pitch % 7]
+        self.octave = measure.octave - int(self.pitch/7)
+        
+    def set_accidental(self,accidental):
+        self.accidental = accidental
         
 
 class Stem:
@@ -127,25 +133,34 @@ class Note:
         
         self.pitch = base.pitch
         self.note = base.note
+        self.octave = base.octave
         self.duration = duration
+        self.accidental = base.accidental
         
-        def update_pitch(self, new_pitch):
-            self.pitch = new_pitch
-            # +/- 0.5 in de class of aparte functie?
-            
-        def update_note(self, new_note):
-            self.note = new_note
-            # vinden ahv pitch in de class of aparte functie?
-            
-        def update_duration(self, new_dur):
-            self.duration = new_dur
-            # *0.5 in de class of aparte functie?
-            
-        def update_location(self, new_loc):
-            self.x = new_loc[0]
-            self.y = new_loc[1]
-            self.h = new_loc[2]-new_loc[0]
-            self.w = new_loc[3]-new_loc[1]
+    def update_pitch(self, new_pitch):
+        self.pitch = new_pitch
+        # +/- 0.5 in de class of aparte functie?
+        
+    def update_note(self, new_note):
+        self.note = new_note
+        # vinden ahv pitch in de class of aparte functie?
+        
+    def update_octave(self, new_octave):
+        self.octave = new_octave
+        # vinden ahv pitch in de class of aparte functie?
+        
+    def update_duration(self, new_dur):
+        self.duration = new_dur
+        # *0.5 in de class of aparte functie?
+        
+    def update_location(self, new_loc):
+        self.x = new_loc[0]
+        self.y = new_loc[1]
+        self.h = new_loc[2]-new_loc[0]
+        self.w = new_loc[3]-new_loc[1]
+        
+    def set_accidental(self,accidental):
+        self.accidental = accidental
             
     
     

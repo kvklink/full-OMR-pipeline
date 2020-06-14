@@ -14,6 +14,7 @@ class Staff:
         firstlines = self.detect_stafflines(img_bar)
         self.dist = self.calc_avg_distance(firstlines)
         self.lines = sorted(self.calc_higher_lines(self.calc_lower_lines(firstlines,self.dist,img_bar.shape[1]),self.dist,img_bar.shape[1]), key=lambda x: x[1])
+        self.divisions = 12
         
     def calc_avg_distance(self,lines):
         s = [x[1] for x in lines]
@@ -174,6 +175,9 @@ class Staff:
             unique_lines[i][3] = unique_lines[i][3]+1
            
         return unique_lines
+            
+    def set_divisions(self,div):
+        self.divisions = div
     
     
 
@@ -181,33 +185,52 @@ class Staff:
 
 
 class Staff_measure:
+    Gnotes = ['G','F','E','D','C','B','A']
+    Goctave = 6
+    
     def __init__(self, staff, nr, start, end):
         self.lines = staff.lines
         self.dist = staff.dist
         self.measure = nr+1
         self.start = start
         self.end = end
-        self.clef = 0
+        self.clef = 'G'
+        self.clef_line = 2
         self.key = 0
-        self.time = 0
-        self.notes = []
+        self.beat = 4
+        self.beat_type = 4
+        self.notes = self.Gnotes
+        self.octave = self.Goctave
+        self.divisions = staff.divisions
         
     def set_clef(self, clef):
         self.clef = clef
         
+    def set_clef_line(self, clef_line):
+        self.clef_line = clef_line
+        
     def set_key(self, key):
         self.key = key
         
-    def set_time(self, time):
-        self.time = time
+    def set_beat(self, beat):
+        self.beat = beat
         
-    def get_notes(self):
-        if self.clef=='violin':
-            pass
-        elif self.clef=='bass':
-            pass
-        # ook nog iets met keys
-        # ['NaN','C3','D3','etc']
+    def set_beat_type(self, beat_type):
+        self.beat_type = beat_type
+        
+    def update_clefnotes(self):
+        if self.clef=='G':
+            self.notes = self.Gnotes
+            self.octave = self.Goctave
+        elif self.clef=='C':
+            self.notes = self.Gnotes[6:]+self.Gnotes[:6]
+            self.octave = self.Goctave - 1
+        elif self.clef=='F':
+            self.notes = self.Gnotes[5:]+self.Gnotes[:5]
+            self.octave = self.Goctave - 2
+            
+    def set_divisions(self,div):
+        self.divisions = div
         
         
 class Bar_line:

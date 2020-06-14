@@ -57,7 +57,10 @@ def build_notes(heads, stems, flags, staff):
                     ymin = min(sy1,sy2,hy1,hy2)
                     ymax = max(sy1,sy2,hy1,hy2)
                     
-                    notes.append(Note(head,1/4,(xmin,ymin,xmax,ymax)))
+                    if head.type == 'closed head': dur = 1
+                    elif head.type == 'open head': dur = 2
+                    else: dur = 1
+                    notes.append(Note(head,dur*staff.divisions,(xmin,ymin,xmax,ymax)))
     
     for note in notes:
         nx1, ny1 = note.x, note.y
@@ -76,10 +79,14 @@ def build_notes(heads, stems, flags, staff):
                     
                     new_loc = (xmin,ymin,xmax,ymax)
                     
-                    note.update_location(new_loc)
-                    note.update_duration(note.duration/2)
+                    if note.type=='1flag': div = 2
+                    elif note.type=='2flags': div = 4
+                    elif note.type=='3flags': div = 8
+                    else: div = 2
                     
-    # somewhere here remove quarter notes that are now eighth notes
-    # also detect full, half and sixteenth notes
+                    note.update_location(new_loc)
+                    note.update_duration(note.duration/div)
+                    
+    # somehow create full notes (check open heads not in note list?)
         
     return notes

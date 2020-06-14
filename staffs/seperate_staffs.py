@@ -13,7 +13,8 @@ def seperate_staffs(img):
     rows,cols = img.shape[:2]
 
     img_struct = img.copy()
-
+#    gray = img.copy()
+    
     gray = cv2.cvtColor(img_struct, cv2.COLOR_BGR2GRAY)
     (thresh, im_bw) = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     

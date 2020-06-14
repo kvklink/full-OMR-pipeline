@@ -7,7 +7,7 @@ Created on Sat Jun 13 16:52:35 2020
 
 import cv2
 import math
-from note_objects import Stem, Note
+from notes.note_objects import Stem, Note
 
 def find_stems(staff):
     img_bar = staff.image

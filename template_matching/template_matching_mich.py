@@ -8,7 +8,7 @@ Created on Sat Jun 13 18:01:59 2020
 import cv2
 import numpy as np
 
-def template_matching(template, staff, threshold):
+def template_matching_mich(template, staff, threshold):
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
     results = cv2.matchTemplate(img_gray, template.image, cv2.TM_CCOEFF_NORMED)
     locations = np.where(results >= threshold)

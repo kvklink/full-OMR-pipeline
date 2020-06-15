@@ -7,9 +7,38 @@ Created on Sat Jun 13 16:08:40 2020
 
 import cv2
 
+def find_pitch(staff, x, y):
+    line_vals = []
+    for l in staff.lines:
+        line_vals.append(staff.calc_y(l,x))
+        
+    if y<min(line_vals):
+        print('too high: %d'%y)
+        return('Error')
+    elif y>max(line_vals):
+        print('too low: %d'%y)
+        return('Error')
+    else:
+        i=0
+        found = False
+        while found==False:
+            i = i+1
+            found = (y<line_vals[i])
+        
+        s = line_vals[i-1]
+        e = line_vals[i]
+        
+        if y in range(int(e-staff.dist/4)+1,e+1):
+            pitch = line_vals.index(e)*2
+        elif y in range(s,int(s+staff.dist/4)):
+            pitch = line_vals.index(s)*2
+        else: pitch = line_vals.index(e)*2-1
+
+    return pitch
+
 class Template:
     def __init__(self, name, image):
-        self.image = cv2.imread(image,0)
+        self.image = cv2.imread(image,0) if isinstance(image,str) else image
         self.name = name
         self.h,self.w = self.image.shape[:2]
 
@@ -27,46 +56,27 @@ class Head:
         self.octave = float('NaN')
         self.accidental = float('NaN')
         
-    def find_pitch(self, staff, x, y):
-        line_vals = []
-        for l in staff.lines:
-            line_vals.append(staff.calc_y(l,x))
-            
-        if y<min(line_vals):
-            print('too high: %d'%y)
-            return('Error')
-        elif y>max(line_vals):
-            print('too low: %d'%y)
-            return('Error')
-        else:
-            i=0
-            found = False
-            while found==False:
-                i = i+1
-                found = (y<line_vals[i])
-            
-            s = line_vals[i-1]
-            e = line_vals[i]
-            
-            if y in range(int(e-staff.dist/4)+1,e+1):
-                pitch = line_vals.index(e)*2
-            elif y in range(s,int(s+staff.dist/4)):
-                pitch = line_vals.index(s)*2
-            else: pitch = line_vals.index(e)*2-1
-    
-        return pitch
+        self.measure = None
         
     def set_pitch(self, staff):
         mid_x = int(self.x+0.5*self.w)
         mid_y = int(self.y+0.5*self.h)
-        self.pitch = self.find_pitch(staff,mid_x,mid_y)
+        self.pitch = find_pitch(staff,mid_x,mid_y)
         
     def set_note(self,measure):
         self.note = measure.notes[self.pitch % 7]
         self.octave = measure.octave - int(self.pitch/7)
+        self.measure = measure
         
     def set_accidental(self,accidental):
         self.accidental = accidental
+        
+    def set_key(self, key):
+        accidentals = key.accidentals
+        for acc in accidentals:
+            if acc.note == self.note:
+                self.accidental = acc.pitch_change
+                break
         
 
 class Stem:
@@ -108,6 +118,13 @@ class Accidental:
         self.w = template.w
         
         self.pitch_change = self.pitch_change_dict[self.type]
+        self.note = ''
+        
+    def find_note(self, measure):
+        pitch = find_pitch(measure.staff, self.x, self.y)
+        self.note = measure.notes[pitch % 7]
+    
+    
     
 class Dots:
     def __init__(self,x,y,template):
@@ -162,6 +179,3 @@ class Note:
     def set_accidental(self,accidental):
         self.accidental = accidental
             
-    
-    
-    

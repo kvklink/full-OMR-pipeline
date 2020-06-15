@@ -11,7 +11,7 @@ from template_matching.template_matching_mich import template_matching_mich
 
 def main():
 #    input = "INPUT IMAGE"
-    input = 'images/Fmttm.png'
+    input = 'images/sheets/Fmttm.png'
     
 #    denoised_image = denoise(input) # returnt een binary image, maar de volgende functies hebben een rgb of grayscale image nodig om goed te werken
     #------------------------------------------------
@@ -25,7 +25,7 @@ def main():
         
     threshold = 0.8 # threshold for template matching
     
-    template_head = Template('closed head','images/head-filled.png') # create a Template object with object name and image filename
+    template_head = Template('closed head','images/templates/head-filled.png') # create a Template object with object name and image filename
     matches_head = template_matching_mich(template_head,temp_staff,threshold) # do template matching with the Template, Staff and threshold
     
     # do a lot of template matching here to create all objects

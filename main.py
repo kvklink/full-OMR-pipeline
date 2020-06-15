@@ -1,9 +1,10 @@
 import cv2 as cv
+import numpy as np
 
 from notes.build_notes_objects import find_stems, build_notes
-from notes.note_objects import Template, Head  # , Stem #, Flag, Rest, Accidental, Dots, Relation
+from notes.note_objects import Template, Head, Stem, Flag, Rest, Accidental, Dots, Relation
 from staffs.seperate_staffs import seperate_staffs
-from staffs.staff_objects import Staff, Staff_measure  # , Bar_line, split_measures
+from staffs.staff_objects import Staff, Staff_measure, find_measure, Clef, Key, Time, Bar_line, split_measures
 from template_matching.template_matching import template_matching
 
 
@@ -41,27 +42,66 @@ def main():
     # next create measures, adding the clef, key and time to each measure (measure inherits from most close to its left)
 
     # create a temporary Staff_measure object for testing (normally based on template matching with staffline templates)
-    temp_measure = Staff_measure(temp_staff, 0, 0, temp_staff.image.shape[0])
+#    temp_measure = Staff_measure(temp_staff, 0, 0, temp_staff.image.shape[0])
+    
+    #----------
+    measure_locs = [297,806,1212,1617,1952]
+    #create staff measure: Staff_measure(staff, nr, start, end)
+    measures = []
+    for i in range(1,len(measure_locs)):
+        measures.append(Staff_measure(temp_staff, i, measure_locs[i-1], measure_locs[i]))
+    #----------
+    
+    # add clefs, keys and timing to measures
+    
+    blank_image = np.zeros([50,50,3],dtype=np.uint8)
+    clef_template = Template('G',blank_image)
+    temp_clef = Clef(measure_locs[0]+5,100,clef_template)
+    
+    acc_template = Template('flat',blank_image)
+    temp_acc_group = [Accidental(measure_locs[0]+15,temp_staff.lines[8][1],acc_template),Accidental(measure_locs[0]+20,temp_staff.lines[9][1],acc_template)]
+    for acc in temp_acc_group:
+        acc.find_note(measures[0])
+    temp_key = Key(temp_acc_group)
+    
+    time_template = Template('common',blank_image)
+    temp_time = Time(measure_locs[0]+30, 100, time_template)
+    
+    # for meas in measure:
+        # add clef, key and time
+        
+    #OF
+    
+    # for c in clefs:
+        # add to corresponding measures
+        
+    for meas in measures:
+        meas.set_clef(temp_clef.type)
+        meas.set_key(temp_key.key)
+        meas.set_time(temp_time)
+    
 
     head_objects = []
     for head in matches_head:  # for each note head location found with template matching:
         head_obj = Head(head[0], head[1], template_head)  # turn into object
         head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
 
+        temp_measure = find_measure(measures,head_obj.x)
         # also here, first determine its corresponding measure, and use that to set the note
         # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
         head_obj.set_note(temp_measure)
+        head_obj.set_key(temp_key)
         head_objects.append(head_obj)
 
         # find all vertical lines in the Staff object (function calls Staff.image)
     stem_objects = find_stems(temp_staff)
-
+    
     # takes all noteheads, stems and flags and the Staff object to determine full notes
     notes = build_notes(head_objects, stem_objects, [], temp_staff)
 
     for note in notes:
         # for each Note object, print the note name and octave
-        print(f'{note.note} {note.octave}')
+        print(f'{note.note} {note.octave} {note.accidental}')
         # print the count of the note (where a quarter note = 1 count)
         print(note.duration / temp_measure.divisions)
         print('\n')

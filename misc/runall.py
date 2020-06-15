@@ -25,7 +25,7 @@ threshold = 0.8
 temp_staff = staffs[0]
     
 template_head = Template('closed head','head-filled.png')
-matches_head = template_matching(template_head,temp_staff,threshold)
+matches_head = template_matching(template_head, temp_staff, threshold)
 # template_head.image, template_head.h, template_head.w
 
 head_objects = []

@@ -4,7 +4,7 @@ from notes.build_notes_objects import find_stems, build_notes
 from notes.note_objects import Template, Head  # , Stem #, Flag, Rest, Accidental, Dots, Relation
 from staffs.seperate_staffs import seperate_staffs
 from staffs.staff_objects import Staff, Staff_measure  # , Bar_line, split_measures
-from template_matching.template_matching_mich import template_matching_mich
+from template_matching.template_matching import template_matching
 
 
 # from denoise.denoise import denoise
@@ -32,7 +32,7 @@ def main():
     # create a Template object with object name and image filename
     template_head = Template('closed head', 'images/templates/head-filled.png')
     # do template matching with the Template, Staff and threshold
-    matches_head = template_matching_mich(template_head, temp_staff, threshold)
+    matches_head = template_matching(template_head, temp_staff, threshold)
 
     # do a lot of template matching here to create all objects
 

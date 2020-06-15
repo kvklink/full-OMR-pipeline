@@ -1,10 +1,14 @@
 import cv2
+import imutils
 import numpy as np
 
 
 def template_matching(template, staff, threshold):
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
-    results = cv2.matchTemplate(img_gray, template.image, cv2.TM_CCOEFF_NORMED)
+
+    # Resize template to match staff height
+    resized_template = imutils.resize(template.image, height=int(staff.calc_avg_distance()))
+    results = cv2.matchTemplate(img_gray, resized_template, cv2.TM_CCOEFF_NORMED)
     locations = np.where(results >= threshold)
 
     matches = []
@@ -20,9 +24,6 @@ def template_matching(template, staff, threshold):
             if pt2[0] in range(pt[0] - 4, pt[0] + 4) and pt2[1] in range(pt[1] - 3, pt[1] + 3):
                 remove_match.append(j)
 
-    unique_matches = []
-    for i in range(len(matches)):
-        if i not in remove_match:
-            unique_matches.append(matches[i])
+    unique_matches = [match for match in matches if match not in remove_match]
 
     return unique_matches

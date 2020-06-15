@@ -86,6 +86,7 @@ class Staff:
         # Find Hough lines
         
         lines = cv2.HoughLinesP(edges2, 1, math.pi/2, 1, None, 50, 10)
+#        lines = cv2.HoughLines(edges2, 1, math.pi/2, 1, None)
         
         # Label useless lines for removal and combine consecutive lines
         
@@ -191,17 +192,18 @@ class Staff_measure:
     def __init__(self, staff, nr, start, end):
         self.lines = staff.lines
         self.dist = staff.dist
-        self.measure = nr+1
+        self.measure = nr
         self.start = start
         self.end = end
         self.clef = 'G'
         self.clef_line = 2
         self.key = 0
-        self.beat = 4
+        self.beats = 4
         self.beat_type = 4
         self.notes = self.Gnotes
         self.octave = self.Goctave
         self.divisions = staff.divisions
+        self.staff = staff
         
     def set_clef(self, clef):
         self.clef = clef
@@ -212,11 +214,15 @@ class Staff_measure:
     def set_key(self, key):
         self.key = key
         
-    def set_beat(self, beat):
-        self.beat = beat
+    def set_beats(self, beats):
+        self.beats = beats
         
     def set_beat_type(self, beat_type):
         self.beat_type = beat_type
+        
+    def set_time(self, time):
+        self.beats = time.beats
+        self.beat_type = time.beat_type
         
     def update_clefnotes(self):
         if self.clef=='G':
@@ -248,4 +254,56 @@ def split_measures(barlines, staff): #barlines sorted on x
         else: x2 = barlines[i].x
         measures.append(Staff_measure(staff,i,x1,x2))
         x1 = x2
+        
+def find_measure(measures, x):
+    for measure in measures:
+        if x>measure.start and x<measure.end:
+            return measure
+    return None
+
+class Clef:
+    def __init__(self,x,y,template):
+        self.x = x
+        self.y = y
+        self.type = template.name
+        self.h = template.h
+        self.w = template.w
+    
+class Key:
+    def __init__(self,grouped_accidentals):
+        self.x, self.y, self.h, self.w = self.find_rect(grouped_accidentals)
+        self.type = grouped_accidentals[0].type
+        self.key = self.find_key(grouped_accidentals)
+        self.accidentals = grouped_accidentals
+        
+    def find_rect(self,group):
+        minx, miny = (group[0].x, group[0].y)
+        maxx, maxy = (minx, miny)
+        for acc in group:
+            minx = min(minx, acc.x)
+            maxx = max(maxx, acc.x + acc.w)
+            miny = min(miny, acc.y)
+            maxy = max(maxy, acc.y + acc.h)
+        w = maxx - minx
+        h = maxy - miny
+        return minx, miny, w, h
+    
+    def find_key(self,group):
+        amount = len(group)
+        if self.type == 'flat':
+            return -1*amount
+        elif self.type == 'sharp':
+            return amount
+        else:
+            return float('NaN')
+        
+class Time:
+    timedict = {'common':(4,4),'cut':(2,2),'4/4':(4,4),'3/4':(3,4),'2/4':(2,4)}
+    
+    def __init__(self, x, y, template):
+        self.beats, self.beat_type = self.timedict[template.name]
+        self.x = x
+        self.y = y
+        self.w = template.w
+        self.h = template.h
         

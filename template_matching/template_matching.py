@@ -1,50 +1,28 @@
-import cv2 as cv
-import imutils as imutils
+import cv2
 import numpy as np
-from tqdm import tqdm
 
 
-def template_matching(img_rgb):
-    template_dir = '/Users/kyle/Documents/UT/ACVPR/Rebelo Dataset/database/syn/notes/'
-    img_gray = cv.cvtColor(img_rgb, cv.COLOR_BGR2GRAY)
+def template_matching(template, staff, threshold):
+    img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
+    results = cv2.matchTemplate(img_gray, template.image, cv2.TM_CCOEFF_NORMED)
+    locations = np.where(results >= threshold)
 
-    # for file in listdir(template_dir):
-    #     templates.append(cv.imread(template_dir + file, 0))
+    matches = []
+    for pt in zip(*locations[::-1]):
+        matches.append([pt[0], pt[1]])
 
-    templates = []
-    selected = [10186, 10650, 10146, 10825, 11414, 11565, 1020]
-    for select in selected:
-        templates.append(cv.Canny(cv.cvtColor(cv.imread(template_dir + f'symbol{select}.png'), cv.COLOR_BGR2GRAY)), 50,
-                         200)
+    matches.sort()
+    remove_match = []
+    for i, pt in enumerate(matches):
+        if i in remove_match: continue
+        for j in range(i + 1, len(matches)):
+            pt2 = matches[j]
+            if pt2[0] in range(pt[0] - 4, pt[0] + 4) and pt2[1] in range(pt[1] - 3, pt[1] + 3):
+                remove_match.append(j)
 
-    threshold = 0.75
-    for template in tqdm(templates):
-        w, h = template.shape[::-1]
+    unique_matches = []
+    for i in range(len(matches)):
+        if i not in remove_match:
+            unique_matches.append(matches[i])
 
-        # loop over the scales of the image
-        for scale in np.linspace(0.2, 1.0, 20)[::-1]:
-            # resize the image according to the scale, and keep track
-            # of the ratio of the resizing
-            resized = imutils.resize(img_gray, width=int(img_gray.shape[1] * scale))
-            r = img_gray.shape[1] / float(resized.shape[1])
-            # if the resized image is smaller than the template, then break
-            # from the loop
-            if resized.shape[0] < h or resized.shape[1] < w:
-                break
-
-        res = cv.matchTemplate(img_gray, template, cv.TM_CCOEFF_NORMED)
-
-        loc = np.where(res >= threshold)
-        for pt in zip(*loc[::-1]):
-            cv.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
-
-    return img_rgb
-
-
-if __name__ == "__main__":
-    cv.namedWindow('output', cv.WINDOW_NORMAL)
-    cv.resizeWindow('output', 1100, 1100)
-    cv.imshow('output', template_matching('/Users/kyle/Desktop/input.jpeg'))
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-̵
+    return unique_matches

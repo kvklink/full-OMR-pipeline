@@ -25,6 +25,8 @@ def main():
         
     threshold = 0.8 # threshold for template matching
     
+    # resize template with respect to temp_staff.dist (i.e. head has height of dist)
+    
     template_head = Template('closed head','images/templates/head-filled.png') # create a Template object with object name and image filename
     matches_head = template_matching_mich(template_head,temp_staff,threshold) # do template matching with the Template, Staff and threshold
     

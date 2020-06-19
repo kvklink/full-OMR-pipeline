@@ -7,7 +7,7 @@ def template_matching(template, staff, threshold):
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
 
     # Resize template to match staff height
-    resized_template = imutils.resize(template.image, height=int(staff.calc_avg_distance()))
+    resized_template = imutils.resize(template.image, height=int(staff.dist))
     results = cv2.matchTemplate(img_gray, resized_template, cv2.TM_CCOEFF_NORMED)
     locations = np.where(results >= threshold)
 

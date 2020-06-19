@@ -40,7 +40,7 @@ def find_pitch(staff, x, y):
 
 
 class Template:
-    def __init__(self, name, image, height_units):
+    def __init__(self, name, image, height_units=1):
         self.image = cv2.imread(image, 0) if isinstance(image, str) else image
         self.name = name
         self.height_units = height_units

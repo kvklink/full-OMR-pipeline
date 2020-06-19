@@ -64,6 +64,8 @@ class Head:
         self.pitch = find_pitch(staff,mid_x,mid_y)
         
     def set_note(self,measure):
+#        print(f"pitch: {self.pitch}")
+#        print(f"measure notes: {measure.notes}")
         self.note = measure.notes[self.pitch % 7]
         self.octave = measure.octave - int(self.pitch/7)
         self.measure = measure
@@ -142,7 +144,7 @@ class Relation:
         self.w = template.w
     
 class Note:
-    def __init__(self, base, duration, loc):
+    def __init__(self, base, durname, duration, loc):
         self.x = loc[0]
         self.y = loc[1]
         self.h = loc[2]-loc[0]
@@ -151,6 +153,7 @@ class Note:
         self.pitch = base.pitch
         self.note = base.note
         self.octave = base.octave
+        self.durname = durname
         self.duration = duration
         self.accidental = base.accidental
         
@@ -166,7 +169,8 @@ class Note:
         self.octave = new_octave
         # vinden ahv pitch in de class of aparte functie?
         
-    def update_duration(self, new_dur):
+    def update_duration(self, durname, new_dur):
+        self.durname = durname
         self.duration = new_dur
         # *0.5 in de class of aparte functie?
         

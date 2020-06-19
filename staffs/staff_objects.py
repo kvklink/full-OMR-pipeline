@@ -15,6 +15,13 @@ class Staff:
         self.dist = self.calc_avg_distance(firstlines)
         self.lines = sorted(self.calc_higher_lines(self.calc_lower_lines(firstlines,self.dist,img_bar.shape[1]),self.dist,img_bar.shape[1]), key=lambda x: x[1])
         self.divisions = 12
+        self.nr_timewise = float('NaN')
+        self.nr_instrument = float('NaN')
+        
+    def set_bar_nrs(self, nr_timewise, nr_instrument): 
+        # moet dan voor het splitsen naar maten gedaan worden
+        self.nr_timewise = nr_timewise
+        self.nr_instrument = nr_instrument
         
     def calc_avg_distance(self,lines):
         s = [x[1] for x in lines]
@@ -85,6 +92,7 @@ class Staff:
         
         # Find Hough lines
         
+        # getallen nog aanpassen naar schaalbaar tov img size
         lines = cv2.HoughLinesP(edges2, 1, math.pi/2, 1, None, 50, 10)
 #        lines = cv2.HoughLines(edges2, 1, math.pi/2, 1, None)
         
@@ -226,12 +234,15 @@ class Staff_measure:
         
     def update_clefnotes(self):
         if self.clef=='G':
+            self.clef_line = 2
             self.notes = self.Gnotes
             self.octave = self.Goctave
         elif self.clef=='C':
+            self.clef_line = 3
             self.notes = self.Gnotes[6:]+self.Gnotes[:6]
             self.octave = self.Goctave - 1
         elif self.clef=='F':
+            self.clef_line = 4
             self.notes = self.Gnotes[5:]+self.Gnotes[:5]
             self.octave = self.Goctave - 2
             

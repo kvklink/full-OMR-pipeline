@@ -57,10 +57,16 @@ def build_notes(heads, stems, flags, staff):
                     ymin = min(sy1,sy2,hy1,hy2)
                     ymax = max(sy1,sy2,hy1,hy2)
                     
-                    if head.type == 'closed head': dur = 1
-                    elif head.type == 'open head': dur = 2
-                    else: dur = 1
-                    notes.append(Note(head,dur*staff.divisions,(xmin,ymin,xmax,ymax)))
+                    if head.type == 'closed head': 
+                        dur = 1
+                        durname = 'quarter'
+                    elif head.type == 'open head': 
+                        dur = 2
+                        durname = 'half'
+                    else: 
+                        dur = 1
+                        durname = 'unknown'
+                    notes.append(Note(head,durname,dur*staff.divisions,(xmin,ymin,xmax,ymax)))
     
     for note in notes:
         nx1, ny1 = note.x, note.y
@@ -79,13 +85,21 @@ def build_notes(heads, stems, flags, staff):
                     
                     new_loc = (xmin,ymin,xmax,ymax)
                     
-                    if note.type=='1flag': div = 2
-                    elif note.type=='2flags': div = 4
-                    elif note.type=='3flags': div = 8
-                    else: div = 2
+                    if flag.type=='1flag': 
+                        div = 2
+                        durname = 'eighth'
+                    elif flag.type=='2flags': 
+                        div = 4
+                        durname = 'sixteenth'
+                    elif flag.type=='3flags': 
+                        div = 8
+                        durname = 'demisemiquaver'
+                    else: 
+                        div = 2
+                        durname = 'unknown'
                     
                     note.update_location(new_loc)
-                    note.update_duration(note.duration/div)
+                    note.update_duration(durname, int(note.duration/div))
                     
     # somehow create full notes (check open heads not in note list?)
         

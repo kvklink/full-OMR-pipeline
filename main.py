@@ -5,7 +5,7 @@ from notes.build_notes_objects import find_stems, build_notes
 from notes.note_objects import Template, Head, Stem, Flag, Rest, Accidental, Dots, Relation
 from staffs.seperate_staffs import seperate_staffs
 from staffs.staff_objects import Staff, Staff_measure, find_measure, Clef, Key, Time, Bar_line, split_measures
-from template_matching.template_matching import template_matching
+from template_matching.template_matching import template_matching, AvailableTemplates
 
 from mxml.xml_from_objects import *
 
@@ -33,10 +33,8 @@ def main():
     threshold = 0.8 
 
     # resize template with respect to temp_staff.dist (i.e. head has height of dist)
-    # create a Template object with object name and image filename
-    template_head = Template('closed head', 'images/templates/head-filled.png')
     # do template matching with the Template, Staff and threshold
-    matches_head = template_matching(template_head, temp_staff, threshold)
+    matches_head = template_matching(AvailableTemplates.ClosedNotehead, temp_staff, threshold)
 
     # do same for note flags
     template_flag = Template('1flag', 'images/templates/flag.png')

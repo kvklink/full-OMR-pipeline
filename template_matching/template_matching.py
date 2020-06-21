@@ -22,7 +22,7 @@ def template_matching(template, staff, threshold):
         for j in range(i + 1, len(matches)):
             pt2 = matches[j]
             if pt2[0] in range(pt[0] - 4, pt[0] + 4) and pt2[1] in range(pt[1] - 3, pt[1] + 3):
-                remove_match.append(j)
+                remove_match.append(pt2)
 
     unique_matches = [match for match in matches if match not in remove_match]
 

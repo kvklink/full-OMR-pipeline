@@ -117,7 +117,7 @@ class Rest:
 
 
 class Accidental:
-    pitch_change_dict = {'fflat': -1, 'flat': -1 / 2, 'natural': 0, 'sharp': 1 / 2, 'ssharp': 1}
+    pitch_change_dict = {'double_flat': -1, 'flat': -1 / 2, 'natural': 0, 'sharp': 1 / 2, 'double_sharp': 1}
 
     def __init__(self, x, y, template):
         self.x = x

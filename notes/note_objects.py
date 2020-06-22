@@ -44,7 +44,8 @@ class Template:
         self.image = cv2.imread(image, 0) if isinstance(image, str) else image
         self.name = name
         self.height_units = height_units
-        self.h, self.w = self.image.shape[:2]
+        self.h = self.image.shape[0]*height_units
+        self.w = self.image.shape[1]*height_units
 
 
 class Head:

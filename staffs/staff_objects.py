@@ -309,7 +309,7 @@ class Key:
             return float('NaN')
         
 class Time:
-    timedict = {'common':(4,4),'cut':(2,2),'4/4':(4,4),'3/4':(3,4),'2/4':(2,4)}
+    timedict = {'3/4 time':(3,4),'3/8 time':(3,8),'4/4 time':(4,4),'5/4 time':(5,4),'5/8 time':(5,8),'6/4 time':(6,4),'6/8 time':(6,8),'7/8 time':(7,8),'9/8 time':(9,8),'12/8 time':(12,8),'4/4 time C':(4,4)}
     
     def __init__(self, x, y, template):
         self.beats, self.beat_type = self.timedict[template.name]

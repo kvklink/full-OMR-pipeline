@@ -30,7 +30,7 @@ def main():
 
     # resize template with respect to temp_staff.dist (i.e. head has height of dist)
     # do template matching with the Template, Staff and threshold
-    matches_head = template_matching(AvailableTemplates.ClosedNotehead, temp_staff, threshold)
+    matches_head = template_matching(AvailableTemplates.NoteheadClosed, temp_staff, threshold)
 
     # do same for note flags
     matches_flag = template_matching(AvailableTemplates.FlagUpsideDown, temp_staff, threshold)
@@ -80,7 +80,7 @@ def main():
     # turn the found head symbols into objects and add corresponding information
     head_objects = []
     for head in matches_head:  # for each note head location found with template matching:
-        head_obj = Head(head[0], head[1], AvailableTemplates.NoteheadClosed)  # turn into object
+        head_obj = Head(head[0], head[1], AvailableTemplates.NoteheadClosed.value)  # turn into object
         head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
         if head_obj.pitch == 'Error': continue
         temp_measure = find_measure(measures, head_obj.x)

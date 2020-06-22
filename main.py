@@ -37,7 +37,6 @@ def main():
     matches_head = template_matching(AvailableTemplates.NoteheadClosed, temp_staff, threshold)
 
     # do same for note flags
-    template_flag = Template('1flag', 'images/templates/flag.png')
     matches_flag = template_matching(AvailableTemplates.FlagUpsideDown, temp_staff, threshold)
     
     # do a lot of template matching here to create all objects
@@ -103,7 +102,7 @@ def main():
     # turn the found flag symbols into objects
     flag_objects = []
     for flag in matches_flag:
-        flag_obj = Flag(flag[0], flag[1], template_flag)
+        flag_obj = Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown.value)
         flag_objects.append(flag_obj)
     
     # takes all noteheads, stems and flags and the Staff object to determine full notes

@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Dict, Any, List
 
 import cv2
 import imutils
@@ -34,7 +35,7 @@ def template_matching(template: Template, staff: Staff, threshold: float):
     return unique_matches
 
 
-def template_matching_array(templates: [Template], staff: Staff, threshold: float):
+def template_matching_array(templates: List[Template], staff: Staff, threshold: float) -> Dict[str, List[Any]]:
     result = {}
     for template in templates:
         result[template.name] = template_matching(template, staff, threshold)

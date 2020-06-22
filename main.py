@@ -30,10 +30,10 @@ def main():
 
     # resize template with respect to temp_staff.dist (i.e. head has height of dist)
     # do template matching with the Template, Staff and threshold
-    matches_head = template_matching(AvailableTemplates.NoteheadClosed, temp_staff, threshold)
+    matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, temp_staff, threshold)
 
     # do same for note flags
-    matches_flag = template_matching(AvailableTemplates.FlagUpsideDown, temp_staff, threshold)
+    matches_flag = template_matching(AvailableTemplates.FlagUpsideDown.value, temp_staff, threshold)
 
     # do a lot of template matching here to create all objects
 
@@ -133,7 +133,8 @@ def main():
     tree = ET.ElementTree(root)
     tree.write("mxml/filename.xml")
 
-    # future: also use those grouping-staffs-symbols to determine whether next part in musicXML needs staff+=1 or measure_nr+=1
+    # TODO: also use those grouping-staffs-symbols to determine whether next part in musicXML
+    #  needs staff+=1 or measure_nr+=1
 
 
 if __name__ == "__main__":

@@ -63,3 +63,6 @@ class AvailableTemplates(Enum):
 
     # Symbols
     Fermate = Template('fermate', 'images/templates/fermate.jpg', 1.5)
+
+    # Times
+    Time3_4 = Template()

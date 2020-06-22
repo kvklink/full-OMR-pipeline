@@ -50,8 +50,7 @@ class AvailableTemplates(Enum):
     # Clefs
     ClefG = Template('g-clef', 'images/templates/g-clef-with-lines.jpg', 7.5)
     ClefF = Template('f-clef', 'images/templates/f-clef-with-lines.jpg', 4)
-    # TODO: add c clef template image
-    # ClefC = Template('c-clef', 'images/templates/c-clef-with-lines.jpg', 1000)
+    ClefC = Template('c-clef', 'images/templates/c-clef-with-lines.jpg', 4)
 
     # Keys
     Flat = Template('flat', 'images/templates/flat.jpg', 2.4)

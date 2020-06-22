@@ -51,12 +51,12 @@ class AvailableTemplates(Enum):
     AllNotes = [NoteheadClosed.value, NoteheadOpen.value, FlagUpsideDown.value]
 
     # Rests
-    RestFull = Template('full_rest', 'images/templates/full-rest-on-line.jpg', 1)
+    RestFull = Template('full_rest', 'images/templates/rests/full-rest-on-line.jpg', 1)
     # !! Half and full rest are *very* similar templates, maybe these would have to be
     # merged and distinguished in a later step eg. using context
-    RestHalf = Template('half_rest', 'images/templates/half-rest-on-line.jpg', 1)
-    RestFourth = Template('fourth_rest', 'images/templates/4th-rest-with-lines.jpg', 4)
-    RestEighth = Template('eighth_rest', 'images/templates/8th-rest-with-line.jpg', 2)
+    RestHalf = Template('half_rest', 'images/templates/rests/half-rest-on-line.jpg', 1)
+    RestFourth = Template('fourth_rest', 'images/templates/rests/4th-rest-with-lines.jpg', 4)
+    RestEighth = Template('eighth_rest', 'images/templates/rests/8th-rest-with-line.jpg', 2)
 
     AllRests = [RestFull.value, RestHalf.value, RestFourth.value, RestEighth.value]
 

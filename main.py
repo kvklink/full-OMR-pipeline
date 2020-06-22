@@ -134,6 +134,12 @@ def main():
     # write to file
     tree = ET.ElementTree(root)
     tree.write("mxml/filename.xml")
+    
+    
+    with open('mxml/filename2.xml', 'wb') as f:
+        f.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode('utf8'))
+        tree.write(f, 'utf-8')
+    
 
     # TODO: also use those grouping-staffs-symbols to determine whether next part in musicXML
     #  needs staff+=1 or measure_nr+=1

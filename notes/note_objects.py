@@ -62,6 +62,11 @@ class Head:
         self.accidental = float('NaN')
 
         self.measure = None
+        
+        self.connected = False
+        
+    def connect(self):
+        self.connected = True
 
     def set_pitch(self, staff):
         mid_x = int(self.x + 0.5 * self.w)

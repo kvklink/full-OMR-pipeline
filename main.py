@@ -52,19 +52,19 @@ def main():
     # add clefs, keys and timing to measures
 
     # create clef for testing
-    temp_clef = Clef(measure_locs[0] + 5, 100, AvailableTemplates.ClefG)
+    temp_clef = Clef(measure_locs[0] + 5, 100, AvailableTemplates.ClefG.value)
 
     # create accidentals for testing
-    temp_acc_group = [Accidental(measure_locs[0] + 15, temp_staff.lines[8][1], AvailableTemplates.Flat),
-                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.Sharp),
-                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.FlatDouble),
-                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.SharpDouble)]
+    temp_acc_group = [Accidental(measure_locs[0] + 15, temp_staff.lines[8][1], AvailableTemplates.Flat.value),
+                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.Sharp.value),
+                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.FlatDouble.value),
+                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.SharpDouble.value)]
     for acc in temp_acc_group:
         acc.find_note(measures[0])
     temp_key = Key(temp_acc_group)
 
     # create time signature for testing
-    temp_time = Time(measure_locs[0] + 30, 100, AvailableTemplates.Time3_4)
+    temp_time = Time(measure_locs[0] + 30, 100, AvailableTemplates.Time3_4.value)
 
     # We have 2 options for assigning the 'voortekens'
     # for meas in measure:
@@ -82,7 +82,7 @@ def main():
     # turn the found head symbols into objects and add corresponding information
     head_objects = []
     for head in matches_head:  # for each note head location found with template matching:
-        head_obj = Head(head[0], head[1], AvailableTemplates.NoteheadClosed)  # turn into object
+        head_obj = Head(head[0], head[1], AvailableTemplates.NoteheadClosed.value)  # turn into object
         head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
         if head_obj.pitch == 'Error': continue
         temp_measure = find_measure(measures, head_obj.x)

@@ -65,4 +65,4 @@ class AvailableTemplates(Enum):
     Fermate = Template('fermate', 'images/templates/fermate.jpg', 1.5)
 
     # Times
-    Time3_4 = Template()
+    Time3_4 = Template('3/4', 'images/templates/time34.png', 4)

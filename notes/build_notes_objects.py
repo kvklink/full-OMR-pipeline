@@ -57,6 +57,8 @@ def build_notes(heads, stems, flags, staff):
                     ymin = min(sy1,sy2,hy1,hy2)
                     ymax = max(sy1,sy2,hy1,hy2)
                     
+                    head.connect()
+                    
                     if head.type == 'closed_notehead': 
                         dur = 1
                         durname = 'quarter'
@@ -67,6 +69,9 @@ def build_notes(heads, stems, flags, staff):
                         dur = 1
                         durname = 'unknown'
                     notes.append(Note(head,durname,dur*staff.divisions,(xmin,ymin,xmax,ymax)))
+                    
+        if head.connected==False:
+            notes.append(Note(head,'whole',4*staff.divisions,(hx1,hy1,hx2,hy2)))
     
     for note in notes:
         nx1, ny1 = note.x, note.y

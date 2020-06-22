@@ -104,7 +104,7 @@ class Flag:
 
 
 class Rest:
-    duration_dict = {'full': 1, 'half': 1 / 2, 'quarter': 1 / 4, 'eighth': 1 / 8, 'sixteenth': 1 / 16}
+    duration_dict = {'full': 1, 'half': 1 / 2, 'quarter': 1 / 4, 'eighth': 1 / 8, 'sixteenth': 1 / 16, 'semidemiquaver': 1 / 32}
 
     def __init__(self, x, y, template):
         self.x = x

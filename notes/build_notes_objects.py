@@ -57,10 +57,10 @@ def build_notes(heads, stems, flags, staff):
                     ymin = min(sy1,sy2,hy1,hy2)
                     ymax = max(sy1,sy2,hy1,hy2)
                     
-                    if head.type == 'closed head': 
+                    if head.type == 'closed_notehead': 
                         dur = 1
                         durname = 'quarter'
-                    elif head.type == 'open head': 
+                    elif head.type == 'open_notehead': 
                         dur = 2
                         durname = 'half'
                     else: 

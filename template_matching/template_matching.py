@@ -11,7 +11,7 @@ def template_matching(template, staff, threshold):
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
 
     # Resize template to match staff height
-    resized_template = imutils.resize(template.image, height=int(staff.dist * template.height_units))
+    resized_template = imutils.resize(template.value.image, height=int(staff.dist * template.value.height_units))
     results = cv2.matchTemplate(img_gray, resized_template, cv2.TM_CCOEFF_NORMED)
     locations = np.where(results >= threshold)
 
@@ -38,7 +38,7 @@ class AvailableTemplates(Enum):
     NoteheadClosed = Template('closed_notehead', 'images/templates/head-filled.png', 1)
     # TODO: open notehead
     # NoteheadOpen = Template('open_notehead', 'images/templates/MISSING-FILE', 1)
-    FlagUpsideDown = Template('flag_upside_down', 'images/templates/flag.jpg', 1.5)
+    FlagUpsideDown = Template('flag_upside_down', 'images/templates/flag.png', 1.5)
 
     # Rests
     RestFull = Template('full_rest', 'images/templates/full-rest-on-line.jpg', 1)

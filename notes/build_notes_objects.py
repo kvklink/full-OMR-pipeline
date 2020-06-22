@@ -85,7 +85,7 @@ def build_notes(heads, stems, flags, staff):
                     
                     new_loc = (xmin,ymin,xmax,ymax)
                     
-                    if flag.type=='1flag': 
+                    if flag.type=='flag_upside_down': 
                         div = 2
                         durname = 'eighth'
                     elif flag.type=='2flags': 

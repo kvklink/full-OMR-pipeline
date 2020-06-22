@@ -65,4 +65,15 @@ class AvailableTemplates(Enum):
     Fermate = Template('fermate', 'images/templates/fermate.jpg', 1.5)
 
     # Times
-    Time3_4 = Template('3/4', 'images/templates/time34.png', 4)
+    Time3_4 = Template('3/4 time', 'images/templates/times/3_4.jpg', 4)
+    Time3_8 = Template('3/8 time', 'images/templates/times/3_8.jpg', 4)
+    Time4_4 = Template('4/4 time', 'images/templates/times/4_4.jpg', 4)
+    Time5_4 = Template('5/4 time', 'images/templates/times/5_4.jpg', 4)
+    Time5_8 = Template('5/8 time', 'images/templates/times/5_8.jpg', 4)
+    Time6_4 = Template('6/4 time', 'images/templates/times/6_4.jpg', 4)
+    Time6_8 = Template('6/8 time', 'images/templates/times/6_8.jpg', 4)
+    Time7_8 = Template('7/8 time', 'images/templates/times/7_8.jpg', 4)
+    Time9_8 = Template('9/8 time', 'images/templates/times/9_8.jpg', 4)
+    Time12_8 = Template('12/8 time', 'images/templates/times/12_8.jpg', 4)
+    TimeAllaBreve = Template('alla breve', 'images/templates/times/alla_breve.jpg', 4)
+    TimeC = Template('4/4 time C', 'images/templates/times/c.jpg', 4)

@@ -36,8 +36,7 @@ def template_matching(template, staff, threshold):
 class AvailableTemplates(Enum):
     # Notes
     NoteheadClosed = Template('closed_notehead', 'images/templates/head-filled.png', 1)
-    # TODO: open notehead
-    # NoteheadOpen = Template('open_notehead', 'images/templates/MISSING-FILE', 1)
+    NoteheadOpen = Template('open_notehead', 'images/templates/head-open.jpg', 1)
     FlagUpsideDown = Template('flag_upside_down', 'images/templates/flag.png', 1.5)
 
     # Rests

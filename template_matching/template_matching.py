@@ -37,7 +37,13 @@ class AvailableTemplates(Enum):
     # Notes
     NoteheadClosed = Template('closed_notehead', 'images/templates/head-filled.png', 1)
     NoteheadOpen = Template('open_notehead', 'images/templates/head-open.jpg', 1)
-    FlagUpsideDown = Template('flag_upside_down', 'images/templates/flag.png', 1.5)
+#    FlagUpsideDown1 = Template('flag_upside_down_1', 'images/templates/flags/down-1.png', 3)
+    FlagUpsideDown1 = Template('flag_upside_down_1', 'images/templates/flag.png', 2)
+    FlagUpsideDown2 = Template('flag_upside_down_2', 'images/templates/flags/down-2.png', 3)
+    FlagUpsideDown3 = Template('flag_upside_down_3', 'images/templates/flags/down-3.png', 4)
+    Flag1 = Template('flag_1', 'images/templates/flags/up-1.png', 3)
+    Flag2 = Template('flag_2', 'images/templates/flags/up-2.png', 3)
+    Flag3 = Template('flag_3', 'images/templates/flags/up-3.png', 4)
 
     # Rests
     RestFull = Template('full_rest', 'images/templates/rests/full-rest-on-line.jpg', 1)

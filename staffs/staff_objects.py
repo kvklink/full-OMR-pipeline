@@ -282,8 +282,8 @@ class Clef:
     
 class Key:
     def __init__(self,grouped_accidentals):
-        self.x, self.y, self.h, self.w = self.find_rect(grouped_accidentals)
-        self.type = grouped_accidentals[0].type
+        self.x, self.y, self.h, self.w = self.find_rect(grouped_accidentals) if len(grouped_accidentals)>0 else (0,0,0,0)
+        self.type = grouped_accidentals[0].type if len(grouped_accidentals)>0 else 'normal'
         self.key = self.find_key(grouped_accidentals)
         self.accidentals = grouped_accidentals
         
@@ -305,6 +305,8 @@ class Key:
             return -1*amount
         elif self.type == 'sharp':
             return amount
+        elif amount==0:
+            return 0
         else:
             return float('NaN')
         

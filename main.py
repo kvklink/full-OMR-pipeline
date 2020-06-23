@@ -1,12 +1,14 @@
 import cv2 as cv
+import xml.etree.cElementTree as ET
 
-from mxml.xml_from_objects import *
+
+from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note#, add_part, add_rest
 from notes.build_notes_objects import find_stems, build_notes
 from notes.note_objects import Head, Flag, Accidental
 from staffs.seperate_staffs import seperate_staffs
 from staffs.staff_objects import Staff, Staff_measure, find_measure, Clef, Key, Time
 from template_matching.template_matching import template_matching, AvailableTemplates
-
+from notes.find_beams import find_beams
 
 def main():
     input_file = 'images/sheets/Fmttm.png'
@@ -35,7 +37,7 @@ def main():
     matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, temp_staff, threshold)
 
     # do same for note flags
-    matches_flag = template_matching(AvailableTemplates.FlagUpsideDown.value, temp_staff, threshold)
+    matches_flag = template_matching(AvailableTemplates.FlagUpsideDown1, temp_staff, threshold)
 
     # do a lot of template matching here to create all objects
 
@@ -55,13 +57,16 @@ def main():
     temp_clef = Clef(measure_locs[0] + 5, 100, AvailableTemplates.ClefG.value)
 
     # create accidentals for testing
-    temp_acc_group = [Accidental(measure_locs[0] + 15, temp_staff.lines[8][1], AvailableTemplates.Flat.value),
-                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.Sharp.value),
-                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.FlatDouble.value),
-                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.SharpDouble.value)]
-    for acc in temp_acc_group:
-        acc.find_note(measures[0])
+    # TODO: fix (er lijken nu 4 "bessen" aan het begin van de bladmuziek te staan)
+    temp_acc_group = []#[Accidental(measure_locs[0] + 15, temp_staff.lines[8][1], AvailableTemplates.Flat.value),
+#                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.Sharp.value),
+#                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.FlatDouble.value),
+#                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.SharpDouble.value)]
+    if len(temp_acc_group)>0:
+        for acc in temp_acc_group:
+            acc.find_note(measures[0])
     temp_key = Key(temp_acc_group)
+
 
     # create time signature for testing
     temp_time = Time(measure_locs[0] + 30, 100, AvailableTemplates.Time3_4.value)
@@ -95,16 +100,18 @@ def main():
     # find all vertical lines in the Staff object and assume to be note stems
     # vertical lines that are not stems are most likely not connected to note heads and thus will be ignored
     stem_objects = find_stems(temp_staff)
+    
+    beam_objects = find_beams(temp_staff)
 
     # turn the found flag symbols into objects
     flag_objects = []
     for flag in matches_flag:
-        flag_obj = Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown.value)
+        flag_obj = Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value)
         flag_objects.append(flag_obj)
 
     # takes all noteheads, stems and flags and the Staff object to determine full notes
     # in future also should take accidentals, dots, connection ties, etc.
-    notes = build_notes(head_objects, stem_objects, flag_objects, temp_staff)
+    notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, temp_staff)
 
     # sort notes by x, and thus by time (later add rests first)
     notes.sort(key=lambda x: x.x)
@@ -112,10 +119,8 @@ def main():
     # select only notes for first measure (should later be done for each measure and maybe add list to the measure)
     m1_notes = [note for note in notes if note.x < measures[0].end]
 
-    # even voor opvangen van het niet herkennen van beams:
     for note in m1_notes:
-        if note.durname == "quarter":
-            note.update_duration("eighth", int(note.duration / 2))
+        print(note.beam)
 
     # write XML file
     root = create_xml()
@@ -133,8 +138,7 @@ def main():
 
     # write to file
     tree = ET.ElementTree(root)
-    tree.write("mxml/filename.xml")
-    
+#    tree.write("mxml/filename.xml")
     
     with open('mxml/filename2.xml', 'wb') as f:
         f.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode('utf8'))

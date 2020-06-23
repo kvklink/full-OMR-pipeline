@@ -73,7 +73,9 @@ def add_note(measure, note):
     # ET.SubElement(note1, "voice").text = ? ("1" oid)
     # ET.SubElement(note1, "staff").text = ? ("1" oid)
     # ET.SubElement(note1, "stem").text = ? ("up" or "down")
-    # ET.SubElement(note1, "beam", number=? ("1" oid)).text = ? ("begin" oid)
+    if note.beam != False:
+        ET.SubElement(note1, "beam", number="1").text = note.beam
+
 
 
 def add_rest(measure, rest):  # dur):

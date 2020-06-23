@@ -95,7 +95,16 @@ class Stem:
         self.y = y1
         self.w = x2 - x1
         self.h = y2 - y1
-
+        
+        
+class Beam:
+    def __init__(self, x1, y1, x2, y2, durname):
+        self.x = x1
+        self.y = y1
+        self.w = x2 - x1
+        self.h = y2 - y1
+        self.durname = durname
+        
 
 class Flag:
     def __init__(self, x, y, template):
@@ -155,11 +164,12 @@ class Relation:
 
 
 class Note:
+    
     def __init__(self, base, durname, duration, loc):
         self.x = loc[0]
         self.y = loc[1]
-        self.h = loc[2] - loc[0]
-        self.w = loc[3] - loc[1]
+        self.w = loc[2] - loc[0]
+        self.h = loc[3] - loc[1]
 
         self.pitch = base.pitch
         self.note = base.note
@@ -167,6 +177,13 @@ class Note:
         self.durname = durname
         self.duration = duration
         self.accidental = base.accidental
+        self.beam = False
+        
+    def add_beam(self, relation, dur_info):
+        self.beam = relation
+        self.durname = dur_info[0]
+        self.duration = self.duration/dur_info[1]
+        
 
     def update_pitch(self, new_pitch):
         self.pitch = new_pitch

@@ -27,6 +27,13 @@ def find_stems(staff):
     
     lines2_ver = cv2.HoughLinesP(edges2_ver, 1, math.pi, 1, None, 10, 10) #edges, rho, theta, threshold, --, minlinelen, maxlinegap
     
+#    imcopy = img_bar.copy()
+#    for linearr in lines2_ver:
+#        line = linearr[0]
+#        cv2.line(imcopy, (line[0],line[1]),(line[2],line[3]),(0,0,255),2)
+#    
+#    cv2.imshow('stems', imcopy)
+    
     stem_list = []
     for line in lines2_ver:
         l = line[0]
@@ -36,9 +43,11 @@ def find_stems(staff):
     return stem_list
 
 
-def build_notes(heads, stems, flags, staff):
+def build_notes(heads, stems, flags, beams, staff):
     dist = staff.dist
     nd = int(dist/8)
+    
+    beam_names = {'single_beam':('eighth',2),'double_beam':('sixteenth',4),'triple_beam':('demisemiquaver',8)}
     
     notes = []
     
@@ -57,6 +66,8 @@ def build_notes(heads, stems, flags, staff):
                     ymin = min(sy1,sy2,hy1,hy2)
                     ymax = max(sy1,sy2,hy1,hy2)
                     
+                    head.connect()
+                    
                     if head.type == 'closed_notehead': 
                         dur = 1
                         durname = 'quarter'
@@ -67,6 +78,9 @@ def build_notes(heads, stems, flags, staff):
                         dur = 1
                         durname = 'unknown'
                     notes.append(Note(head,durname,dur*staff.divisions,(xmin,ymin,xmax,ymax)))
+                    
+        if head.connected==False:
+            notes.append(Note(head,'whole',4*staff.divisions,(hx1,hy1,hx2,hy2)))
     
     for note in notes:
         nx1, ny1 = note.x, note.y
@@ -85,13 +99,13 @@ def build_notes(heads, stems, flags, staff):
                     
                     new_loc = (xmin,ymin,xmax,ymax)
                     
-                    if flag.type=='flag_upside_down': 
+                    if flag.type in ['flag_upside_down_1','flag_1']: 
                         div = 2
                         durname = 'eighth'
-                    elif flag.type=='2flags': 
+                    elif flag.type in ['flag_upside_down_2','flag_2']: 
                         div = 4
                         durname = 'sixteenth'
-                    elif flag.type=='3flags': 
+                    elif flag.type in ['flag_upside_down_3','flag_3']: 
                         div = 8
                         durname = 'demisemiquaver'
                     else: 
@@ -100,7 +114,23 @@ def build_notes(heads, stems, flags, staff):
                     
                     note.update_location(new_loc)
                     note.update_duration(durname, int(note.duration/div))
-                    
+    
+
+        for beam in beams:
+            bx1, by1 = beam.x, beam.y
+            bx2, by2 = (bx1+beam.w, by1+beam.h)
+            
+            print(by1, by2, ny1, ny2)
+            print(bx1, bx2, nx1, nx2,'\n')
+            
+            
+            if by1 in range(ny1-nd, ny2+nd) or by2 in range(ny1-nd, ny2+nd):
+                if bx1 in range(nx1-nd, nx2+nd+1):
+                    note.add_beam('begin', beam_names[beam.durname])
+                elif bx2 in range(nx1-nd, nx2+nd+1):
+                    note.add_beam('end', beam_names[beam.durname])
+                elif nx1 > bx1+nd and nx2 < bx2-nd:
+                    note.add_beam('continue', beam_names[beam.durname])
     # somehow create full notes (check open heads not in note list?)
         
     return notes

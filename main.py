@@ -1,14 +1,15 @@
-import cv2 as cv
 import xml.etree.cElementTree as ET
 
+import cv2 as cv
 
-from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note#, add_part, add_rest
+from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note  # , add_part, add_rest
 from notes.build_notes_objects import find_stems, build_notes
-from notes.note_objects import Head, Flag, Accidental
-from staffs.seperate_staffs import seperate_staffs
+from notes.find_beams import find_beams
+from notes.note_objects import Head, Flag
+from staffs.seperate_staffs import separate_staffs
 from staffs.staff_objects import Staff, Staff_measure, find_measure, Clef, Key, Time
 from template_matching.template_matching import template_matching, AvailableTemplates
-from notes.find_beams import find_beams
+
 
 def main():
     input_file = 'images/sheets/Fmttm.png'
@@ -16,14 +17,9 @@ def main():
     # returnt een binary image, maar de volgende functies hebben een rgb of grayscale image nodig om goed te werken
     #    denoised_image = denoise(input)
 
-    # seperate full sheet music into an image for each staff
+    # separate full sheet music into an image for each staff
     # (input=rgb (grayscale also possible with slight adjustment in function))
-    staff_imgs = seperate_staffs(cv.imread(input_file))
-
-    # create list of Staff objects, by creating Staff objects of the staff images
-    staffs = []
-    for s in staff_imgs:
-        staffs.append(Staff(s))
+    staffs = [Staff(s) for s in separate_staffs(cv.imread(input_file))]
 
     temp_staff = staffs[0]  # do only for first staff while testing
 
@@ -56,15 +52,15 @@ def main():
 
     # create accidentals for testing
     # TODO: fix (er lijken nu 4 "bessen" aan het begin van de bladmuziek te staan)
-    temp_acc_group = []#[Accidental(measure_locs[0] + 15, temp_staff.lines[8][1], AvailableTemplates.Flat.value),
-#                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.Sharp.value),
-#                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.FlatDouble.value),
-#                      Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.SharpDouble.value)]
-    if len(temp_acc_group)>0:
+    temp_acc_group = []
+    # [Accidental(measure_locs[0] + 15, temp_staff.lines[8][1], AvailableTemplates.Flat.value),
+    # Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.Sharp.value),
+    # Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.FlatDouble.value),
+    # Accidental(measure_locs[0] + 20, temp_staff.lines[9][1], AvailableTemplates.SharpDouble.value)]
+    if len(temp_acc_group) > 0:
         for acc in temp_acc_group:
             acc.find_note(measures[0])
     temp_key = Key(temp_acc_group)
-
 
     # create time signature for testing
     temp_time = Time(measure_locs[0] + 30, 100, AvailableTemplates.Time3_4.value)
@@ -136,12 +132,14 @@ def main():
 
     # write to file
     tree = ET.ElementTree(root)
-#    tree.write("mxml/filename.xml")
+    #    tree.write("mxml/filename.xml")
 
     with open('mxml/filename2.xml', 'wb') as f:
-        f.write('<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode('utf8'))
+        f.write(
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
+            'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(
+                'utf8'))
         tree.write(f, 'utf-8')
-
 
     # TODO: also use those grouping-staffs-symbols to determine whether next part in musicXML
     #  needs staff+=1 or measure_nr+=1

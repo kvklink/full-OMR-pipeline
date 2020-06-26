@@ -15,14 +15,14 @@ def find_pitch(staff, x, y):
 
     if y < min(line_vals):
         print('too high: %d' % y)
-        return ('Error')
+        return 'Error'
     elif y > max(line_vals):
         print('too low: %d' % y)
-        return ('Error')
+        return 'Error'
     else:
         i = 0
         found = False
-        while found == False:
+        while not found:
             i = i + 1
             found = (y < line_vals[i])
 
@@ -40,12 +40,12 @@ def find_pitch(staff, x, y):
 
 
 class Template:
-    def __init__(self, name, image, height_units=1):
+    def __init__(self, name: str, image, height_units: int = 1):
         self.image = cv2.imread(image, 0) if isinstance(image, str) else image
         self.name = name
         self.height_units = height_units
-        self.h = self.image.shape[0]*height_units
-        self.w = self.image.shape[1]*height_units
+        self.h = self.image.shape[0] * height_units
+        self.w = self.image.shape[1] * height_units
 
 
 class Head:
@@ -62,9 +62,9 @@ class Head:
         self.accidental = float('NaN')
 
         self.measure = None
-        
+
         self.connected = False
-        
+
     def connect(self):
         self.connected = True
 
@@ -74,8 +74,8 @@ class Head:
         self.pitch = find_pitch(staff, mid_x, mid_y)
 
     def set_note(self, measure):
-#        print(f"pitch: {self.pitch}")
-#        print(f"measure notes: {measure.notes}")
+        # print(f"pitch: {self.pitch}")
+        # print(f"measure notes: {measure.notes}")
         self.note = measure.notes[self.pitch % 7]
         self.octave = measure.octave - int(self.pitch / 7)
         self.measure = measure
@@ -97,8 +97,8 @@ class Stem:
         self.y = y1
         self.w = x2 - x1
         self.h = y2 - y1
-        
-        
+
+
 class Beam:
     def __init__(self, x1, y1, x2, y2, durname):
         self.x = x1
@@ -106,7 +106,7 @@ class Beam:
         self.w = x2 - x1
         self.h = y2 - y1
         self.durname = durname
-        
+
 
 class Flag:
     def __init__(self, x, y, template):
@@ -118,7 +118,8 @@ class Flag:
 
 
 class Rest:
-    duration_dict = {'full': 1, 'half': 1 / 2, 'quarter': 1 / 4, 'eighth': 1 / 8, 'sixteenth': 1 / 16, 'semidemiquaver': 1 / 32}
+    duration_dict = {'full': 1, 'half': 1 / 2, 'quarter': 1 / 4, 'eighth': 1 / 8, 'sixteenth': 1 / 16,
+                     'semidemiquaver': 1 / 32}
 
     def __init__(self, x, y, template):
         self.x = x
@@ -131,7 +132,13 @@ class Rest:
 
 
 class Accidental:
-    pitch_change_dict = {'double_flat': -1, 'flat': -1 / 2, 'natural': 0, 'sharp': 1 / 2, 'double_sharp': 1}
+    pitch_change_dict = {
+        'double_flat': -1,
+        'flat': -1 / 2,
+        'natural': 0,
+        'sharp': 1 / 2,
+        'double_sharp': 1
+    }
 
     def __init__(self, x, y, template):
         self.x = x
@@ -166,7 +173,6 @@ class Relation:
 
 
 class Note:
-    
     def __init__(self, base, durname, duration, loc):
         self.x = loc[0]
         self.y = loc[1]
@@ -180,12 +186,11 @@ class Note:
         self.duration = duration
         self.accidental = base.accidental
         self.beam = False
-        
+
     def add_beam(self, relation, dur_info):
         self.beam = relation
         self.durname = dur_info[0]
-        self.duration = self.duration/dur_info[1]
-        
+        self.duration = self.duration / dur_info[1]
 
     def update_pitch(self, new_pitch):
         self.pitch = new_pitch
@@ -198,7 +203,7 @@ class Note:
     def update_octave(self, new_octave):
         self.octave = new_octave
         # vinden ahv pitch in de class of aparte functie?
-        
+
     def update_duration(self, durname, new_dur):
         self.durname = durname
         self.duration = new_dur

@@ -4,6 +4,7 @@ Created on Sat Jun 13 16:08:40 2020
 
 @author: super
 """
+from enum import Enum, unique
 
 import cv2
 
@@ -146,7 +147,7 @@ class Accidental:
     def __init__(self, x: int, y: int, template: Template, is_local: bool = True):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.type = AccidentalTypes(template.name)
         self.h = template.h
         self.w = template.w
 
@@ -160,6 +161,15 @@ class Accidental:
 
     def set_is_local(self, is_local: bool):
         self.is_local = is_local
+
+
+@unique
+class AccidentalTypes(Enum):
+    FLAT = 'flat',
+    FLAT_DOUBLE = 'double_flat',
+    SHARP = 'sharp',
+    SHARP_DOUBLE = 'double_sharp',
+    NATURAL = 'natural'
 
 
 class Dots:

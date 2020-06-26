@@ -9,7 +9,7 @@ from notes.note_objects import Template
 from staffs.staff_objects import Staff
 
 
-def template_matching(template: Template, staff: Staff, threshold: float):
+def template_matching(template: Template, staff: Staff, threshold: float) -> List[List]:
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
 
     # Resize template to match staff height
@@ -35,10 +35,10 @@ def template_matching(template: Template, staff: Staff, threshold: float):
     return unique_matches
 
 
-def template_matching_array(templates: List[Template], staff: Staff, threshold: float) -> Dict[str, List[Any]]:
+def template_matching_array(templates: List[Template], staff: Staff, threshold: float) -> Dict[Template, List]:
     result = {}
     for template in templates:
-        result[template.name] = template_matching(template, staff, threshold)
+        result[template] = template_matching(template, staff, threshold)
     return result
 
 

@@ -147,11 +147,11 @@ def main():
     part1 = create_firstpart(root, "Piano R")
     for meas in measures:
         meas1 = add_measure(part1, meas)
-        
+
         for i, obj in enumerate(meas.objects):
             if i in meas.backup_locs:
                 add_backup(meas1, meas.backup_times[i])
-                voice = voice + 1 # hier eigenlijk nog weer op een manier soms terug naar vorige voice
+                voice = voice + 1  # hier eigenlijk nog weer op een manier soms terug naar vorige voice
             if obj.type == 'note':
                 if i in meas.chord_locs:
                     add_note(meas1, obj, voice, True)
@@ -159,12 +159,12 @@ def main():
                     add_note(meas1, obj, voice)
             elif obj.type == 'rest':
                 add_rest(meas1, obj, voice)
-#
-#    for note in m1_notes:
-#        # bij akkoorden: volgorde maakt niet uit behalve bij verschillende nootlengtes
-#        # in dat geval: sorteren op duur, langste eerst, dan 'backup' (hoe in python?)
-#        add_note(meas1, note)
-#
+    #
+    #    for note in m1_notes:
+    #        # bij akkoorden: volgorde maakt niet uit behalve bij verschillende nootlengtes
+    #        # in dat geval: sorteren op duur, langste eerst, dan 'backup' (hoe in python?)
+    #        add_note(meas1, note)
+    #
     # write to file
     tree = ET.ElementTree(root)
     #    tree.write("mxml/filename.xml")

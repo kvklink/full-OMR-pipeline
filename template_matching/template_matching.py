@@ -14,6 +14,8 @@ def template_matching(template: Template, staff: Staff, threshold: float) -> Lis
 
     # Resize template to match staff height
     resized_template = imutils.resize(template.image, height=int(staff.dist * template.height_units))
+    template.update_size(resized_template.shape)
+#    template.update_size()
     results = cv2.matchTemplate(img_gray, resized_template, cv2.TM_CCOEFF_NORMED)
     locations = np.where(results >= threshold)
 
@@ -43,11 +45,12 @@ def template_matching_array(templates: List[Template], staff: Staff, threshold: 
 
 
 class AvailableTemplates(Enum):
+    Barline = Template('barline', 'images/templates/barline.png', 4)
+
     # Notes
     NoteheadClosed = Template('closed_notehead', 'images/templates/head-filled.png', 1)
-    NoteheadOpen = Template('open_notehead', 'images/templates/head-open.jpg', 1)
-    #    FlagUpsideDown1 = Template('flag_upside_down_1', 'images/templates/flags/down-1.png', 3)
-    FlagUpsideDown1 = Template('flag_upside_down_1', 'images/templates/flag.png', 2)
+    NoteheadOpen = Template('open_notehead', 'images/templates/head-open.png', 1)
+    FlagUpsideDown1 = Template('flag_upside_down_1', 'images/templates/flags/down-1.png', 3)
     FlagUpsideDown2 = Template('flag_upside_down_2', 'images/templates/flags/down-2.png', 3)
     FlagUpsideDown3 = Template('flag_upside_down_3', 'images/templates/flags/down-3.png', 4)
     Flag1 = Template('flag_1', 'images/templates/flags/up-1.png', 3)
@@ -65,28 +68,29 @@ class AvailableTemplates(Enum):
     RestFourth = Template('fourth_rest', 'images/templates/rests/4th-rest-with-lines.jpg', 4)
     RestEighth = Template('eighth_rest', 'images/templates/rests/8th-rest-with-line.jpg', 2)
 
-    AllRests = [RestFull.value, RestHalf.value, RestFourth.value, RestEighth.value]
+    AllRests = [RestFull, RestHalf, RestFourth, RestEighth]
 
     # Clefs
-    ClefG = Template('g-clef', 'images/templates/g-clef-with-lines.jpg', 7.5)
-    ClefF = Template('f-clef', 'images/templates/f-clef-with-lines.jpg', 4)
-    ClefC = Template('c-clef', 'images/templates/c-clef-with-lines.jpg', 4)
+#    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
+    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines-2.jpg', 4)
+    ClefF = Template('f-clef', 'images/templates/clefs/f-clef-with-lines.jpg', 4)
+    ClefC = Template('c-clef', 'images/templates/clefs/c-clef-with-lines.jpg', 4)
 
-    AllClefs = [ClefG.value, ClefF.value, ClefC.value]
+    AllClefs = [ClefG, ClefF, ClefC]
 
     # Keys
-    Flat = Template('flat', 'images/templates/flat.jpg', 2.4)
-    FlatDouble = Template('double_flat', 'images/templates/double-flat.jpg', 2.4)
-    Sharp = Template('sharp', 'images/templates/sharp.jpg', 2.8)
-    SharpDouble = Template('double_sharp', 'images/templates/double-sharp.jpg', 1)
-    Natural = Template('natural', 'images/templates/natural.jpg', 3)
+    Flat = Template('flat', 'images/templates/accidentals/flat.jpg', 2.4)
+    FlatDouble = Template('double_flat', 'images/templates/accidentals/double-flat.jpg', 2.4)
+    Sharp = Template('sharp', 'images/templates/accidentals/sharp.jpg', 2.8)
+    SharpDouble = Template('double_sharp', 'images/templates/accidentals/double-sharp.jpg', 1)
+    Natural = Template('natural', 'images/templates/accidentals/natural.jpg', 3)
 
-    AllKeys = [Flat.value, FlatDouble.value, Sharp.value, SharpDouble.value, Natural.value]
+    AllKeys = [Flat, FlatDouble, Sharp, SharpDouble, Natural]
 
     # Symbols
     Fermate = Template('fermate', 'images/templates/fermate.jpg', 1.5)
 
-    AllSymbols = [Fermate.value]
+    AllSymbols = [Fermate]
 
     # Times
     Time3_4 = Template('3/4 time', 'images/templates/times/3_4.jpg', 4)
@@ -102,5 +106,5 @@ class AvailableTemplates(Enum):
     TimeAllaBreve = Template('alla breve', 'images/templates/times/alla_breve.jpg', 4)
     TimeC = Template('4/4 time C', 'images/templates/times/c.jpg', 4)
 
-    AllTimes = [Time3_4.value, Time3_8.value, Time4_4.value, Time5_4.value, Time5_8.value, Time6_4.value,
-                Time6_8.value, Time7_8.value, Time9_8.value, Time12_8.value, TimeAllaBreve.value, TimeC.value]
+    AllTimes = [Time3_4, Time3_8, Time4_4, Time5_4, Time5_8, Time6_4,
+                Time6_8, Time7_8, Time9_8, Time12_8, TimeAllaBreve, TimeC]

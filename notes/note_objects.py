@@ -44,8 +44,11 @@ class Template:
         self.image = cv2.imread(image, 0) if isinstance(image, str) else image
         self.name = name
         self.height_units = height_units
-        self.h = self.image.shape[0] * height_units
-        self.w = self.image.shape[1] * height_units
+        self.h = self.image.shape[0]
+        self.w = self.image.shape[1]
+
+    def update_size(self, tup):
+        self.h, self.w = tup
 
 
 class Head:
@@ -212,8 +215,8 @@ class Note:
     def update_location(self, new_loc):
         self.x = new_loc[0]
         self.y = new_loc[1]
-        self.h = new_loc[2] - new_loc[0]
-        self.w = new_loc[3] - new_loc[1]
+        self.w = new_loc[2] - new_loc[0]
+        self.h = new_loc[3] - new_loc[1]
 
     def set_accidental(self, accidental):
         self.accidental = accidental

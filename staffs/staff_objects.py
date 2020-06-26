@@ -247,12 +247,11 @@ class Staff_measure:
         self.divisions = div
 
 
-class Bar_line:
-    def __init__(self,x,y,template):
+class Barline:
+    def __init__(self,x,y1,y2):
         self.x = x
-        self.y = y
-        self.h = template.h
-        self.w = template.w
+        self.y1 = y1
+        self.y2 = y2
 
 
 def split_measures(barlines, staff): #barlines sorted on x
@@ -263,6 +262,7 @@ def split_measures(barlines, staff): #barlines sorted on x
         else: x2 = barlines[i].x
         measures.append(Staff_measure(staff,i,x1,x2))
         x1 = x2
+    return measures
 
 
 def find_measure(measures, x):
@@ -321,3 +321,16 @@ class Time:
         self.y = y
         self.w = template.w
         self.h = template.h
+
+
+def select_barlines(measure_locs, staff, template):
+    bar_h = int(template.height_units * staff.dist)
+    bar_w = int(bar_h * template.w / template.h)
+
+    barlines = []
+    measure_locs = sorted(measure_locs, key = lambda x: x[0])
+    for meas in measure_locs:
+        if abs(staff.lines[4][1] - meas[1]) < 3 and abs(staff.lines[8][1] - (meas[1] + bar_h)) < 3:
+            barlines.append(Barline(int(meas[0]+bar_w/2), meas[1], meas[1]+bar_h))
+
+    return barlines

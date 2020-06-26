@@ -16,7 +16,7 @@ def main():
 
     # denoise
     # denoised_image = denoise(cv.imread(input_file))
-    
+
     # deskew
     # deskewed_image = deskew(denoised_image)
     deskewed_image = cv.imread(input_file) # temporary
@@ -24,7 +24,7 @@ def main():
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(deskewed_image)]
     temp_staff = staffs[0]  # temporary: do only for first staff while testing
-    
+
     # set threshold for template matching
     threshold = 0.8
 
@@ -56,12 +56,12 @@ def main():
         meas.set_clef(clef_objects[0].type)
         meas.set_key(temp_key.key)
         meas.set_time(time34_objects[0])
-        
+
     # do template matching for notes and rests (to do: change to groups)
     # note heads closed
     matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, temp_staff, threshold)
     matches_head2 = template_matching(AvailableTemplates.NoteheadOpen.value, temp_staff, threshold)
-    
+
     # single upside down flag
     matches_flag = template_matching(AvailableTemplates.FlagUpsideDown1.value, temp_staff, 0.5)
 
@@ -73,8 +73,8 @@ def main():
 
     for head in matches_head2:
         open_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadOpen.value))
-        
-    head_objects = []  
+
+    head_objects = []
     for head_obj in closed_heads:
         head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
         if head_obj.pitch == 'Error': continue
@@ -111,7 +111,7 @@ def main():
 
     # sort notes by x, and thus by time (later add rests first)
     notes.sort(key=lambda x: x.x)
-    
+
     unique_notes = []
     note_coords = []
     for note in notes:

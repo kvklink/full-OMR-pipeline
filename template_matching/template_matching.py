@@ -46,7 +46,7 @@ def template_matching_array(templates: List[Template], staff: Staff, threshold: 
 
 class AvailableTemplates(Enum):
     Barline = Template('barline', 'images/templates/barline.png', 4)
-    
+
     # Notes
     NoteheadClosed = Template('closed_notehead', 'images/templates/head-filled.png', 1)
     NoteheadOpen = Template('open_notehead', 'images/templates/head-open.png', 1)

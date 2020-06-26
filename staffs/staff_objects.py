@@ -326,11 +326,11 @@ class Time:
 def select_barlines(measure_locs, staff, template):
     bar_h = int(template.height_units * staff.dist)
     bar_w = int(bar_h * template.w / template.h)
-    
+
     barlines = []
     measure_locs = sorted(measure_locs, key = lambda x: x[0])
     for meas in measure_locs:
         if abs(staff.lines[4][1] - meas[1]) < 3 and abs(staff.lines[8][1] - (meas[1] + bar_h)) < 3:
             barlines.append(Barline(int(meas[0]+bar_w/2), meas[1], meas[1]+bar_h))
-            
+
     return barlines

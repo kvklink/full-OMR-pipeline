@@ -4,6 +4,7 @@ Created on Sat Jun 13 16:08:40 2020
 
 @author: super
 """
+from enum import Enum, unique
 
 import cv2
 
@@ -145,19 +146,32 @@ class Accidental:
         'double_sharp': 1
     }
 
-    def __init__(self, x, y, template):
+    def __init__(self, x: int, y: int, template: Template, is_local: bool = True):
         self.x = x
         self.y = y
-        self.name = template.name
+        self.type = AccidentalTypes(template.name)
         self.h = template.h
         self.w = template.w
 
         self.pitch_change = self.pitch_change_dict[self.name]
         self.note = ''
+        self.is_local = is_local
 
     def find_note(self, measure):
         pitch = find_pitch(measure.staff, self.x, self.y)
         self.note = measure.notes[pitch % 7]
+
+    def set_is_local(self, is_local: bool):
+        self.is_local = is_local
+
+
+@unique
+class AccidentalTypes(Enum):
+    FLAT = 'flat',
+    FLAT_DOUBLE = 'double_flat',
+    SHARP = 'sharp',
+    SHARP_DOUBLE = 'double_sharp',
+    NATURAL = 'natural'
 
 
 class Dots:

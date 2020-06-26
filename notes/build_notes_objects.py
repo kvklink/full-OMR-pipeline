@@ -49,20 +49,18 @@ def find_stems(staff: Staff) -> List[Stem]:
 
 
 def find_accidentals(staff: Staff) -> List[Accidental]:
-    img_bar = staff.image
-    line_height = staff.dist
-    templates = AvailableTemplates.AllKeys.value
-
     # TODO: actually put some thought into picking a threshold
-    found_accidentals = template_matching_array(templates, staff, 0.7)
-    all_accidentals_ordered = sorted(found_accidentals.values(), key=lambda found: found[0])
+    found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, 0.7)
+    if len(found_accidentals.keys()) == 0:
+        # No accidentals were found, so just cut to the chase already
+        return []
 
-    for template in templates:
-        current_accidentals = found_accidentals[template]
-        for match in current_accidentals:
-            pass
+    matched_accidentals: List[Accidental] = []
+    for template in found_accidentals.keys():
+        for match in found_accidentals[template]:
+            matched_accidentals.append(Accidental(match[0], match[1], template))
 
-    return []
+    return sorted(matched_accidentals, key=lambda accidental: accidental.x)
 
 
 def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: List[Beam],
@@ -146,8 +144,8 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
             bx1, by1 = beam.x, beam.y
             bx2, by2 = (bx1 + beam.w, by1 + beam.h)
 
-#            print(by1, by2, ny1, ny2)
-#            print(bx1, bx2, nx1, nx2, '\n')
+            #            print(by1, by2, ny1, ny2)
+            #            print(bx1, bx2, nx1, nx2, '\n')
 
             if by1 in range(ny1 - nd, ny2 + nd) or by2 in range(ny1 - nd, ny2 + nd):
                 if bx1 in range(nx1 - nd, nx2 + nd + 1):

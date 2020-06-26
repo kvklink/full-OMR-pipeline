@@ -9,7 +9,7 @@ from notes.note_objects import Template
 from staffs.staff_objects import Staff
 
 
-def template_matching(template: Template, staff: Staff, threshold: float):
+def template_matching(template: Template, staff: Staff, threshold: float) -> List[List]:
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
 
     # Resize template to match staff height
@@ -37,10 +37,10 @@ def template_matching(template: Template, staff: Staff, threshold: float):
     return unique_matches
 
 
-def template_matching_array(templates: List[Template], staff: Staff, threshold: float) -> Dict[str, List[Any]]:
+def template_matching_array(templates: List[Template], staff: Staff, threshold: float) -> Dict[Template, List]:
     result = {}
     for template in templates:
-        result[template.name] = template_matching(template, staff, threshold)
+        result[template] = template_matching(template, staff, threshold)
     return result
 
 
@@ -57,7 +57,8 @@ class AvailableTemplates(Enum):
     Flag2 = Template('flag_2', 'images/templates/flags/up-2.png', 3)
     Flag3 = Template('flag_3', 'images/templates/flags/up-3.png', 4)
 
-    AllNotes = [NoteheadClosed, NoteheadOpen, FlagUpsideDown1]
+    AllNotes = [NoteheadClosed.value, NoteheadOpen.value, FlagUpsideDown1.value, FlagUpsideDown2.value,
+                FlagUpsideDown3.value, Flag1.value, Flag2.value, Flag3.value]
 
     # Rests
     RestFull = Template('full_rest', 'images/templates/rests/full-rest-on-line.jpg', 1)

@@ -114,10 +114,10 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
 
                     head.connect()
 
-                    if head.type == 'closed_notehead':
+                    if head.name == 'closed_notehead':
                         dur = 1
                         durname = 'quarter'
-                    elif head.type == 'open_notehead':
+                    elif head.name == 'open_notehead':
                         dur = 2
                         durname = 'half'
                     else:
@@ -145,13 +145,13 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
 
                     new_loc = (x_min, y_min, x_max, y_max)
 
-                    if flag.type in ['flag_upside_down_1', 'flag_1']:
+                    if flag.name in ['flag_upside_down_1', 'flag_1']:
                         div = 2
                         durname = 'eighth'
-                    elif flag.type in ['flag_upside_down_2', 'flag_2']:
+                    elif flag.name in ['flag_upside_down_2', 'flag_2']:
                         div = 4
                         durname = 'sixteenth'
-                    elif flag.type in ['flag_upside_down_3', 'flag_3']:
+                    elif flag.name in ['flag_upside_down_3', 'flag_3']:
                         div = 8
                         durname = 'demisemiquaver'
                     else:

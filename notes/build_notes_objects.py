@@ -9,11 +9,11 @@ from typing import List
 
 import cv2
 
-from notes.note_objects import Stem, Note, Head, Flag, Beam
+from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental
 from staffs.staff_objects import Staff
 
 
-def find_stems(staff):
+def find_stems(staff: Staff) -> List[Stem]:
     img_bar = staff.image
     img_struct_ver = img_bar.copy()
     ver_size = int(img_bar.shape[0] / 15)
@@ -39,7 +39,7 @@ def find_stems(staff):
     #
     #    cv2.imshow('stems', imcopy)
 
-    stem_list = []
+    stem_list: List[Stem] = []
     for line in lines2_ver:
         l = line[0]
         stem_list.append(Stem(l[0], l[1], l[2], l[3]))
@@ -47,7 +47,14 @@ def find_stems(staff):
     return stem_list
 
 
-def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: List[Beam], staff: Staff) -> List[Note]:
+def find_accidentals(staff: Staff) -> List[Accidental]:
+    img_bar = staff.image
+
+    return []  # Stub implementation
+
+
+def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: List[Beam],
+                accidentals: List[Accidental], staff: Staff) -> List[Note]:
     dist = staff.dist
     nd = int(dist / 8)
 

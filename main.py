@@ -3,7 +3,7 @@ import xml.etree.cElementTree as ET
 import cv2 as cv
 
 from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note  # , add_part, add_rest
-from notes.build_notes_objects import find_stems, build_notes
+from notes.build_notes_objects import find_stems, build_notes, find_accidentals
 from notes.find_beams import find_beams
 from notes.note_objects import Head, Flag
 from staffs.seperate_staffs import separate_staffs
@@ -97,15 +97,14 @@ def main():
 
     beam_objects = find_beams(temp_staff)
 
+    accidental_objects = find_accidentals(temp_staff)
+
     # turn the found flag symbols into objects
-    flag_objects = []
-    for flag in matches_flag:
-        flag_obj = Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value)
-        flag_objects.append(flag_obj)
+    flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in matches_flag]
 
     # takes all noteheads, stems and flags and the Staff object to determine full notes
     # in future also should take accidentals, dots, connection ties, etc.
-    notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, temp_staff)
+    notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, accidental_objects, temp_staff)
 
     # sort notes by x, and thus by time (later add rests first)
     notes.sort(key=lambda x: x.x)

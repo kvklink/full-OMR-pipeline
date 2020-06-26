@@ -48,7 +48,6 @@ def find_beams(staff):
     coords = []
     for r,c in zip(result[0],result[1]):
         coords.append([r,c])
-    
 
     delete_ind = []
     for i in range(len(coords)):
@@ -61,12 +60,10 @@ def find_beams(staff):
     for i in range(len(coords)):
         if i not in delete_ind:
             unique_coords.append(coords[i])
-            
-    
+
     def pythagoras(p1,p2):
         dist = math.sqrt(abs(p1[0]-p2[0])**2+abs(p1[1]-p2[1])**2)
         return dist
-    
     
     lines2 = []
     for line in lines:
@@ -76,7 +73,6 @@ def find_beams(staff):
             lines2.append(l)
     
     lines2 = sorted(lines2, key=lambda x: x[0])
-    
     
     beams = []
     # for each line, find closest corners to represent actual line endings
@@ -114,7 +110,6 @@ def find_beams(staff):
                 beams.append([best_dict_l['backup'][1], best_dict_r['closest'][1]])
         else:
             beams.append([best_dict_l['closest'][1], best_dict_r['closest'][1]])
-        
 
     beam_tuples = []
     for beam in beams:

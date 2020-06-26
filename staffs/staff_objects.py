@@ -197,18 +197,32 @@ class Staff_measure:
     def __init__(self, staff, nr, start, end):
         self.lines = staff.lines
         self.dist = staff.dist
+
         self.measure = nr
         self.start = start
         self.end = end
+
+        self.show_clef = False
+        self.show_key = False
+        self.show_time = False
+
         self.clef = 'G'
         self.clef_line = 2
+
         self.key = 0
+
         self.beats = 4
         self.beat_type = 4
+
         self.notes = self.Gnotes
         self.octave = self.Goctave
         self.divisions = staff.divisions
         self.staff = staff
+        
+        self.objects = []
+        self.chord_locs = []
+        self.backup_locs = []
+        self.backup_times = {}
 
     def set_clef(self, clef):
         self.clef = clef
@@ -246,6 +260,33 @@ class Staff_measure:
     def set_divisions(self,div):
         self.divisions = div
 
+    def assign_objects(self, notes, rests):
+        m1_notes = [note for note in notes if self.start < note.x < self.end]
+        m1_rests = [rest for rest in rests if self.start < rest.x < self.end]
+        m1_objects = m1_notes + m1_rests
+        self.objects = sorted(m1_objects, key=lambda x: x.x)
+        
+    def find_backups(self):
+        for i in range(1,len(self.objects)):
+            obj_1 = self.objects[i-1]
+            obj_2 = self.objects[i]
+            if obj_1.x+obj_1.w > obj_2.x:
+                if obj_1.duration == obj_2.duration:
+                    if obj_1.type == obj_2.type == 'note':
+                        self.chord_locs.append(i)
+                    else:
+                        self.backup_locs.append(i)
+                        self.backup_times[i] = obj_1.duration
+                elif obj_1.duration > obj_2.duration:
+                    self.backup_locs.append(i)
+                    self.backup_times[i] = obj_1.duration
+                else:
+                    self.objects[i-1] = obj_2
+                    self.objects[i] = obj_1
+                    # switch objects
+                    self.backup_locs.append(i)
+                    self.backup_times[i] = obj_2.duration
+
 
 class Barline:
     def __init__(self,x,y1,y2):
@@ -273,10 +314,11 @@ def find_measure(measures, x):
 
 
 class Clef:
+    clef_letters = {'g-clef': 'G', 'c-clef': 'C', 'f-clef': 'F'}
     def __init__(self,x,y,template):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.type = self.clef_letters[template.name]
         self.h = template.h
         self.w = template.w
 

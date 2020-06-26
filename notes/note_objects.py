@@ -56,7 +56,7 @@ class Head:
     def __init__(self, x, y, template):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.name = template.name
         self.h = template.h
         self.w = template.w
 
@@ -116,23 +116,25 @@ class Flag:
     def __init__(self, x, y, template):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.name = template.name
         self.h = template.h
         self.w = template.w
 
 
 class Rest:
-    duration_dict = {'full': 1, 'half': 1 / 2, 'quarter': 1 / 4, 'eighth': 1 / 8, 'sixteenth': 1 / 16,
-                     'semidemiquaver': 1 / 32}
+    duration_dict = {'full_rest': 4, 'half_rest': 2, 'fourth_rest': 1, 'eighth_rest': 1 / 2, 'sixteenth_rest': 1 / 4,
+                     'semidemiquaver_rest': 1 / 8}
 
-    def __init__(self, x, y, template):
+    def __init__(self, x, y, template, staff):
+        self.type = 'rest'
+
         self.x = x
         self.y = y
-        self.type = template.name
+        self.name = template.name
         self.h = template.h
         self.w = template.w
 
-        self.duration = self.duration_dict[self.type]
+        self.duration = int(self.duration_dict[self.name] * staff.divisions)
 
 
 class Accidental:
@@ -151,7 +153,7 @@ class Accidental:
         self.h = template.h
         self.w = template.w
 
-        self.pitch_change = self.pitch_change_dict[self.type]
+        self.pitch_change = self.pitch_change_dict[self.name]
         self.note = ''
         self.is_local = is_local
 
@@ -184,13 +186,15 @@ class Relation:
     def __init__(self, x, y, template):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.name = template.name
         self.h = template.h
         self.w = template.w
 
 
 class Note:
     def __init__(self, base, durname, duration, loc):
+        self.type = 'note'
+
         self.x = loc[0]
         self.y = loc[1]
         self.w = loc[2] - loc[0]
@@ -200,14 +204,14 @@ class Note:
         self.note = base.note
         self.octave = base.octave
         self.durname = durname
-        self.duration = duration
+        self.duration = int(duration)
         self.accidental = base.accidental
         self.beam = False
 
     def add_beam(self, relation, dur_info):
         self.beam = relation
         self.durname = dur_info[0]
-        self.duration = self.duration / dur_info[1]
+        self.duration = int(self.duration / dur_info[1])
 
     def update_pitch(self, new_pitch):
         self.pitch = new_pitch

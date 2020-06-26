@@ -2,10 +2,10 @@ import xml.etree.cElementTree as ET
 
 import cv2 as cv
 
-from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note  # , add_part, add_rest
-from notes.build_notes_objects import find_stems, build_notes, detect_accidentals
+from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note, add_rest, add_backup  # , add_part
+from notes.build_notes_objects import find_stems, build_notes, find_accidentals
 from notes.find_beams import find_beams
-from notes.note_objects import Head, Flag
+from notes.note_objects import Head, Flag, Rest
 from staffs.seperate_staffs import separate_staffs
 from staffs.staff_objects import Staff, find_measure, Clef, Key, Time, split_measures, select_barlines
 from template_matching.template_matching import template_matching, AvailableTemplates
@@ -28,6 +28,7 @@ def main():
     # set threshold for template matching
     threshold = 0.8
 
+    # vanaf hier per staff
     # find measures
     measure_locs = template_matching(AvailableTemplates.Barline.value, temp_staff, 0.8)
     barlines = select_barlines(measure_locs, temp_staff, AvailableTemplates.Barline.value)
@@ -58,6 +59,16 @@ def main():
         meas.set_key(temp_key.key)
         meas.set_time(time34_objects[0])
 
+    clef_meas = find_measure(measures, clef_objects[0].x)
+    if clef_meas is not None:
+        clef_meas.show_clef = True
+    key_meas = find_measure(measures, temp_key.x)
+    if key_meas is not None:
+        key_meas.show_key = True
+    time_meas = find_measure(measures, time34_objects[0].x)
+    if time_meas is not None:
+        time_meas.show_time = True
+
     # do template matching for notes and rests (to do: change to groups)
     # note heads closed
     matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, temp_staff, threshold)
@@ -65,6 +76,8 @@ def main():
 
     # single upside down flag
     matches_flag = template_matching(AvailableTemplates.FlagUpsideDown1.value, temp_staff, 0.5)
+
+    matches_rest = template_matching(AvailableTemplates.RestEighth.value, temp_staff, 0.7)
 
     # turn the found head symbols into objects and add corresponding information
     closed_heads = []
@@ -98,6 +111,9 @@ def main():
     # turn the found flag symbols into objects
     flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in matches_flag]
 
+    # turn rest into object
+    rest_objects = [Rest(rest[0], rest[1], AvailableTemplates.RestEighth.value, temp_staff) for rest in matches_rest]
+
     # find note stems
     stem_objects = find_stems(temp_staff)
     # find note beams
@@ -120,28 +136,40 @@ def main():
             note_coords.append((note.x, note.y))
             unique_notes.append(note)
 
-    # select only notes for first measure (should later be done for each measure and maybe add list to the measure)
-    m1_notes = [note for note in unique_notes if note.x < measures[0].end]
+    # vanaf hier per measure
+    for meas in measures:
+        meas.assign_objects(unique_notes, rest_objects)
+        meas.find_backups()
 
+    voice = 1
     # write XML file
     root = create_xml()
     part1 = create_firstpart(root, "Piano R")
-    meas1 = add_measure(part1, measures[0])
-    # even voor het opvangen van niet zoeken naar rests:
-    rest = ET.SubElement(meas1, "note")
-    ET.SubElement(rest, "rest", measure="yes")
-    ET.SubElement(rest, "duration").text = "6"
-
-    for note in m1_notes:
-        # bij akkoorden: volgorde maakt niet uit behalve bij verschillende nootlengtes
-        # in dat geval: sorteren op duur, langste eerst, dan 'backup' (hoe in python?)
-        add_note(meas1, note)
-
+    for meas in measures:
+        meas1 = add_measure(part1, meas)
+        
+        for i, obj in enumerate(meas.objects):
+            if i in meas.backup_locs:
+                add_backup(meas1, meas.backup_times[i])
+                voice = voice + 1 # hier eigenlijk nog weer op een manier soms terug naar vorige voice
+            if obj.type == 'note':
+                if i in meas.chord_locs:
+                    add_note(meas1, obj, voice, True)
+                else:
+                    add_note(meas1, obj, voice)
+            elif obj.type == 'rest':
+                add_rest(meas1, obj, voice)
+#
+#    for note in m1_notes:
+#        # bij akkoorden: volgorde maakt niet uit behalve bij verschillende nootlengtes
+#        # in dat geval: sorteren op duur, langste eerst, dan 'backup' (hoe in python?)
+#        add_note(meas1, note)
+#
     # write to file
     tree = ET.ElementTree(root)
     #    tree.write("mxml/filename.xml")
 
-    with open('mxml/filename2.xml', 'wb') as f:
+    with open('mxml/filename.xml', 'wb') as f:
         f.write(
             '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
             'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(

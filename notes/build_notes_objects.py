@@ -11,6 +11,7 @@ import cv2
 
 from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental
 from staffs.staff_objects import Staff
+from template_matching.template_matching import template_matching_array, AvailableTemplates
 
 
 def find_stems(staff: Staff) -> List[Stem]:
@@ -49,8 +50,19 @@ def find_stems(staff: Staff) -> List[Stem]:
 
 def find_accidentals(staff: Staff) -> List[Accidental]:
     img_bar = staff.image
+    line_height = staff.dist
+    templates = AvailableTemplates.AllKeys.value
 
-    return []  # Stub implementation
+    # TODO: actually put some thought into picking a threshold
+    found_accidentals = template_matching_array(templates, staff, 0.7)
+    all_accidentals_ordered = sorted(found_accidentals.values(), key=lambda found: found[0])
+
+    for template in templates:
+        current_accidentals = found_accidentals[template]
+        for match in current_accidentals:
+            pass
+
+    return []
 
 
 def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: List[Beam],

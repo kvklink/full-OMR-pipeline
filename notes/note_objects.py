@@ -143,7 +143,7 @@ class Accidental:
         'double_sharp': 1
     }
 
-    def __init__(self, x, y, template):
+    def __init__(self, x: int, y: int, template: Template, is_local: bool = True):
         self.x = x
         self.y = y
         self.type = template.name
@@ -152,10 +152,14 @@ class Accidental:
 
         self.pitch_change = self.pitch_change_dict[self.type]
         self.note = ''
+        self.is_local = is_local
 
     def find_note(self, measure):
         pitch = find_pitch(measure.staff, self.x, self.y)
         self.note = measure.notes[pitch % 7]
+
+    def set_is_local(self, is_local: bool):
+        self.is_local = is_local
 
 
 class Dots:

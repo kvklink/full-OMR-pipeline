@@ -43,24 +43,29 @@ def add_measure(part, meas):
 
     ET.SubElement(attributes, "divisions").text = f"{meas.divisions}"
 
-    key = ET.SubElement(attributes, "key")
-    ET.SubElement(key, "fifths").text = f"{meas.key}"
+    if meas.show_key == True:
+        key = ET.SubElement(attributes, "key")
+        ET.SubElement(key, "fifths").text = f"{meas.key}"
 
-    time = ET.SubElement(attributes, "time")
-    ET.SubElement(time, "beats").text = f"{meas.beats}"
-    ET.SubElement(time, "beat-type").text = f"{meas.beat_type}"
+    if meas.show_time == True:
+        time = ET.SubElement(attributes, "time")
+        ET.SubElement(time, "beats").text = f"{meas.beats}"
+        ET.SubElement(time, "beat-type").text = f"{meas.beat_type}"
 
-    clef = ET.SubElement(attributes, "clef")
-    ET.SubElement(clef, "sign").text = meas.clef
-    ET.SubElement(clef, "line").text = f"{meas.clef_line}"
+    if meas.show_clef == True:
+        clef = ET.SubElement(attributes, "clef")
+        ET.SubElement(clef, "sign").text = meas.clef
+        ET.SubElement(clef, "line").text = f"{meas.clef_line}"
 
     return measure
 
 
-def add_note(measure, note):
+def add_note(measure, note, voice, addchord = False):
     # add note
     note1 = ET.SubElement(measure, "note")
-    # ET.SubElement(note1, "chord")
+
+    if addchord == True:
+         ET.SubElement(note1, "chord")
 
     pitch1 = ET.SubElement(note1, "pitch")
     ET.SubElement(pitch1, "step").text = note.note
@@ -68,6 +73,7 @@ def add_note(measure, note):
 
     ET.SubElement(note1, "duration").text = f"{note.duration}"
     ET.SubElement(note1, "type").text = note.durname
+    ET.SubElement(note1, "voice").text = f"{voice}"
 
     ET.SubElement(pitch1, "alter").text = "0" if math.isnan(note.accidental) else note.accidental
     # ET.SubElement(note1, "voice").text = ? ("1" oid)
@@ -77,15 +83,12 @@ def add_note(measure, note):
         ET.SubElement(note1, "beam", number="1").text = note.beam
 
 
+def add_rest(measure, rest, voice):  # dur):
+    rest1 = ET.SubElement(measure, "note")
+    ET.SubElement(rest1, "rest", measure="yes")
+    ET.SubElement(rest1, "duration").text = f"{int(rest.duration)}"
+    ET.SubElement(rest1, "voice").text = f"{voice}"
 
-def add_rest(measure, rest):  # dur):
-    rest = ET.SubElement(measure, "note")
-    ET.SubElement(rest, "rest", measure="yes")
-    ET.SubElement(rest, "duration").text = f"{rest.duration}"
-
-#
-#
-#
-#
-#
-#
+def add_backup(measure, length):
+    backup = ET.SubElement(measure, "backup")
+    ET.SubElement(backup, "duration").text = f"{int(length)}"

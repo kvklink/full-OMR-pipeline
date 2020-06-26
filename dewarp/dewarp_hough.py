@@ -8,14 +8,12 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 
-# from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental
-# from staffs.staff_objects import Staff
-from denoise.denoise import denoise
+from denoise.denoise import *
+from utils.util import bgr_imshow
 
-
-DIR = 'images/sheets/mscd-15/' #trombone/'
+DIR = 'images/sheets/trombone-quality/' #mscd-15/' #trombone/'
 INPUT_PATH = DIR + 'input.png'
-OUTPUT_PATH = DIR + 'deskew-hough.png'
+OUTPUT_PATH = DIR + 'denoise-deskew-hough.png'
 
 DENOISE_FIRST = True
 
@@ -28,12 +26,12 @@ def main():
     if src is None:
         print ('Error opening image!')
         return -1
-    imshow("Source", src)
+    bgr_imshow("Source", src)
     
     # Edge detection
     # TODO
     dst = cv.Canny(src, 50, 200, None, 3)
-    imshow("Edge detection", dst)
+    bgr_imshow("Edge detection", dst)
 
     # Copy edges to the images that will display the results in BGR
     cdst = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
@@ -69,22 +67,12 @@ def main():
             cv.line(cdstP, (l[0], l[1]), (l[2], l[3]), (0,0,255), thickness=1, lineType=cv.LINE_AA)
     
     
-    imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst)
-    imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP)
+    bgr_imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst)
+    bgr_imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP)
     cv.imwrite(OUTPUT_PATH, cdstP)
     
     cv.waitKey()
     return 0
-    
-def imshow(title, image):
-    USE_PLT = True
-    if USE_PLT:
-        plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
-        plt.title(title)
-        plt.show()
-    else:
-        cv.imshow(title, image)
-    return
 
 if __name__ == "__main__":
     main()

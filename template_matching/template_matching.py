@@ -5,7 +5,7 @@ import cv2
 import imutils
 import numpy as np
 
-from notes.note_objects import Template
+from notes.note_objects import Template, AccidentalTypes
 from staffs.staff_objects import Staff
 
 
@@ -81,11 +81,11 @@ class AvailableTemplates(Enum):
     AllClefs = [ClefG, ClefF, ClefC]
 
     # Keys
-    Flat = Template('flat', 'images/templates/accidentals/flat.jpg', 2.4)
-    FlatDouble = Template('double_flat', 'images/templates/accidentals/double-flat.jpg', 2.4)
-    Sharp = Template('sharp', 'images/templates/accidentals/sharp.jpg', 2.8)
-    SharpDouble = Template('double_sharp', 'images/templates/accidentals/double-sharp.jpg', 1)
-    Natural = Template('natural', 'images/templates/accidentals/natural.jpg', 3)
+    Flat = Template(AccidentalTypes.FLAT.value, 'images/templates/accidentals/flat.jpg', 2.4)
+    FlatDouble = Template(AccidentalTypes.FLAT_DOUBLE.value, 'images/templates/accidentals/double-flat.jpg', 2.4)
+    Sharp = Template(AccidentalTypes.SHARP.value, 'images/templates/accidentals/sharp.jpg', 2.8)
+    SharpDouble = Template(AccidentalTypes.SHARP_DOUBLE.value, 'images/templates/accidentals/double-sharp.jpg', 1)
+    Natural = Template(AccidentalTypes.NATURAL.value, 'images/templates/accidentals/natural.jpg', 3)
 
     AllKeys = [Flat, FlatDouble, Sharp, SharpDouble, Natural]
 

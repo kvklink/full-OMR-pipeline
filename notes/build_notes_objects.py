@@ -9,7 +9,7 @@ from typing import List
 
 import cv2
 
-from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental
+from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental, AccidentalTypes
 from staffs.staff_objects import Staff
 from template_matching.template_matching import template_matching_array, AvailableTemplates
 
@@ -58,8 +58,30 @@ def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
     for template in found_accidentals.keys():
         for match in found_accidentals[template]:
             matched_accidentals.append(Accidental(match[0], match[1], template))
+    matched_accidentals.sort(key=lambda acc: acc.x)
 
-    return sorted(matched_accidentals, key=lambda accidental: accidental.x)
+    for i in range(len(matched_accidentals)):
+        current: Accidental = matched_accidentals[i]
+        if current.type in [AccidentalTypes.FLAT_DOUBLE, AccidentalTypes.SHARP_DOUBLE, AccidentalTypes.NATURAL]:
+            # It is either a double flat, double sharp or a natural (and must therefore be local)
+            current.set_is_local(True)
+            continue
+
+        previous: Accidental = matched_accidentals[i - 1]
+        if previous:
+            if previous.x - current.x < (staff.dist * 1.5) \
+                    and (previous.y - current.y) > (staff.dist * 0.5) \
+                    and previous.type is current.type:
+                # A group of accidentals that are of the same type, sufficiently close and not on the same line
+                previous.set_is_local(False)
+                current.set_is_local(False)
+            else:
+                current.set_is_local(True)
+                continue
+
+        # TODO: add clause that catches a single key accidental (so there is no previous)
+
+    return matched_accidentals
 
 
 def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: List[Beam],

@@ -1,6 +1,6 @@
 """
-@file hough_lines.py
-@brief This program demonstrates line finding with the Hough transform
+@file dewarp_hough.py
+@brief This program demonstrates line finding with the Hough transform. Eventual goal is to dewarp the music sheet image.
 """
 import sys
 import math
@@ -8,19 +8,28 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 
+# from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental
+# from staffs.staff_objects import Staff
+from denoise.denoise import denoise
+
+
 DIR = 'images/sheets/mscd-15/' #trombone/'
 INPUT_PATH = DIR + 'input.png'
 OUTPUT_PATH = DIR + 'deskew-hough.png'
 
+DENOISE_FIRST = True
+
 def main():    
-    filename = INPUT_PATH
-    src = cv.imread(cv.samples.findFile(filename), cv.IMREAD_GRAYSCALE)
+    if DENOISE_FIRST:
+        src = denoise(INPUT_PATH)
+    else:
+        src = cv.imread(INPUT_PATH, cv.IMREAD_GRAYSCALE)
     # Check if image is loaded fine
     if src is None:
         print ('Error opening image!')
         return -1
     imshow("Source", src)
-
+    
     # Edge detection
     # TODO
     dst = cv.Canny(src, 50, 200, None, 3)
@@ -68,9 +77,13 @@ def main():
     return 0
     
 def imshow(title, image):
-    plt.imshow(image)
-    plt.title(title)
-    plt.show()
+    USE_PLT = True
+    if USE_PLT:
+        plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
+        plt.title(title)
+        plt.show()
+    else:
+        cv.imshow(title, image)
     return
 
 if __name__ == "__main__":

@@ -6,15 +6,15 @@ Created on Sat Jun 13 17:49:06 2020
 """
 
 import cv2
-from seperate_staffs import seperate_staffs
-from staff_objects import Staff #, Staff_measure, Bar_line, split_measures
-from note_objects import Template, Head#, Stem #, Flag, Rest, Accidental, Dots, Relation
-from build_notes_objects import find_stems, build_notes
+from staffs.seperate_staffs import separate_staffs
+from staffs.staff_objects import Staff #, Staff_measure, Bar_line, split_measures
+from notes.note_objects import Template, Head#, Stem #, Flag, Rest, Accidental, Dots, Relation
+from notes.build_notes_objects import find_stems, build_notes
 from template_matching import template_matching
 
 img = cv2.imread('Fmttm.png')
 
-staff_imgs = seperate_staffs(img)
+staff_imgs = separate_staffs(img)
 
 staffs = []
 for s in staff_imgs:

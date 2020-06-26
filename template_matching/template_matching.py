@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, Any, List
+from typing import Dict, List
 
 import cv2
 import imutils
@@ -15,7 +15,6 @@ def template_matching(template: Template, staff: Staff, threshold: float) -> Lis
     # Resize template to match staff height
     resized_template = imutils.resize(template.image, height=int(staff.dist * template.height_units))
     template.update_size(resized_template.shape)
-#    template.update_size()
     results = cv2.matchTemplate(img_gray, resized_template, cv2.TM_CCOEFF_NORMED)
     locations = np.where(results >= threshold)
 
@@ -40,7 +39,10 @@ def template_matching(template: Template, staff: Staff, threshold: float) -> Lis
 def template_matching_array(templates: List[Template], staff: Staff, threshold: float) -> Dict[Template, List]:
     result = {}
     for template in templates:
-        result[template] = template_matching(template, staff, threshold)
+        potential_result = template_matching(template, staff, threshold)
+        if potential_result:
+            result[template] = potential_result
+
     return result
 
 
@@ -57,8 +59,8 @@ class AvailableTemplates(Enum):
     Flag2 = Template('flag_2', 'images/templates/flags/up-2.png', 3)
     Flag3 = Template('flag_3', 'images/templates/flags/up-3.png', 4)
 
-    AllNotes = [NoteheadClosed.value, NoteheadOpen.value, FlagUpsideDown1.value, FlagUpsideDown2.value,
-                FlagUpsideDown3.value, Flag1.value, Flag2.value, Flag3.value]
+    AllNotes = [NoteheadClosed, NoteheadOpen, FlagUpsideDown1, FlagUpsideDown2,
+                FlagUpsideDown3, Flag1, Flag2, Flag3]
 
     # Rests
     RestFull = Template('full_rest', 'images/templates/rests/full-rest-on-line.jpg', 1)
@@ -71,7 +73,7 @@ class AvailableTemplates(Enum):
     AllRests = [RestFull, RestHalf, RestFourth, RestEighth]
 
     # Clefs
-#    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
+    #    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
     ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines-2.jpg', 4)
     ClefF = Template('f-clef', 'images/templates/clefs/f-clef-with-lines.jpg', 4)
     ClefC = Template('c-clef', 'images/templates/clefs/c-clef-with-lines.jpg', 4)

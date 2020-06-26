@@ -146,8 +146,8 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
             bx1, by1 = beam.x, beam.y
             bx2, by2 = (bx1 + beam.w, by1 + beam.h)
 
-            print(by1, by2, ny1, ny2)
-            print(bx1, bx2, nx1, nx2, '\n')
+#            print(by1, by2, ny1, ny2)
+#            print(bx1, bx2, nx1, nx2, '\n')
 
             if by1 in range(ny1 - nd, ny2 + nd) or by2 in range(ny1 - nd, ny2 + nd):
                 if bx1 in range(nx1 - nd, nx2 + nd + 1):

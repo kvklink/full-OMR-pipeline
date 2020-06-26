@@ -3,11 +3,11 @@ import xml.etree.cElementTree as ET
 import cv2 as cv
 
 from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note  # , add_part, add_rest
-from notes.build_notes_objects import find_stems, build_notes, find_accidentals
+from notes.build_notes_objects import find_stems, build_notes, detect_accidentals
 from notes.find_beams import find_beams
 from notes.note_objects import Head, Flag
 from staffs.seperate_staffs import separate_staffs
-from staffs.staff_objects import Staff, find_measure, Clef, Key, Time, Barline, split_measures, select_barlines
+from staffs.staff_objects import Staff, find_measure, Clef, Key, Time, split_measures, select_barlines
 from template_matching.template_matching import template_matching, AvailableTemplates
 
 
@@ -19,7 +19,7 @@ def main():
 
     # deskew
     # deskewed_image = deskew(denoised_image)
-    deskewed_image = cv.imread(input_file) # temporary
+    deskewed_image = cv.imread(input_file)  # temporary
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(deskewed_image)]
@@ -51,7 +51,8 @@ def main():
     for t in times34:
         time34_objects.append(Time(t[0], t[1], AvailableTemplates.Time3_4.value))
 
-    # for now we use first option (temporary) (to do: order clefs/times by x, then add to current measure and following upto next clef/time)
+    # for now we use first option (temporary) (to do: order clefs/times by x,
+    # then add to current measure and following upto next clef/time)
     for meas in measures:
         meas.set_clef(clef_objects[0].type)
         meas.set_key(temp_key.key)
@@ -83,7 +84,7 @@ def main():
         # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
         head_obj.set_note(temp_measure)
         head_obj.set_key(temp_key)
-        head_objects.append(head_obj)    # show in image
+        head_objects.append(head_obj)  # show in image
     for head_obj in open_heads:
         head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
         if head_obj.pitch == 'Error': continue
@@ -92,7 +93,7 @@ def main():
         # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
         head_obj.set_note(temp_measure)
         head_obj.set_key(temp_key)
-        head_objects.append(head_obj)    # show in image
+        head_objects.append(head_obj)  # show in image
 
     # turn the found flag symbols into objects
     flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in matches_flag]
@@ -103,7 +104,7 @@ def main():
     beam_objects = find_beams(temp_staff)
 
     # find accidentals
-    accidental_objects = find_accidentals(temp_staff)
+    accidental_objects = detect_accidentals(temp_staff, threshold)
 
     # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
     # in future also should take dots, connection ties, etc.
@@ -146,6 +147,7 @@ def main():
             'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(
                 'utf8'))
         tree.write(f, 'utf-8')
+
 
 if __name__ == "__main__":
     main()

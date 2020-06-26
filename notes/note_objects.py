@@ -46,7 +46,7 @@ class Template:
         self.height_units = height_units
         self.h = self.image.shape[0]
         self.w = self.image.shape[1]
-        
+
     def update_size(self, tup):
         self.h, self.w = tup
 

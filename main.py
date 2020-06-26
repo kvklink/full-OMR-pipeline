@@ -12,7 +12,7 @@ from template_matching.template_matching import template_matching, AvailableTemp
 
 
 def main():
-    input_file = 'images/sheets/Fmttm.png'
+    input_file = 'images/sheets/fmttm/input.png'
 
     # denoise
     # denoised_image = denoise(cv.imread(input_file))

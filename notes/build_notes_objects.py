@@ -48,9 +48,8 @@ def find_stems(staff: Staff) -> List[Stem]:
     return stem_list
 
 
-def find_accidentals(staff: Staff) -> List[Accidental]:
-    # TODO: actually put some thought into picking a threshold
-    found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, 0.7)
+def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
+    found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, threshold)
     if len(found_accidentals.keys()) == 0:
         # No accidentals were found, so just cut to the chase already
         return []

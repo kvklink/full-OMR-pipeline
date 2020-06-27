@@ -48,8 +48,9 @@ def main():
     bgr_imshow("Source", src)
     ncols = src.shape[1]
     
+    # TODO: Try dilate/erode before/after edge detction
+
     # Edge detection
-    # TODO
     if EDGEDET_FIRST:
         dst = cv.Canny(src, 50, 200, None, 3)
         bgr_imshow("Edge detection", dst)

@@ -122,8 +122,14 @@ class Flag:
 
 
 class Rest:
-    duration_dict = {'full_rest': 4, 'half_rest': 2, 'fourth_rest': 1, 'eighth_rest': 1 / 2, 'sixteenth_rest': 1 / 4,
-                     'semidemiquaver_rest': 1 / 8}
+    duration_dict = {
+        'full_rest': 4,
+        'half_rest': 2,
+        'fourth_rest': 1,
+        'eighth_rest': 1 / 2,
+        'sixteenth_rest': 1 / 4,
+        'semidemiquaver_rest': 1 / 8
+    }
 
     def __init__(self, x, y, template, staff):
         self.type = 'rest'
@@ -137,23 +143,35 @@ class Rest:
         self.duration = int(self.duration_dict[self.name] * staff.divisions)
 
 
-class Accidental:
-    pitch_change_dict = {
-        'double_flat': -1,
-        'flat': -1 / 2,
-        'natural': 0,
-        'sharp': 1 / 2,
-        'double_sharp': 1
-    }
+@unique
+class AccidentalTypes(Enum):
+    FLAT = ('flat', -0.5)
+    FLAT_DOUBLE = ('double_flat', -1)
+    SHARP = ('sharp', 0.5)
+    SHARP_DOUBLE = ('double_sharp', 1)
+    NATURAL = ('natural', 0)
 
+    def __init__(self, acc_type: str, shift: float):
+        self.acc_type = acc_type
+        self.shift = shift
+
+    @staticmethod
+    def get_by_name(acc_type: str):
+        results = [val.acc_type for val in AccidentalTypes.__members__.values()]
+        if acc_type in results:
+            return results[0]
+        else:
+            raise ValueError(f'{acc_type} is not a valid Accidental type!')
+
+
+class Accidental:
     def __init__(self, x: int, y: int, template: Template, is_local: bool = True):
         self.x = x
         self.y = y
-        self.type = AccidentalTypes(template.name)
+        self.acc_type = AccidentalTypes.get_by_name(template.name)
         self.h = template.h
         self.w = template.w
 
-        self.pitch_change = self.pitch_change_dict[self.name]
         self.note = ''
         self.is_local = is_local
 
@@ -163,15 +181,6 @@ class Accidental:
 
     def set_is_local(self, is_local: bool):
         self.is_local = is_local
-
-
-@unique
-class AccidentalTypes(Enum):
-    FLAT = 'flat',
-    FLAT_DOUBLE = 'double_flat',
-    SHARP = 'sharp',
-    SHARP_DOUBLE = 'double_sharp',
-    NATURAL = 'natural'
 
 
 class Dots:

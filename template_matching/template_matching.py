@@ -81,11 +81,11 @@ class AvailableTemplates(Enum):
     AllClefs = [ClefG, ClefF, ClefC]
 
     # Keys
-    Flat = Template(AccidentalTypes.FLAT.value, 'images/templates/accidentals/flat.jpg', 2.4)
-    FlatDouble = Template(AccidentalTypes.FLAT_DOUBLE.value, 'images/templates/accidentals/double-flat.jpg', 2.4)
-    Sharp = Template(AccidentalTypes.SHARP.value, 'images/templates/accidentals/sharp.jpg', 2.8)
-    SharpDouble = Template(AccidentalTypes.SHARP_DOUBLE.value, 'images/templates/accidentals/double-sharp.jpg', 1)
-    Natural = Template(AccidentalTypes.NATURAL.value, 'images/templates/accidentals/natural.jpg', 3)
+    Flat = Template(AccidentalTypes.FLAT.acc_type, 'images/templates/accidentals/flat.jpg', 2.4)
+    FlatDouble = Template(AccidentalTypes.FLAT_DOUBLE.acc_type, 'images/templates/accidentals/double-flat.jpg', 2.4)
+    Sharp = Template(AccidentalTypes.SHARP.acc_type, 'images/templates/accidentals/sharp.jpg', 2.8)
+    SharpDouble = Template(AccidentalTypes.SHARP_DOUBLE.acc_type, 'images/templates/accidentals/double-sharp.jpg', 1)
+    Natural = Template(AccidentalTypes.NATURAL.acc_type, 'images/templates/accidentals/natural.jpg', 3)
 
     AllKeys = [Flat, FlatDouble, Sharp, SharpDouble, Natural]
 

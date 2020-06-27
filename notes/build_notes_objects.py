@@ -62,7 +62,7 @@ def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
 
     for i in range(len(matched_accidentals)):
         current: Accidental = matched_accidentals[i]
-        if current.type in [AccidentalTypes.FLAT_DOUBLE, AccidentalTypes.SHARP_DOUBLE, AccidentalTypes.NATURAL]:
+        if current.acc_type in [AccidentalTypes.FLAT_DOUBLE, AccidentalTypes.SHARP_DOUBLE, AccidentalTypes.NATURAL]:
             # It is either a double flat, double sharp or a natural (and must therefore be local)
             current.set_is_local(True)
             continue
@@ -71,7 +71,7 @@ def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
         if previous:
             if previous.x - current.x < (staff.dist * 1.5) \
                     and (previous.y - current.y) > (staff.dist * 0.5) \
-                    and previous.type is current.type:
+                    and previous.acc_type is current.acc_type:
                 # A group of accidentals that are of the same type, sufficiently close and not on the same line
                 previous.set_is_local(False)
                 current.set_is_local(False)

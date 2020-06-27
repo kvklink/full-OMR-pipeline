@@ -11,38 +11,57 @@ import matplotlib.pyplot as plt
 from denoise.denoise import *
 from utils.util import bgr_imshow
 
+#====== PARAMS =====================================
+DENOISE_FIRST = True
+EDGEDET_FIRST = True
+# All Hough
+RHO = 1                 # 1 pixel
+THDEG = 1               # 1 degree
+THETA = np.pi * THDEG / 180
+# Std Hough
+THRES = 400 #250 #150
+# Prob Hough
+PTHRES = 100 #100 #20 #50
+MIN_PRC = 5
+# MIN_LEN = 100 #0.6 * ncols #500 #100 #50 #100 #50
+MAX_PRC = 0.5
+# MAX_GAP = 9 #0.05 * ncols #50 #10
+#===================================================
+
+# IO for testing
 DIR = 'images/sheets/trombone-quality/' #mscd-15/' #trombone/'
 INPUT_PATH = DIR + 'input.png'
-OUTPUT_PATH = DIR + 'denoise-deskew-hough.png'
-
-DENOISE_FIRST = True
+SHOUGH_TITLE = f"shough ({RHO},{THDEG},{THRES}) [dnois={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
+PHOUGH_TITLE = f"phough ({RHO},{THDEG},{PTHRES},{MIN_PRC}%,{MAX_PRC}%) [denos={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
+SHOUGH_PATH = DIR + SHOUGH_TITLE + ".png"
+PHOUGH_PATH = DIR + PHOUGH_TITLE + ".png"
 
 def main():    
+    # Retrieve source
     if DENOISE_FIRST:
         src = denoise(INPUT_PATH)
     else:
         src = cv.imread(INPUT_PATH, cv.IMREAD_GRAYSCALE)
-    # Check if image is loaded fine
     if src is None:
         print ('Error opening image!')
         return -1
     bgr_imshow("Source", src)
+    ncols = src.shape[1]
     
     # Edge detection
     # TODO
-    dst = cv.Canny(src, 50, 200, None, 3)
-    bgr_imshow("Edge detection", dst)
+    if EDGEDET_FIRST:
+        dst = cv.Canny(src, 50, 200, None, 3)
+        bgr_imshow("Edge detection", dst)
+    else:
+        dst = cv.bitwise_not(src) #cv.cvtColor(src, cv.COLOR_RGB2GRAY)
 
     # Copy edges to the images that will display the results in BGR
     cdst = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
     cdstP = np.copy(cdst)
     
-    # Standard Hough
-    res_rho = 1                 # 1 pixel
-    res_theta = np.pi / 180     # 1 degree
-    threshold = 250 #150
-    lines = cv.HoughLines(dst, res_rho, res_theta, threshold, None, 0, 0)
-    
+    # Standard Hough    
+    lines = cv.HoughLines(dst, RHO, THETA, THRES, None, 0, 0)
     if lines is not None:
         for i in range(0, len(lines)):
             rho = lines[i][0][0]
@@ -54,22 +73,19 @@ def main():
             pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
             pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
             cv.line(cdst, pt1, pt2, (0,0,255), thickness=1, lineType=cv.LINE_AA)
-    
+    bgr_imshow(SHOUGH_TITLE, cdst)
+    cv.imwrite(SHOUGH_PATH, cdst)
+
     # Probabalistic Hough
-    pthreshold = 100 #20 #50
-    min_len = 500 #100 #50 #100 #50
-    max_gap = 50 #10
-    linesP = cv.HoughLinesP(dst, res_rho, res_theta, pthreshold, None, min_len, max_gap)
-    
+    linesP = cv.HoughLinesP(dst, RHO, THETA, PTHRES, None, MIN_PRC * ncols / 100, MAX_PRC * ncols / 100)
     if linesP is not None:
         for i in range(0, len(linesP)):
             l = linesP[i][0]
             cv.line(cdstP, (l[0], l[1]), (l[2], l[3]), (0,0,255), thickness=1, lineType=cv.LINE_AA)
     
-    
-    bgr_imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst)
-    bgr_imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP)
-    cv.imwrite(OUTPUT_PATH, cdstP)
+
+    bgr_imshow(PHOUGH_TITLE, cdstP)
+    cv.imwrite(PHOUGH_PATH, cdstP)
     
     cv.waitKey()
     return 0

@@ -9,6 +9,8 @@ import math
 
 import cv2
 
+from notes.note_objects import AccidentalTypes
+
 
 class Staff:
     def __init__(self, img_bar):
@@ -332,8 +334,8 @@ class Clef:
 class Key:
     def __init__(self, grouped_accidentals):
         self.x, self.y, self.h, self.w = self.find_rect(grouped_accidentals) if len(grouped_accidentals) > 0 else (
-        0, 0, 0, 0)
-        self.type = grouped_accidentals[0].type if len(grouped_accidentals) > 0 else 'normal'
+            0, 0, 0, 0)
+        self.acc_type = grouped_accidentals[0].type if len(grouped_accidentals) > 0 else 'normal'
         self.key = self.find_key(grouped_accidentals)
         self.accidentals = grouped_accidentals
 
@@ -351,9 +353,9 @@ class Key:
 
     def find_key(self, group):
         amount = len(group)
-        if self.type == 'flat':
+        if self.acc_type is AccidentalTypes.FLAT:
             return -1 * amount
-        elif self.type == 'sharp':
+        elif self.acc_type is AccidentalTypes.SHARP:
             return amount
         elif amount == 0:
             return 0

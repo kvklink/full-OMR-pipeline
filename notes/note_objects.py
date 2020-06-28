@@ -4,6 +4,7 @@ Created on Sat Jun 13 16:08:40 2020
 
 @author: super
 """
+from enum import Enum, unique
 
 import cv2
 
@@ -40,19 +41,22 @@ def find_pitch(staff, x, y):
 
 
 class Template:
-    def __init__(self, name: str, image, height_units: int = 1):
+    def __init__(self, name: str, image, height_units: float = 1):
         self.image = cv2.imread(image, 0) if isinstance(image, str) else image
         self.name = name
         self.height_units = height_units
-        self.h = self.image.shape[0] * height_units
-        self.w = self.image.shape[1] * height_units
+        self.h = self.image.shape[0]
+        self.w = self.image.shape[1]
+
+    def update_size(self, tup):
+        self.h, self.w = tup
 
 
 class Head:
     def __init__(self, x, y, template):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.name = template.name
         self.h = template.h
         self.w = template.w
 
@@ -112,47 +116,71 @@ class Flag:
     def __init__(self, x, y, template):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.name = template.name
         self.h = template.h
         self.w = template.w
 
 
 class Rest:
-    duration_dict = {'full': 1, 'half': 1 / 2, 'quarter': 1 / 4, 'eighth': 1 / 8, 'sixteenth': 1 / 16,
-                     'semidemiquaver': 1 / 32}
+    duration_dict = {
+        'full_rest': 4,
+        'half_rest': 2,
+        'fourth_rest': 1,
+        'eighth_rest': 1 / 2,
+        'sixteenth_rest': 1 / 4,
+        'semidemiquaver_rest': 1 / 8
+    }
 
-    def __init__(self, x, y, template):
+    def __init__(self, x, y, template, staff):
+        self.type = 'rest'
+
         self.x = x
         self.y = y
-        self.type = template.name
+        self.name = template.name
         self.h = template.h
         self.w = template.w
 
-        self.duration = self.duration_dict[self.type]
+        self.duration = int(self.duration_dict[self.name] * staff.divisions)
+
+
+@unique
+class AccidentalTypes(Enum):
+    FLAT = ('flat', -0.5)
+    FLAT_DOUBLE = ('double_flat', -1)
+    SHARP = ('sharp', 0.5)
+    SHARP_DOUBLE = ('double_sharp', 1)
+    NATURAL = ('natural', 0)
+
+    def __init__(self, acc_type: str, shift: float):
+        self.acc_type = acc_type
+        self.shift = shift
+
+    @staticmethod
+    def get_by_name(acc_type: str):
+        results = [val.acc_type for val in AccidentalTypes.__members__.values()]
+        if acc_type in results:
+            return results[0]
+        else:
+            raise ValueError(f'{acc_type} is not a valid Accidental type!')
 
 
 class Accidental:
-    pitch_change_dict = {
-        'double_flat': -1,
-        'flat': -1 / 2,
-        'natural': 0,
-        'sharp': 1 / 2,
-        'double_sharp': 1
-    }
-
-    def __init__(self, x, y, template):
+    def __init__(self, x: int, y: int, template: Template, is_local: bool = True):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.acc_type = AccidentalTypes.get_by_name(template.name)
         self.h = template.h
         self.w = template.w
 
-        self.pitch_change = self.pitch_change_dict[self.type]
         self.note = ''
+        self.is_local = is_local
 
     def find_note(self, measure):
         pitch = find_pitch(measure.staff, self.x, self.y)
         self.note = measure.notes[pitch % 7]
+
+    def set_is_local(self, is_local: bool):
+        self.is_local = is_local
 
 
 class Dots:
@@ -167,13 +195,15 @@ class Relation:
     def __init__(self, x, y, template):
         self.x = x
         self.y = y
-        self.type = template.name
+        self.name = template.name
         self.h = template.h
         self.w = template.w
 
 
 class Note:
     def __init__(self, base, durname, duration, loc):
+        self.type = 'note'
+
         self.x = loc[0]
         self.y = loc[1]
         self.w = loc[2] - loc[0]
@@ -183,14 +213,14 @@ class Note:
         self.note = base.note
         self.octave = base.octave
         self.durname = durname
-        self.duration = duration
+        self.duration = int(duration)
         self.accidental = base.accidental
         self.beam = False
 
     def add_beam(self, relation, dur_info):
         self.beam = relation
         self.durname = dur_info[0]
-        self.duration = self.duration / dur_info[1]
+        self.duration = int(self.duration / dur_info[1])
 
     def update_pitch(self, new_pitch):
         self.pitch = new_pitch
@@ -212,8 +242,8 @@ class Note:
     def update_location(self, new_loc):
         self.x = new_loc[0]
         self.y = new_loc[1]
-        self.h = new_loc[2] - new_loc[0]
-        self.w = new_loc[3] - new_loc[1]
+        self.w = new_loc[2] - new_loc[0]
+        self.h = new_loc[3] - new_loc[1]
 
     def set_accidental(self, accidental):
         self.accidental = accidental

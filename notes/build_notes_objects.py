@@ -9,8 +9,9 @@ from typing import List
 
 import cv2
 
-from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental
+from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental, AccidentalTypes
 from staffs.staff_objects import Staff
+from template_matching.template_matching import template_matching_array, AvailableTemplates
 
 
 def find_stems(staff: Staff) -> List[Stem]:
@@ -47,10 +48,40 @@ def find_stems(staff: Staff) -> List[Stem]:
     return stem_list
 
 
-def find_accidentals(staff: Staff) -> List[Accidental]:
-    img_bar = staff.image
+def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
+    found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, threshold)
+    if len(found_accidentals.keys()) == 0:
+        # No accidentals were found, so just cut to the chase already
+        return []
 
-    return []  # Stub implementation
+    matched_accidentals: List[Accidental] = []
+    for template in found_accidentals.keys():
+        for match in found_accidentals[template]:
+            matched_accidentals.append(Accidental(match[0], match[1], template))
+    matched_accidentals.sort(key=lambda acc: acc.x)
+
+    for i in range(len(matched_accidentals)):
+        current: Accidental = matched_accidentals[i]
+        if current.acc_type in [AccidentalTypes.FLAT_DOUBLE, AccidentalTypes.SHARP_DOUBLE, AccidentalTypes.NATURAL]:
+            # It is either a double flat, double sharp or a natural (and must therefore be local)
+            current.set_is_local(True)
+            continue
+
+        previous: Accidental = matched_accidentals[i - 1]
+        if previous:
+            if previous.x - current.x < (staff.dist * 1.5) \
+                    and (previous.y - current.y) > (staff.dist * 0.5) \
+                    and previous.acc_type is current.acc_type:
+                # A group of accidentals that are of the same type, sufficiently close and not on the same line
+                previous.set_is_local(False)
+                current.set_is_local(False)
+            else:
+                current.set_is_local(True)
+                continue
+
+        # TODO: add clause that catches a single key accidental (so there is no previous)
+
+    return matched_accidentals
 
 
 def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: List[Beam],
@@ -83,10 +114,10 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
 
                     head.connect()
 
-                    if head.type == 'closed_notehead':
+                    if head.name == 'closed_notehead':
                         dur = 1
                         durname = 'quarter'
-                    elif head.type == 'open_notehead':
+                    elif head.name == 'open_notehead':
                         dur = 2
                         durname = 'half'
                     else:
@@ -114,13 +145,13 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
 
                     new_loc = (x_min, y_min, x_max, y_max)
 
-                    if flag.type in ['flag_upside_down_1', 'flag_1']:
+                    if flag.name in ['flag_upside_down_1', 'flag_1']:
                         div = 2
                         durname = 'eighth'
-                    elif flag.type in ['flag_upside_down_2', 'flag_2']:
+                    elif flag.name in ['flag_upside_down_2', 'flag_2']:
                         div = 4
                         durname = 'sixteenth'
-                    elif flag.type in ['flag_upside_down_3', 'flag_3']:
+                    elif flag.name in ['flag_upside_down_3', 'flag_3']:
                         div = 8
                         durname = 'demisemiquaver'
                     else:
@@ -134,8 +165,8 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
             bx1, by1 = beam.x, beam.y
             bx2, by2 = (bx1 + beam.w, by1 + beam.h)
 
-            print(by1, by2, ny1, ny2)
-            print(bx1, bx2, nx1, nx2, '\n')
+            #            print(by1, by2, ny1, ny2)
+            #            print(bx1, bx2, nx1, nx2, '\n')
 
             if by1 in range(ny1 - nd, ny2 + nd) or by2 in range(ny1 - nd, ny2 + nd):
                 if bx1 in range(nx1 - nd, nx2 + nd + 1):

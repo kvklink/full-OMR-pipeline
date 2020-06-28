@@ -29,7 +29,7 @@ MAX_PRC = 5
 #===================================================
 
 # IO for testing
-DIR = 'images/sheets/trombone-quality/' #mscd-15/' #trombone/'
+DIR = 'images/sheets/fmttm/' #trombone-quality/' #mscd-15/' #trombone/'
 INPUT_PATH = DIR + 'input.png'
 SHOUGH_TITLE = f"shough ({RHO},{THDEG},{THRES}) [dnois={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
 PHOUGH_TITLE = f"phough ({RHO},{THDEG},{PTHRES},{MIN_PRC}%,{MAX_PRC}%) [denos={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
@@ -65,14 +65,15 @@ def main():
     lines = cv.HoughLines(dst, RHO, THETA, THRES, None, 0, 0)
     if lines is not None:
         for i in range(0, len(lines)):
+            line_len = ncols * 1.5
             rho = lines[i][0][0]
             theta = lines[i][0][1]
             a = math.cos(theta)
             b = math.sin(theta)
             x0 = a * rho
             y0 = b * rho
-            pt1 = (int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
-            pt2 = (int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+            pt1 = (int(x0 + line_len*(-b)), int(y0 + line_len*(a)))
+            pt2 = (int(x0 - line_len*(-b)), int(y0 - line_len*(a)))
             cv.line(cdst, pt1, pt2, (0,0,255), thickness=1, lineType=cv.LINE_AA)
     bgr_imshow(SHOUGH_TITLE, cdst)
     cv.imwrite(SHOUGH_PATH, cdst)

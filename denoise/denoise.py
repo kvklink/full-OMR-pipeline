@@ -1,24 +1,19 @@
 import cv2 as cv
 
 
-def denoise(input_name):
-    img_color = cv.imread(input_name)
-    img_gray = cv.cvtColor(img_color, cv.COLOR_BGR2GRAY)
-    cv.normalize(img_gray, img_gray, 0, 165, cv.NORM_MINMAX)
-
-    # is dit netjes?
-    img_gray = cv.bitwise_not(img_gray)
-    # nee
-    _, img_gray = cv.threshold(img_gray, 255, 0, cv.THRESH_TRUNC)
-    _, img = cv.threshold(img_gray, 127, 0, cv.THRESH_TOZERO)
-    # werkt het?
+def denoise(img):
+    cv.normalize(img, img, 0, 165, cv.NORM_MINMAX)
     img = cv.bitwise_not(img)
-    # ja
+    _, img = cv.threshold(img, 255, 0, cv.THRESH_TRUNC)
+    _, img = cv.threshold(img, 127, 0, cv.THRESH_TOZERO)
+    img = cv.bitwise_not(img)
     return cv.fastNlMeansDenoising(img, None, 20, 7, 21)
 
+def denoise_at(path):
+    return denoise(cv.imread(path, cv.IMREAD_GRAYSCALE))
 
 if __name__ == "__main__":
-    cv.imshow('output', denoise('/Users/kyle/Desktop/test.png'))
+    cv.imshow('output', denoise_at('/Users/kyle/Desktop/test.png'))
     cv.waitKey(0)
     cv.destroyAllWindows()
     cv.waitKey(1)

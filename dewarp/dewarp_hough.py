@@ -16,15 +16,15 @@ DENOISE_FIRST = True
 EDGEDET_FIRST = True
 # All Hough
 RHO = 1                 # 1 pixel
-THDEG = 1               # 1 degree
+THDEG = 0.2              # 1 degree
 THETA = np.pi * THDEG / 180
 # Std Hough
 THRES = 400 #250 #150
 # Prob Hough
-PTHRES = 100 #100 #20 #50
-MIN_PRC = 5
+PTHRES = 300 #100 #20 #50
+MIN_PRC = 60
 # MIN_LEN = 100 #0.6 * ncols #500 #100 #50 #100 #50
-MAX_PRC = 0.5
+MAX_PRC = 5
 # MAX_GAP = 9 #0.05 * ncols #50 #10
 #===================================================
 

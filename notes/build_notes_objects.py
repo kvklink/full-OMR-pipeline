@@ -104,7 +104,6 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
     }
 
     notes: List[Note] = []
-    grouped_accidentals = group_accidentals(accidentals)
 
     for head in heads:
         hx1, hy1 = head.x, head.y
@@ -184,7 +183,22 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
                     note.add_beam('end', beam_names[beam.durname])
                 elif nx1 > bx1 + nd and nx2 < bx2 - nd:
                     note.add_beam('continue', beam_names[beam.durname])
-    # somehow create full notes (check open heads not in note list?)
+
+    # TODO: somehow create full notes (check open heads not in note list?)
+
+    # Apply accidentals to notes
+    grouped_accidentals = group_accidentals(accidentals)
+    for accidental_arr in grouped_accidentals:
+        for accidental in accidental_arr:
+            # Determine ranges for applying the accidentals (in case there is a key change somewhere in the staff)
+            x_start = accidental_arr[0].x
+            x_end = accidental_arr[-1].x + staff.dist * 1.5
+            for _note in notes:
+                if x_start <= _note.x < x_end and _note.note == accidental.note:
+                    # Apply the accidental when it is in range, the same note,
+                    # and non-local, or sufficiently close to the current note
+                    if (not accidental.is_local) or (_note.x - accidental.x < staff.dist * 1.5):
+                        _note.accidental = accidental
 
     return notes
 

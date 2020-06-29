@@ -120,7 +120,7 @@ def main():
     beam_objects = find_beams(temp_staff)
 
     # find accidentals
-    accidental_objects = detect_accidentals(temp_staff, threshold)
+    accidental_objects = detect_accidentals(temp_staff, threshold, time_meas[0])
 
     # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
     # in future also should take dots, connection ties, etc.

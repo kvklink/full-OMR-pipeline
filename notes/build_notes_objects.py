@@ -10,7 +10,7 @@ from typing import List
 import cv2
 
 from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental, AccidentalTypes
-from staffs.staff_objects import Staff
+from staffs.staff_objects import Staff, Time
 from template_matching.template_matching import template_matching_array, AvailableTemplates
 
 
@@ -48,7 +48,7 @@ def find_stems(staff: Staff) -> List[Stem]:
     return stem_list
 
 
-def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
+def detect_accidentals(staff: Staff, threshold: float, signature: Time) -> List[Accidental]:
     found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, threshold)
     if len(found_accidentals.keys()) == 0:
         # No accidentals were found, so just cut to the chase already
@@ -78,8 +78,14 @@ def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
             else:
                 current.set_is_local(True)
                 continue
-
-        # TODO: add clause that catches a single key accidental (so there is no previous)
+        else:
+            # clause that catches a single key accidental (so there is no previous)
+            # Only works when at least one time signature was detected earlier!
+            if signature:
+                if current.x < signature.x:
+                    current.set_is_local(False)
+                else:
+                    current.set_is_local(True)
 
     return matched_accidentals
 

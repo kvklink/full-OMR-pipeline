@@ -8,8 +8,6 @@ from enum import Enum, unique
 
 import cv2
 
-from staffs.staff_objects import Staff_measure
-
 
 def find_pitch(staff, x, y):
     line_vals = []
@@ -177,7 +175,7 @@ class Accidental:
         self.note = ''
         self.is_local = is_local
 
-    def find_note(self, measure: Staff_measure):
+    def find_note(self, measure):
         pitch = find_pitch(measure.staff, self.x, self.y)
         self.note = measure.notes[pitch % 7]
 

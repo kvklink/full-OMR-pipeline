@@ -66,7 +66,6 @@ def main():
     global_key_per_measure: List[Accidental] = []
     # FIXME: iets met global key of ding met maat ofzo zal ik wel missen. help.
     for measure in measures:
-        print(measure.key)
         key_per_measure: List[Accidental] = global_key_per_measure.copy()
         for accidentals in group_accidentals(accidental_objects):
             if not accidentals[0].is_local:

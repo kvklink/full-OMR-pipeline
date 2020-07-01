@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jun 13 16:08:40 2020
-
-@author: super
-"""
 from enum import Enum, unique
+from typing import TYPE_CHECKING
 
-import helpers.note_helpers as n_helpers
-import models.measure as measure_model
-import models.staff as staff_model
-import models.template as template_model
+from helpers.note_helpers import find_pitch
+
+if TYPE_CHECKING:
+    from models.measure import Measure
+    from models.staff import Staff
+    from models.template import Template
 
 
 @unique
@@ -34,7 +31,7 @@ class AccidentalTypes(Enum):
 
 
 class Accidental:
-    def __init__(self, x: int, y: int, template: template_model.Template, is_local: bool = True):
+    def __init__(self, x: int, y: int, template: 'Template', is_local: bool = True):
         self.x = x
         self.y = y
         self.acc_type = AccidentalTypes.get_by_name(template.name)
@@ -45,7 +42,7 @@ class Accidental:
         self.is_local = is_local
 
     def find_note(self, measure):
-        pitch = n_helpers.find_pitch(measure.staff, self.x, self.y)
+        pitch = find_pitch(measure.staff, self.x, self.y)
         self.note = measure.notes[pitch % 7]
 
     def set_is_local(self, is_local: bool):
@@ -53,7 +50,7 @@ class Accidental:
 
 
 class Head:
-    def __init__(self, x: int, y: int, template: template_model.Template):
+    def __init__(self, x: int, y: int, template: 'Template'):
         self.x = x
         self.y = y
         self.name = template.name
@@ -72,12 +69,12 @@ class Head:
     def connect(self):
         self.connected = True
 
-    def set_pitch(self, staff: staff_model.Staff):
+    def set_pitch(self, staff: 'Staff'):
         mid_x = int(self.x + 0.5 * self.w)
         mid_y = int(self.y + 0.5 * self.h)
-        self.pitch = n_helpers.find_pitch(staff, mid_x, mid_y)
+        self.pitch = find_pitch(staff, mid_x, mid_y)
 
-    def set_note(self, measure: measure_model.Measure):
+    def set_note(self, measure: 'Measure'):
         # print(f"pitch: {self.pitch}")
         # print(f"measure notes: {measure.notes}")
         self.note = measure.notes[self.pitch % 7]
@@ -113,7 +110,7 @@ class Beam:
 
 
 class Flag:
-    def __init__(self, x: int, y: int, template: template_model.Template):
+    def __init__(self, x: int, y: int, template: 'Template'):
         self.x = x
         self.y = y
         self.name = template.name
@@ -131,7 +128,7 @@ class Rest:
         'semidemiquaver_rest': 1 / 8
     }
 
-    def __init__(self, x: int, y: int, template: template_model.Template, staff: staff_model.Staff):
+    def __init__(self, x: int, y: int, template: 'Template', staff: 'Staff'):
         self.type = 'rest'
 
         self.x = x
@@ -144,7 +141,7 @@ class Rest:
 
 
 class Dots:
-    def __init__(self, x: int, y: int, template: template_model.Template):
+    def __init__(self, x: int, y: int, template: 'Template'):
         self.x = x
         self.y = y
         self.h = template.h
@@ -152,7 +149,7 @@ class Dots:
 
 
 class Relation:
-    def __init__(self, x: int, y: int, template: template_model.Template):
+    def __init__(self, x: int, y: int, template: 'Template'):
         self.x = x
         self.y = y
         self.name = template.name

@@ -1,11 +1,14 @@
-import models.staff as staff_model
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from models.staff import Staff
 
 
 class Measure:
     Gnotes = ['G', 'F', 'E', 'D', 'C', 'B', 'A']
     Goctave = 6
 
-    def __init__(self, input_staff: staff_model.Staff, nr: int, start: int, end: int):
+    def __init__(self, input_staff: 'Staff', nr: int, start: int, end: int):
         self.lines = input_staff.lines
         self.dist = input_staff.dist
 

@@ -3,15 +3,16 @@ from typing import List
 
 import cv2 as cv
 
-from staffs.seperate_staffs import separate_staffs
 from helpers.measure_helpers import select_barlines, split_measures, find_measure
+from models.measure import Measure
 from models.note_objects import Accidental, Flag, Rest, Head
 from models.staff import Staff
 from models.staff_objects import Time, Clef, Key
 from mxml.xml_from_objects import add_backup, add_note, add_rest, add_measure, create_firstpart, create_xml
 from notes.build_notes_objects import detect_accidentals, group_accidentals, build_notes, find_stems
 from notes.find_beams import find_beams
-from template_matching.template_matching import template_matching, AvailableTemplates
+from staffs.seperate_staffs import separate_staffs
+from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
 
 
 def main():
@@ -25,159 +26,145 @@ def main():
     deskewed_image = cv.imread(input_file)  # temporary
 
     # separate full sheet music into an image for each staff
-    staffs = [Staff(s) for s in separate_staffs(deskewed_image)]
-    temp_staff = staffs[1]  # temporary: do only for first staff while testing
+    # FIXME: 300 iq shit hiero, we pakken nu alleen maar de tweede stem op de eerste regel
+    # is met 1 voorteken namelijk interessanter voor mij om te testen dan de eerste stem
+    staffs = [[Staff(s) for s in separate_staffs(deskewed_image)][1]]
 
     # set threshold for template matching
-    threshold = 0.8
+    all_measures: List[Measure] = []
 
-    # time
-    times34 = template_matching(AvailableTemplates.Time3_4.value, temp_staff, 0.7)
-    time34_objects = []
-    for t in times34:
-        time34_objects.append(Time(t[0], t[1], AvailableTemplates.Time3_4.value))
+    for current_staff in staffs:
+        # Generate Time signature objects
+        detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.7)
+        time_objects: List['Time'] = []
+        for template in detected_times.keys():
+            for match in detected_times[template]:
+                time_objects.append(Time(match[0], match[1], template))
 
-    # find measures
-    measure_locs = template_matching(AvailableTemplates.Barline.value, temp_staff, 0.8)
-    barlines = select_barlines(measure_locs, temp_staff, AvailableTemplates.Barline.value)
-    measures = split_measures(barlines, temp_staff)
+        # find measures
+        measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
+        barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
+        measures = split_measures(barlines, current_staff)
 
-    time_meas = find_measure(measures, time34_objects[0].x)
-    if time_meas is not None:
-        time_meas.show_time = True
+        time_meas = find_measure(measures, time_objects[0].x)
+        time_meas.show_time = True if time_meas else False
 
-    # find accidentals
-    accidental_objects = detect_accidentals(temp_staff, 0.7, time_meas)
+        # find accidentals
+        accidental_objects = detect_accidentals(current_staff, 0.7)
 
-    # find clef, key and time
-    # clef
-    clefs = template_matching(AvailableTemplates.ClefF.value, temp_staff, 0.5)
-    clef_objects = []
-    for c in clefs:
-        clef_objects.append(Clef(c[0], c[1], AvailableTemplates.ClefF.value))
+        # find clef
+        clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
+        clef_objects: List['Clef'] = []
+        for template in clefs.keys():
+            for match in clefs[template]:
+                clef_objects.append(Clef(match[0], match[1], template))
 
-    # temp_acc_group = []
-    # if len(temp_acc_group) > 0:
-    #     for acc in temp_acc_group:
-    #         acc.find_note(measures[0])
-    # temp_key = Key(temp_acc_group)
+        # Associate accidentals with a certain note
+        global_key_per_measure: List[Accidental] = []
+        for measure in measures:
+            key_per_measure: List[Accidental] = global_key_per_measure.copy()
+            for accidentals in group_accidentals(accidental_objects):
+                if not accidentals[0].is_local:
+                    # We encounter a group of key accidentals, update key accordingly
+                    global_key_per_measure = accidentals
+                for accidental in accidentals:
+                    # Update all accidentals that fit in this measure
+                    if measure.start < accidental.x < measure.end:
+                        accidental.find_note(measure)
+                        key_per_measure.append(accidental)
 
-    # Associate accidentals with a certain note
-    global_key_per_measure: List[Accidental] = []
-    # FIXME: iets met global key of ding met maat ofzo zal ik wel missen. help.
-    for measure in measures:
-        key_per_measure: List[Accidental] = global_key_per_measure.copy()
-        for accidentals in group_accidentals(accidental_objects):
-            if not accidentals[0].is_local:
-                # We encounter a group of key accidentals, update key accordingly
-                global_key_per_measure = accidentals
-            for accidental in accidentals:
-                # Update all accidentals that fit in this measure
-                if measure.start < accidental.x < measure.end:
-                    accidental.find_note(measure)
-                    key_per_measure.append(accidental)
+            measure.set_key(Key(key_per_measure))
 
-        measure.set_key(Key(key_per_measure))
+            relevant_clef = max([clef for clef in clef_objects if clef.x < measure.end], key=lambda clef: clef.x)
+            measure.set_clef(relevant_clef)
 
-        # for now we use first option (temporary) (to do: order clefs/times by x,
-        # then add to current measure and following upto next clef/time)
-        measure.set_clef(clef_objects[0].type)
-        # measure.set_key() # FIXME: wat doet dit? Als in, waar is een Key object voor bedoeld?
-        measure.set_time(time34_objects[0])
+            relevant_time = max([time for time in time_objects if time.x < measure.end], key=lambda time: time.x)
+            measure.set_time(relevant_time)
 
-    # FIXME: denk ik beter om dit binnen de for loop door alle measures te doen ipv ze per stuk op te zoeken
-    # maar ik weet niet zeker of dat wel zomaar kan, vandaar dat ik het zo laat voor nu
+        # do template matching for notes and rests (to do: change to groups)
+        # note heads closed
+        matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, current_staff, 0.8)
+        matches_head2 = template_matching(AvailableTemplates.NoteheadOpen.value, current_staff, 0.8)
 
-    # Sterker nog, clef_meas en key_meas worden nergens anders gebruikt afaik
-    # clef_meas = find_measure(measures, clef_objects[0].x)
-    # if clef_meas is not None:
-    #     clef_meas.show_clef = True
-    # key_meas = find_measure(measures, temp_key.x)
-    # if key_meas is not None:
-    #     key_meas.show_key = True
+        # single upside down flag
+        matches_flag = template_matching(AvailableTemplates.FlagUpsideDown1.value, current_staff, 0.5)
 
-    # TODO: temp key slaat nergens op. Werkt op dit moment niet met toonsoort-wisselingen of sleutel-wisselingen
-    temp_key = Key(global_key_per_measure)
+        matches_rest = template_matching(AvailableTemplates.RestEighth.value, current_staff, 0.7)
 
-    # do template matching for notes and rests (to do: change to groups)
-    # note heads closed
-    matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, temp_staff, threshold)
-    matches_head2 = template_matching(AvailableTemplates.NoteheadOpen.value, temp_staff, threshold)
+        # turn the found head symbols into objects and add corresponding information
+        closed_heads = []
+        for head in matches_head:  # for each note head location found with template matching:
+            closed_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadClosed.value))  # turn into object
 
-    # single upside down flag
-    matches_flag = template_matching(AvailableTemplates.FlagUpsideDown1.value, temp_staff, 0.5)
+        open_heads = []
+        for head in matches_head2:
+            open_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadOpen.value))
 
-    matches_rest = template_matching(AvailableTemplates.RestEighth.value, temp_staff, 0.7)
+        head_objects = []
+        for head_obj in closed_heads + open_heads:
+            head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
+            if head_obj.pitch == 'Error':
+                continue
+            relevant_measure = find_measure(measures, head_obj.x)
+            # also here, first determine its corresponding measure, and use that to set the note
+            # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
+            head_obj.set_note(relevant_measure)
+            head_obj.set_key(find_measure(measures, head_obj.x).key)
+            head_objects.append(head_obj)  # show in image
 
-    # turn the found head symbols into objects and add corresponding information
-    closed_heads = []
-    for head in matches_head:  # for each note head location found with template matching:
-        closed_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadClosed.value))  # turn into object
-    open_heads = []
+        # Is now included in the loop above, since they were identical
+        #
+        # for head_obj in open_heads:
+        #     head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
+        #     if head_obj.pitch == 'Error':
+        #         continue
+        #     relevant_measure = find_measure(measures, head_obj.x)
+        #     # also here, first determine its corresponding measure, and use that to set the note
+        #     # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
+        #     head_obj.set_note(relevant_measure)
+        #     head_obj.set_key(find_measure(measures, head_obj.x).key)
+        #     head_objects.append(head_obj)  # show in image
 
-    for head in matches_head2:
-        open_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadOpen.value))
+        # turn the found flag symbols into objects
+        flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in
+                        matches_flag]
 
-    head_objects = []
-    for head_obj in closed_heads:
-        head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
-        if head_obj.pitch == 'Error':
-            continue
-        temp_measure = find_measure(measures, head_obj.x)
-        # also here, first determine its corresponding measure, and use that to set the note
-        # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
-        head_obj.set_note(temp_measure)
-        head_obj.set_key(temp_key)
-        head_objects.append(head_obj)  # show in image
-    for head_obj in open_heads:
-        head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
-        if head_obj.pitch == 'Error':
-            continue
-        temp_measure = find_measure(measures, head_obj.x)
-        # also here, first determine its corresponding measure, and use that to set the note
-        # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
-        head_obj.set_note(temp_measure)
-        head_obj.set_key(temp_key)
-        head_objects.append(head_obj)  # show in image
+        # turn rest into object
+        rest_objects = [Rest(rest[0], rest[1], AvailableTemplates.RestEighth.value, current_staff) for rest
+                        in matches_rest]
 
-    # turn the found flag symbols into objects
-    flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in
-                    matches_flag]
+        # find note stems
+        stem_objects = find_stems(current_staff)
+        # find note beams
+        beam_objects = find_beams(current_staff)
 
-    # turn rest into object
-    rest_objects = [Rest(rest[0], rest[1], AvailableTemplates.RestEighth.value, temp_staff) for rest
-                    in matches_rest]
+        # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
+        # in future also should take dots, connection ties, etc.
+        notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, accidental_objects,
+                            current_staff)
 
-    # find note stems
-    stem_objects = find_stems(temp_staff)
-    # find note beams
-    beam_objects = find_beams(temp_staff)
+        # sort notes by x, and thus by time (later add rests first)
+        notes.sort(key=lambda x: x.x)
 
-    # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
-    # in future also should take dots, connection ties, etc.
-    notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, accidental_objects,
-                        temp_staff)
+        unique_notes = []
+        note_coords = []
+        for note in notes:
+            if (note.x, note.y) not in note_coords:
+                note_coords.append((note.x, note.y))
+                unique_notes.append(note)
 
-    # sort notes by x, and thus by time (later add rests first)
-    notes.sort(key=lambda x: x.x)
+        # vanaf hier per measure
+        for meas in measures:
+            meas.assign_objects(unique_notes, rest_objects)
+            meas.find_backups()
 
-    unique_notes = []
-    note_coords = []
-    for note in notes:
-        if (note.x, note.y) not in note_coords:
-            note_coords.append((note.x, note.y))
-            unique_notes.append(note)
-
-    # vanaf hier per measure
-    for meas in measures:
-        meas.assign_objects(unique_notes, rest_objects)
-        meas.find_backups()
+        all_measures += measures
 
     voice = 1
     # write XML file
     root = create_xml()
     part1 = create_firstpart(root, "Piano R")
-    for meas in measures:
+    for meas in all_measures:
         meas1 = add_measure(part1, meas)
 
         for i, obj in enumerate(meas.objects):

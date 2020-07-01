@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from models.staff import Staff
 
 
-def template_matching(template: Template, staff: 'Staff', threshold: float) -> List[List]:
+def template_matching(template: Template, staff: 'Staff', threshold: float) -> List[List[int]]:
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
 
     # Resize template to match staff height

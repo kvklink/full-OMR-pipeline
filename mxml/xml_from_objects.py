@@ -43,16 +43,16 @@ def add_measure(part, meas):
 
     ET.SubElement(attributes, "divisions").text = f"{meas.divisions}"
 
-    if meas.show_key == True:
+    if meas.show_key:
         key = ET.SubElement(attributes, "key")
         ET.SubElement(key, "fifths").text = f"{meas.key}"
 
-    if meas.show_time == True:
+    if meas.show_time:
         time = ET.SubElement(attributes, "time")
-        ET.SubElement(time, "beats").text = f"{meas.beats}"
-        ET.SubElement(time, "beat-type").text = f"{meas.beat_type}"
+        ET.SubElement(time, "beats").text = f"{meas.time.beats}"
+        ET.SubElement(time, "beat-type").text = f"{meas.time.beat_type}"
 
-    if meas.show_clef == True:
+    if meas.show_clef:
         clef = ET.SubElement(attributes, "clef")
         ET.SubElement(clef, "sign").text = meas.clef
         ET.SubElement(clef, "line").text = f"{meas.clef_line}"
@@ -60,12 +60,12 @@ def add_measure(part, meas):
     return measure
 
 
-def add_note(measure, note, voice, addchord = False):
+def add_note(measure, note, voice, addchord=False):
     # add note
     note1 = ET.SubElement(measure, "note")
 
-    if addchord == True:
-         ET.SubElement(note1, "chord")
+    if addchord:
+        ET.SubElement(note1, "chord")
 
     pitch1 = ET.SubElement(note1, "pitch")
     ET.SubElement(pitch1, "step").text = note.note
@@ -79,7 +79,7 @@ def add_note(measure, note, voice, addchord = False):
     # ET.SubElement(note1, "voice").text = ? ("1" oid)
     # ET.SubElement(note1, "staff").text = ? ("1" oid)
     # ET.SubElement(note1, "stem").text = ? ("up" or "down")
-    if note.beam != False:
+    if note.beam:
         ET.SubElement(note1, "beam", number="1").text = note.beam
 
 
@@ -88,6 +88,7 @@ def add_rest(measure, rest, voice):  # dur):
     ET.SubElement(rest1, "rest", measure="yes")
     ET.SubElement(rest1, "duration").text = f"{int(rest.duration)}"
     ET.SubElement(rest1, "voice").text = f"{voice}"
+
 
 def add_backup(measure, length):
     backup = ET.SubElement(measure, "backup")

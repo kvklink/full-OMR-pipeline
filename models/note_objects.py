@@ -5,10 +5,11 @@ Created on Sat Jun 13 16:08:40 2020
 @author: super
 """
 from enum import Enum, unique
-from typing import Optional
 
-from models.staff_objects import Staff, Measure
-from models.template import Template
+import helpers.note_helpers as n_helpers
+import models.measure as measure_model
+import models.staff as staff_model
+import models.template as template_model
 
 
 @unique
@@ -33,7 +34,7 @@ class AccidentalTypes(Enum):
 
 
 class Accidental:
-    def __init__(self, x: int, y: int, template: Template, is_local: bool = True):
+    def __init__(self, x: int, y: int, template: template_model.Template, is_local: bool = True):
         self.x = x
         self.y = y
         self.acc_type = AccidentalTypes.get_by_name(template.name)
@@ -44,7 +45,7 @@ class Accidental:
         self.is_local = is_local
 
     def find_note(self, measure):
-        pitch = find_pitch(measure.staff, self.x, self.y)
+        pitch = n_helpers.find_pitch(measure.staff, self.x, self.y)
         self.note = measure.notes[pitch % 7]
 
     def set_is_local(self, is_local: bool):
@@ -52,7 +53,7 @@ class Accidental:
 
 
 class Head:
-    def __init__(self, x: int, y: int, template: Template):
+    def __init__(self, x: int, y: int, template: template_model.Template):
         self.x = x
         self.y = y
         self.name = template.name
@@ -71,12 +72,12 @@ class Head:
     def connect(self):
         self.connected = True
 
-    def set_pitch(self, staff: Staff):
+    def set_pitch(self, staff: staff_model.Staff):
         mid_x = int(self.x + 0.5 * self.w)
         mid_y = int(self.y + 0.5 * self.h)
-        self.pitch = find_pitch(staff, mid_x, mid_y)
+        self.pitch = n_helpers.find_pitch(staff, mid_x, mid_y)
 
-    def set_note(self, measure: Measure):
+    def set_note(self, measure: measure_model.Measure):
         # print(f"pitch: {self.pitch}")
         # print(f"measure notes: {measure.notes}")
         self.note = measure.notes[self.pitch % 7]
@@ -112,7 +113,7 @@ class Beam:
 
 
 class Flag:
-    def __init__(self, x: int, y: int, template: Template):
+    def __init__(self, x: int, y: int, template: template_model.Template):
         self.x = x
         self.y = y
         self.name = template.name
@@ -130,7 +131,7 @@ class Rest:
         'semidemiquaver_rest': 1 / 8
     }
 
-    def __init__(self, x: int, y: int, template: Template, staff: Staff):
+    def __init__(self, x: int, y: int, template: template_model.Template, staff: staff_model.Staff):
         self.type = 'rest'
 
         self.x = x
@@ -143,7 +144,7 @@ class Rest:
 
 
 class Dots:
-    def __init__(self, x: int, y: int, template: Template):
+    def __init__(self, x: int, y: int, template: template_model.Template):
         self.x = x
         self.y = y
         self.h = template.h
@@ -151,7 +152,7 @@ class Dots:
 
 
 class Relation:
-    def __init__(self, x: int, y: int, template: Template):
+    def __init__(self, x: int, y: int, template: template_model.Template):
         self.x = x
         self.y = y
         self.name = template.name
@@ -206,34 +207,3 @@ class Note:
 
     def set_accidental(self, accidental):
         self.accidental = accidental
-
-
-def find_pitch(staff: Staff, x: int, y: int) -> Optional[int]:
-    line_vals = []
-    for line in staff.lines:
-        line_vals.append(staff.calc_y(line, x))
-
-    if y < min(line_vals):
-        print(f'too high: {y}')
-        return None
-    elif y > max(line_vals):
-        print(f'too low: {y}')
-        return None
-    else:
-        i = 0
-        found = False
-        while not found:
-            i = i + 1
-            found = (y < line_vals[i])
-
-        s = line_vals[i - 1]
-        e = line_vals[i]
-
-        if y in range(int(e - staff.dist / 4) + 1, e + 1):
-            pitch = line_vals.index(e) * 2
-        elif y in range(s, int(s + staff.dist / 4)):
-            pitch = line_vals.index(s) * 2
-        else:
-            pitch = line_vals.index(e) * 2 - 1
-
-    return pitch

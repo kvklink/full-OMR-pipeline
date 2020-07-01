@@ -10,7 +10,8 @@ from typing import List
 import cv2
 
 from models.note_objects import Stem, Note, Head, Flag, Beam, Accidental, AccidentalTypes
-from models.staff_objects import Staff, Time
+from models.staff import Staff
+from models.staff_objects import Time
 from template_matching.template_matching import template_matching_array, AvailableTemplates
 
 

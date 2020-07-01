@@ -6,10 +6,8 @@ Created on Sat Jun 13 15:16:26 2020
 """
 
 from enum import Enum, unique
-from typing import List, Optional
 
-from models.measure import Measure
-from models.note_objects import AccidentalTypes
+import models.note_objects as note_obj
 
 
 class Barline:
@@ -59,27 +57,16 @@ class Key:
     def __init__(self, grouped_accidentals):
         self.x, self.y, self.h, self.w = self.find_rect(grouped_accidentals) if len(grouped_accidentals) > 0 else (
             0, 0, 0, 0)
-        self.acc_type = grouped_accidentals[0].acc_type if len(grouped_accidentals) > 0 else AccidentalTypes.NATURAL
+        self.acc_type = grouped_accidentals[0].acc_type if len(
+            grouped_accidentals) > 0 else note_obj.AccidentalTypes.NATURAL
         self.key = self.find_key(grouped_accidentals)
         self.accidentals = grouped_accidentals
 
-    def find_rect(self, group):
-        minx, miny = (group[0].x, group[0].y)
-        maxx, maxy = (minx, miny)
-        for acc in group:
-            minx = min(minx, acc.x)
-            maxx = max(maxx, acc.x + acc.w)
-            miny = min(miny, acc.y)
-            maxy = max(maxy, acc.y + acc.h)
-        w = maxx - minx
-        h = maxy - miny
-        return minx, miny, w, h
-
     def find_key(self, group):
         amount = len(group)
-        if self.acc_type is AccidentalTypes.FLAT:
+        if self.acc_type is note_obj.AccidentalTypes.FLAT:
             return -1 * amount
-        elif self.acc_type is AccidentalTypes.SHARP:
+        elif self.acc_type is note_obj.AccidentalTypes.SHARP:
             return amount
         elif amount == 0:
             return 0

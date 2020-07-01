@@ -1,14 +1,13 @@
-from models.staff import Staff
-from models.staff_objects import Key, Time, Clef
+import models.staff as staff_model
 
 
 class Measure:
     Gnotes = ['G', 'F', 'E', 'D', 'C', 'B', 'A']
     Goctave = 6
 
-    def __init__(self, staff: Staff, nr: int, start: int, end: int, key: Key, time: Time, clef: Clef):
-        self.lines = staff.lines
-        self.dist = staff.dist
+    def __init__(self, input_staff: staff_model.Staff, nr: int, start: int, end: int):
+        self.lines = input_staff.lines
+        self.dist = input_staff.dist
 
         self.measure = nr
         self.start = start
@@ -28,8 +27,8 @@ class Measure:
 
         self.notes = self.Gnotes
         self.octave = self.Goctave
-        self.divisions = staff.divisions
-        self.staff = staff
+        self.divisions = input_staff.divisions
+        self.staff = input_staff
 
         self.objects = []
         self.chord_locs = []

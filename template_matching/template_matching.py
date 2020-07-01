@@ -1,15 +1,19 @@
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, TYPE_CHECKING
 
 import cv2
 import imutils
 import numpy as np
 
-from models.note_objects import Template, AccidentalTypes
-from models.staff_objects import Staff, ClefTypes
+from models.note_objects import AccidentalTypes
+from models.template import Template
+from models.staff_objects import ClefTypes
+
+if TYPE_CHECKING:
+    from models.staff import Staff
 
 
-def template_matching(template: Template, staff: Staff, threshold: float) -> List[List]:
+def template_matching(template: Template, staff: 'Staff', threshold: float) -> List[List]:
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
 
     # Resize template to match staff height
@@ -36,7 +40,7 @@ def template_matching(template: Template, staff: Staff, threshold: float) -> Lis
     return unique_matches
 
 
-def template_matching_array(templates: List[Template], staff: Staff, threshold: float) -> Dict[Template, List]:
+def template_matching_array(templates: List['Template'], staff: 'Staff', threshold: float) -> Dict['Template', List]:
     result = {}
     for template in templates:
         potential_result = template_matching(template, staff, threshold)

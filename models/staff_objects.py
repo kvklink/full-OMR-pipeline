@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jun 13 15:16:26 2020
-
-@author: super
-"""
-
 from enum import Enum, unique
 
-import models.note_objects as note_obj
+from helpers.staff_helpers import find_rect
+from models.note_objects import AccidentalTypes
 
 
 class Barline:
@@ -23,9 +17,9 @@ class ClefTypes(Enum):
     F_CLEF = ('f-clef', 'F')
     C_CLEF = ('c-clef', 'C')
 
-    def __init__(self, name: str, letter: str):
-        self.name = name
-        self.letter = letter
+    def __init__(self, clef_name: str, clef_letter: str):
+        self.clef_name = clef_name
+        self.clef_letter = clef_letter
 
     @staticmethod
     def get_by_name(clef_name: str):
@@ -55,18 +49,18 @@ class Clef:
 
 class Key:
     def __init__(self, grouped_accidentals):
-        self.x, self.y, self.h, self.w = self.find_rect(grouped_accidentals) if len(grouped_accidentals) > 0 else (
+        self.x, self.y, self.h, self.w = find_rect(grouped_accidentals) if len(grouped_accidentals) > 0 else (
             0, 0, 0, 0)
         self.acc_type = grouped_accidentals[0].acc_type if len(
-            grouped_accidentals) > 0 else note_obj.AccidentalTypes.NATURAL
+            grouped_accidentals) > 0 else AccidentalTypes.NATURAL
         self.key = self.find_key(grouped_accidentals)
         self.accidentals = grouped_accidentals
 
     def find_key(self, group):
         amount = len(group)
-        if self.acc_type is note_obj.AccidentalTypes.FLAT:
+        if self.acc_type is AccidentalTypes.FLAT:
             return -1 * amount
-        elif self.acc_type is note_obj.AccidentalTypes.SHARP:
+        elif self.acc_type is AccidentalTypes.SHARP:
             return amount
         elif amount == 0:
             return 0

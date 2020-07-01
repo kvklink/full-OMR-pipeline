@@ -1,13 +1,15 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-import helpers.staff_helpers as staff_helpers
-import models.staff as staff_model
+from helpers.staff_helpers import calc_y
+
+if TYPE_CHECKING:
+    from models.staff import Staff
 
 
-def find_pitch(staff: staff_model.Staff, x: int, y: int) -> Optional[int]:
+def find_pitch(staff: 'Staff', x: int, y: int) -> Optional[int]:
     line_vals = []
     for line in staff.lines:
-        line_vals.append(staff_helpers.calc_y(line, x))
+        line_vals.append(calc_y(line, x))
 
     if y < min(line_vals):
         print(f'too high: {y}')

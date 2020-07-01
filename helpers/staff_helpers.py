@@ -171,7 +171,7 @@ def detect_staff_lines(img_bar):
     return unique_lines
 
 
-def find_rect(self, group):
+def find_rect(group):
     min_x, min_y = (group[0].x, group[0].y)
     max_x, max_y = (min_x, min_y)
     for acc in group:

@@ -1,23 +1,25 @@
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
-import helpers.staff_helpers as helper
-import models.measure as measure_model
+from helpers.staff_helpers import detect_staff_lines, calc_avg_distance, calc_higher_lines, calc_lower_lines
+
+if TYPE_CHECKING:
+    from models.measure import Measure
 
 
 class Staff:
     def __init__(self, img_bar):
         self.image = img_bar
-        first_lines = helper.detect_staff_lines(img_bar)
-        self.dist = helper.calc_avg_distance(first_lines)
+        first_lines = detect_staff_lines(img_bar)
+        self.dist = calc_avg_distance(first_lines)
         self.lines = sorted(
-            helper.calc_higher_lines(helper.calc_lower_lines(first_lines, self.dist, img_bar.shape[1]), self.dist,
+            calc_higher_lines(calc_lower_lines(first_lines, self.dist, img_bar.shape[1]), self.dist,
                               img_bar.shape[1]), key=lambda x: x[1])
         self.divisions = 12
         self.nr_timewise = float('NaN')
         self.nr_instrument = float('NaN')
-        self.measures: Optional[List[measure_model.Measure]] = None
+        self.measures: Optional[List['Measure']] = None
 
-    def set_measures(self, measures: List[measure_model.Measure]):
+    def set_measures(self, measures: List['Measure']):
         self.measures = measures
 
     def set_bar_nrs(self, nr_timewise, nr_instrument):

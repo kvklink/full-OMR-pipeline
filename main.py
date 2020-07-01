@@ -12,7 +12,7 @@ from mxml.xml_from_objects import add_backup, add_note, add_rest, add_measure, c
 from notes.build_notes_objects import detect_accidentals, group_accidentals, build_notes, find_stems
 from notes.find_beams import find_beams
 from staffs.seperate_staffs import separate_staffs
-from template_matching.template_matching import template_matching, AvailableTemplates
+from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
 
 
 def main():
@@ -31,22 +31,22 @@ def main():
     staffs = [[Staff(s) for s in separate_staffs(deskewed_image)][1]]
 
     # set threshold for template matching
-    threshold = 0.8
     all_measures: List[Measure] = []
 
     for current_staff in staffs:
-        # time_yo
-        times34 = template_matching(AvailableTemplates.Time3_4.value, current_staff, 0.7)
-        time34_objects = []
-        for t in times34:
-            time34_objects.append(Time(t[0], t[1], AvailableTemplates.Time3_4.value))
+        # Generate Time objects
+        detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.7)
+        time_objects: List['Time'] = []
+        for template in detected_times.keys():
+            for match in detected_times[template]:
+                time_objects.append(Time(match[0], match[1], template))
 
         # find measures
         measure_locs = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
         barlines = select_barlines(measure_locs, current_staff, AvailableTemplates.Barline.value)
         measures = split_measures(barlines, current_staff)
 
-        time_meas = find_measure(measures, time34_objects[0].x)
+        time_meas = find_measure(measures, time_objects[0].x)
         if time_meas is not None:
             time_meas.show_time = True
 
@@ -55,10 +55,11 @@ def main():
 
         # find clef, key and time
         # clef
-        clefs = template_matching(AvailableTemplates.ClefF.value, current_staff, 0.5)
-        clef_objects = []
-        for c in clefs:
-            clef_objects.append(Clef(c[0], c[1], AvailableTemplates.ClefF.value))
+        clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
+        clef_objects: List['Clef'] = []
+        for template in clefs.keys():
+            for match in clefs[template]:
+                clef_objects.append(Clef(match[0], match[1], template))
 
         # temp_acc_group = []
         # if len(temp_acc_group) > 0:
@@ -87,7 +88,7 @@ def main():
             # then add to current measure and following upto next clef/time)
             measure.set_clef(clef_objects[0].type)
             # measure.set_key() # FIXME: wat doet dit? Als in, waar is een Key object voor bedoeld?
-            measure.set_time(time34_objects[0])
+            measure.set_time(time_objects[0])
 
         # FIXME: denk ik beter om dit binnen de for loop door alle measures te doen ipv ze per stuk op te zoeken
         # maar ik weet niet zeker of dat wel zomaar kan, vandaar dat ik het zo laat voor nu
@@ -105,8 +106,8 @@ def main():
 
         # do template matching for notes and rests (to do: change to groups)
         # note heads closed
-        matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, current_staff, threshold)
-        matches_head2 = template_matching(AvailableTemplates.NoteheadOpen.value, current_staff, threshold)
+        matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, current_staff, 0.8)
+        matches_head2 = template_matching(AvailableTemplates.NoteheadOpen.value, current_staff, 0.8)
 
         # single upside down flag
         matches_flag = template_matching(AvailableTemplates.FlagUpsideDown1.value, current_staff, 0.5)

@@ -5,8 +5,8 @@ import cv2
 import imutils
 import numpy as np
 
-from notes.note_objects import Template, AccidentalTypes
-from staffs.staff_objects import Staff
+from models.note_objects import Template, AccidentalTypes
+from models.staff_objects import Staff, ClefTypes
 
 
 def template_matching(template: Template, staff: Staff, threshold: float) -> List[List]:
@@ -64,7 +64,7 @@ class AvailableTemplates(Enum):
 
     # Rests
     RestFull = Template('full_rest', 'images/templates/rests/full-rest-on-line.jpg', 1)
-    # !! Half and full rest are *very* similar templates, maybe these would have to be
+    # FIXME: Half and full rest are *very* similar templates, maybe these would have to be
     # merged and distinguished in a later step eg. using context
     RestHalf = Template('half_rest', 'images/templates/rests/half-rest-on-line.jpg', 1)
     RestFourth = Template('fourth_rest', 'images/templates/rests/4th-rest-with-lines.jpg', 4)
@@ -74,9 +74,9 @@ class AvailableTemplates(Enum):
 
     # Clefs
     #    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
-    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines-2.jpg', 4)
-    ClefF = Template('f-clef', 'images/templates/clefs/f-clef-with-lines.jpg', 4)
-    ClefC = Template('c-clef', 'images/templates/clefs/c-clef-with-lines.jpg', 4)
+    ClefG = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/g-clef-with-lines-2.jpg', 4)
+    ClefF = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/f-clef-with-lines.jpg', 4)
+    ClefC = Template(ClefTypes.C_CLEF.name, 'images/templates/clefs/c-clef-with-lines.jpg', 4)
 
     AllClefs = [ClefG, ClefF, ClefC]
 

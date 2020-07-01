@@ -6,9 +6,9 @@ import cv2 as cv
 from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note, add_rest, add_backup
 from notes.build_notes_objects import find_stems, build_notes, detect_accidentals, group_accidentals
 from notes.find_beams import find_beams
-from notes.note_objects import Head, Flag, Rest, Accidental
+from models.note_objects import Head, Flag, Rest, Accidental
 from staffs.seperate_staffs import separate_staffs
-from staffs.staff_objects import Staff, find_measure, Clef, Time, split_measures, select_barlines, Key
+from models.staff_objects import Staff, find_measure, Clef, Time, split_measures, select_barlines, Key
 from template_matching.template_matching import template_matching, AvailableTemplates
 
 

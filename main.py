@@ -3,12 +3,14 @@ from typing import List
 
 import cv2 as cv
 
-from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note, add_rest, add_backup
-from notes.build_notes_objects import find_stems, build_notes, detect_accidentals, group_accidentals
-from notes.find_beams import find_beams
-from notes.note_objects import Head, Flag, Rest, Accidental
 from staffs.seperate_staffs import separate_staffs
-from staffs.staff_objects import Staff, find_measure, Clef, Time, split_measures, select_barlines, Key
+from helpers.measure_helpers import select_barlines, split_measures, find_measure
+from models.note_objects import Accidental, Flag, Rest, Head
+from models.staff import Staff
+from models.staff_objects import Time, Clef, Key
+from mxml.xml_from_objects import add_backup, add_note, add_rest, add_measure, create_firstpart, create_xml
+from notes.build_notes_objects import detect_accidentals, group_accidentals, build_notes, find_stems
+from notes.find_beams import find_beams
 from template_matching.template_matching import template_matching, AvailableTemplates
 
 
@@ -64,7 +66,6 @@ def main():
     global_key_per_measure: List[Accidental] = []
     # FIXME: iets met global key of ding met maat ofzo zal ik wel missen. help.
     for measure in measures:
-        print(measure.key)
         key_per_measure: List[Accidental] = global_key_per_measure.copy()
         for accidentals in group_accidentals(accidental_objects):
             if not accidentals[0].is_local:
@@ -140,10 +141,12 @@ def main():
         head_objects.append(head_obj)  # show in image
 
     # turn the found flag symbols into objects
-    flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in matches_flag]
+    flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in
+                    matches_flag]
 
     # turn rest into object
-    rest_objects = [Rest(rest[0], rest[1], AvailableTemplates.RestEighth.value, temp_staff) for rest in matches_rest]
+    rest_objects = [Rest(rest[0], rest[1], AvailableTemplates.RestEighth.value, temp_staff) for rest
+                    in matches_rest]
 
     # find note stems
     stem_objects = find_stems(temp_staff)
@@ -152,7 +155,8 @@ def main():
 
     # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
     # in future also should take dots, connection ties, etc.
-    notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, accidental_objects, temp_staff)
+    notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, accidental_objects,
+                        temp_staff)
 
     # sort notes by x, and thus by time (later add rests first)
     notes.sort(key=lambda x: x.x)

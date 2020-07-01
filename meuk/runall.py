@@ -7,8 +7,8 @@ Created on Sat Jun 13 17:49:06 2020
 
 import cv2
 from staffs.seperate_staffs import separate_staffs
-from staffs.staff_objects import Staff #, Staff_measure, Bar_line, split_measures
-from notes.note_objects import Template, Head#, Stem #, Flag, Rest, Accidental, Dots, Relation
+from models.staff_objects import Staff #, Staff_measure, Bar_line, split_measures
+from models.note_objects import Template, Head#, Stem #, Flag, Rest, Accidental, Dots, Relation
 from notes.build_notes_objects import find_stems, build_notes
 from template_matching import template_matching
 

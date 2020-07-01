@@ -5,16 +5,20 @@ Created on Sat Jun 13 16:52:35 2020
 @author: super
 """
 import math
-from typing import List
+from typing import List, TYPE_CHECKING
 
 import cv2
 
-from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental, AccidentalTypes
-from staffs.staff_objects import Staff, Time
+from models.note_objects import Accidental, Stem, AccidentalTypes, Note
 from template_matching.template_matching import template_matching_array, AvailableTemplates
 
+if TYPE_CHECKING:
+    from models.note_objects import Head, Flag, Beam
+    from models.staff import Staff
+    from models.staff_objects import Time
 
-def find_stems(staff: Staff) -> List[Stem]:
+
+def find_stems(staff: 'Staff') -> List['Stem']:
     img_bar = staff.image
     img_struct_ver = img_bar.copy()
     ver_size = int(img_bar.shape[0] / 15)
@@ -40,7 +44,7 @@ def find_stems(staff: Staff) -> List[Stem]:
     #
     #    cv2.imshow('stems', imcopy)
 
-    stem_list: List[Stem] = []
+    stem_list: List['Stem'] = []
     for line in lines2_ver:
         l = line[0]
         stem_list.append(Stem(l[0], l[1], l[2], l[3]))
@@ -48,13 +52,13 @@ def find_stems(staff: Staff) -> List[Stem]:
     return stem_list
 
 
-def detect_accidentals(staff: Staff, threshold: float, signature: Time = None) -> List[Accidental]:
+def detect_accidentals(staff: 'Staff', threshold: float, signature: 'Time' = None) -> List['Accidental']:
     found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, threshold)
     if len(found_accidentals.keys()) == 0:
         # No accidentals were found, so just cut to the chase already
         return []
 
-    matched_accidentals: List[Accidental] = []
+    matched_accidentals: List['Accidental'] = []
     for template in found_accidentals.keys():
         for match in found_accidentals[template]:
             matched_accidentals.append(Accidental(match[0], match[1], template))
@@ -63,13 +67,13 @@ def detect_accidentals(staff: Staff, threshold: float, signature: Time = None) -
     matched_accidentals.sort(key=lambda acc: acc.x)
 
     for i in range(len(matched_accidentals)):
-        current: Accidental = matched_accidentals[i]
+        current: 'Accidental' = matched_accidentals[i]
         if current.acc_type in [AccidentalTypes.FLAT_DOUBLE, AccidentalTypes.SHARP_DOUBLE, AccidentalTypes.NATURAL]:
             # It is either a double flat, double sharp or a natural (and must therefore be local)
             current.set_is_local(True)
             continue
 
-        previous: Accidental = matched_accidentals[i - 1]
+        previous: 'Accidental' = matched_accidentals[i - 1]
         if previous:
             if previous.x - current.x < (staff.dist * 1.5) \
                     and (previous.y - current.y) > (staff.dist * 0.5) \
@@ -92,8 +96,8 @@ def detect_accidentals(staff: Staff, threshold: float, signature: Time = None) -
     return matched_accidentals
 
 
-def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: List[Beam],
-                accidentals: List[Accidental], staff: Staff) -> List[Note]:
+def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], beams: List['Beam'],
+                accidentals: List['Accidental'], staff: 'Staff') -> List['Note']:
     dist = staff.dist
     nd = int(dist / 8)
 
@@ -103,7 +107,7 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
         'triple_beam': ('demisemiquaver', 8)
     }
 
-    notes: List[Note] = []
+    notes: List['Note'] = []
 
     for head in heads:
         hx1, hy1 = head.x, head.y
@@ -215,8 +219,8 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
 
 # Group accidentals together in groups. Groups consist of local and nonlocal accidentals in alternating order
 # Example: [n,n,n,l,l,l,l,n,l,l] -> [[n,n,n],[l,l,l,l],[n],[l,l]]
-def group_accidentals(accidentals: List[Accidental]) -> List[List[Accidental]]:
-    result: List[List[Accidental]] = [[]]
+def group_accidentals(accidentals: List['Accidental']) -> List[List['Accidental']]:
+    result: List[List['Accidental']] = [[]]
     group_index = 0
     for i in range(len(accidentals)):
         if accidentals[i].is_local:

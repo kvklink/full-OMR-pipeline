@@ -192,6 +192,7 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
     # TODO: somehow create full notes (check open heads not in note list?)
 
     # Apply accidentals to notes
+    # FIXME: is this necessary?
     grouped_accidentals = group_accidentals(accidentals)
     for accidental_arr in grouped_accidentals:
         for accidental in accidental_arr:

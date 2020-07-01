@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import cv2 as cv
 
+
 def imshow(title, image, use_plt=True, is_bgr = False):
     if use_plt:
         if is_bgr:
@@ -12,8 +13,10 @@ def imshow(title, image, use_plt=True, is_bgr = False):
         cv.imshow(title, image)
     return
 
+
 def bgr_imshow(title, image, use_plt=True):
     return imshow(title, image, use_plt, is_bgr=True)
+
 
 def get_dir(file_path):
     return file_path[::-1].split('/',1)[1][::-1]

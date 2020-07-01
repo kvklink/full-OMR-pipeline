@@ -9,8 +9,9 @@ from typing import List
 
 import cv2
 
-from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental, AccidentalTypes
-from staffs.staff_objects import Staff, Time
+from models.note_objects import Stem, Note, Head, Flag, Beam, Accidental, AccidentalTypes
+from models.staff import Staff
+from models.staff_objects import Time
 from template_matching.template_matching import template_matching_array, AvailableTemplates
 
 
@@ -48,7 +49,7 @@ def find_stems(staff: Staff) -> List[Stem]:
     return stem_list
 
 
-def detect_accidentals(staff: Staff, threshold: float, signature: Time) -> List[Accidental]:
+def detect_accidentals(staff: Staff, threshold: float, signature: Time = None) -> List[Accidental]:
     found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, threshold)
     if len(found_accidentals.keys()) == 0:
         # No accidentals were found, so just cut to the chase already
@@ -194,11 +195,21 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
             x_start = accidental_arr[0].x
             x_end = accidental_arr[-1].x + staff.dist * 1.5
             for _note in notes:
+                # print(f'Note: {_note.note} Accidental: {accidental.note}')
                 if x_start <= _note.x < x_end and _note.note == accidental.note:
                     # Apply the accidental when it is in range, the same note,
                     # and non-local, or sufficiently close to the current note
-                    if (not accidental.is_local) or (_note.x - accidental.x < staff.dist * 1.5):
+                    if not accidental.is_local:
+                        # print("apply 1")
                         _note.accidental = accidental
+                    elif _note.x - accidental.x < staff.dist * 1.5:
+                        # print("apply 2")
+                        # FIXME: local accidentals should be applied to the rest of the measure!
+                        _note.accidental = accidental
+                    # else:
+                    #     print(f'hmmmmm: {accidental.x}   {_note.x}   {staff.dist}')
+                # elif _note.note == accidental.note:
+                #     print(f'{x_start}    {x_end}    {_note.x}')
 
     return notes
 

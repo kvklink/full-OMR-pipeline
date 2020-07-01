@@ -1,7 +1,9 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+from models.staff_objects import ClefTypes
 
 if TYPE_CHECKING:
     from models.staff import Staff
+    from models.staff_objects import Key, Clef, Time
 
 
 class Measure:
@@ -20,13 +22,11 @@ class Measure:
         self.show_key = False
         self.show_time = False
 
-        self.clef = 'G'
+        self.clef: Optional['Clef'] = None
+        self.key: Optional['Key'] = None
+        self.time: Optional['Time'] = None
+
         self.clef_line = 2
-
-        self.key = 0
-
-        self.beats = 4
-        self.beat_type = 4
 
         self.notes = self.Gnotes
         self.octave = self.Goctave
@@ -38,38 +38,34 @@ class Measure:
         self.backup_locs = []
         self.backup_times = {}
 
-    def set_clef(self, clef):
+    def set_clef(self, clef: 'Clef'):
         self.clef = clef
+        self.update_clef()
 
-    def set_clef_line(self, clef_line):
+    def set_clef_line(self, clef_line: int):
         self.clef_line = clef_line
 
-    def set_key(self, key):
+    def set_key(self, key: 'Key'):
         self.key = key
 
-    def set_beats(self, beats):
-        self.beats = beats
-
-    def set_beat_type(self, beat_type):
-        self.beat_type = beat_type
-
-    def set_time(self, time):
-        self.beats = time.beats
-        self.beat_type = time.beat_type
+    def set_time(self, time: 'Time'):
+        self.time = time
 
     def update_clef(self):
-        if self.clef == 'G':
+        if self.clef.type == ClefTypes.G_CLEF.name:
             self.clef_line = 2
             self.notes = self.Gnotes
             self.octave = self.Goctave
-        elif self.clef == 'C':
+        elif self.clef.type == ClefTypes.C_CLEF.name:
             self.clef_line = 3
             self.notes = self.Gnotes[6:] + self.Gnotes[:6]
             self.octave = self.Goctave - 1
-        elif self.clef == 'F':
+        elif self.clef.type == ClefTypes.F_CLEF.name:
             self.clef_line = 4
             self.notes = self.Gnotes[5:] + self.Gnotes[:5]
             self.octave = self.Goctave - 2
+        else:
+            raise ValueError(f'{self.clef.type} is an unsupported Clef type')
 
     def set_divisions(self, div):
         self.divisions = div

@@ -52,8 +52,7 @@ def main():
         # find accidentals
         accidental_objects = detect_accidentals(current_staff, 0.7)
 
-        # find clef, key and time
-        # clef
+        # find clef
         clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
         clef_objects: List['Clef'] = []
         for template in clefs.keys():
@@ -62,7 +61,6 @@ def main():
 
         # Associate accidentals with a certain note
         global_key_per_measure: List[Accidental] = []
-        # FIXME: iets met global key of ding met maat ofzo zal ik wel missen. help.
         for measure in measures:
             key_per_measure: List[Accidental] = global_key_per_measure.copy()
             for accidentals in group_accidentals(accidental_objects):
@@ -77,25 +75,11 @@ def main():
 
             measure.set_key(Key(key_per_measure))
 
-            # for now we use first option (temporary) (to do: order clefs/times by x,
-            # then add to current measure and following upto next clef/time)
-            measure.set_clef(clef_objects[0].type)
-            # measure.set_key() # FIXME: wat doet dit? Als in, waar is een Key object voor bedoeld?
-            measure.set_time(time_objects[0])
+            relevant_clef = max([clef for clef in clef_objects if clef.x < measure.end], key=lambda clef: clef.x)
+            measure.set_clef(relevant_clef)
 
-        # FIXME: denk ik beter om dit binnen de for loop door alle measures te doen ipv ze per stuk op te zoeken
-        # maar ik weet niet zeker of dat wel zomaar kan, vandaar dat ik het zo laat voor nu
-
-        # Sterker nog, clef_meas en key_meas worden nergens anders gebruikt afaik
-        # clef_meas = find_measure(measures, clef_objects[0].x)
-        # if clef_meas is not None:
-        #     clef_meas.show_clef = True
-        # key_meas = find_measure(measures, temp_key.x)
-        # if key_meas is not None:
-        #     key_meas.show_key = True
-
-        # TODO: temp key slaat nergens op. Werkt op dit moment niet met toonsoort-wisselingen of sleutel-wisselingen
-        temp_key = Key(global_key_per_measure)
+            relevant_time = max([time for time in time_objects if time.x < measure.end], key=lambda time: time.x)
+            measure.set_time(relevant_time)
 
         # do template matching for notes and rests (to do: change to groups)
         # note heads closed
@@ -111,32 +95,35 @@ def main():
         closed_heads = []
         for head in matches_head:  # for each note head location found with template matching:
             closed_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadClosed.value))  # turn into object
-        open_heads = []
 
+        open_heads = []
         for head in matches_head2:
             open_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadOpen.value))
 
         head_objects = []
-        for head_obj in closed_heads:
+        for head_obj in closed_heads + open_heads:
             head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
             if head_obj.pitch == 'Error':
                 continue
-            temp_measure = find_measure(measures, head_obj.x)
+            relevant_measure = find_measure(measures, head_obj.x)
             # also here, first determine its corresponding measure, and use that to set the note
             # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
-            head_obj.set_note(temp_measure)
-            head_obj.set_key(temp_key)
+            head_obj.set_note(relevant_measure)
+            head_obj.set_key(find_measure(measures, head_obj.x).key)
             head_objects.append(head_obj)  # show in image
-        for head_obj in open_heads:
-            head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
-            if head_obj.pitch == 'Error':
-                continue
-            temp_measure = find_measure(measures, head_obj.x)
-            # also here, first determine its corresponding measure, and use that to set the note
-            # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
-            head_obj.set_note(temp_measure)
-            head_obj.set_key(temp_key)
-            head_objects.append(head_obj)  # show in image
+
+        # Is now included in the loop above, since they were identical
+        #
+        # for head_obj in open_heads:
+        #     head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
+        #     if head_obj.pitch == 'Error':
+        #         continue
+        #     relevant_measure = find_measure(measures, head_obj.x)
+        #     # also here, first determine its corresponding measure, and use that to set the note
+        #     # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
+        #     head_obj.set_note(relevant_measure)
+        #     head_obj.set_key(find_measure(measures, head_obj.x).key)
+        #     head_objects.append(head_obj)  # show in image
 
         # turn the found flag symbols into objects
         flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in

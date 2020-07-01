@@ -315,7 +315,7 @@ def split_measures(barlines, staff):  # barlines sorted on x
 
 def find_measure(measures, x):
     for measure in measures:
-        if x > measure.start and x < measure.end:
+        if measure.start < x < measure.end:
             return measure
     return None
 
@@ -335,7 +335,7 @@ class Key:
     def __init__(self, grouped_accidentals):
         self.x, self.y, self.h, self.w = self.find_rect(grouped_accidentals) if len(grouped_accidentals) > 0 else (
             0, 0, 0, 0)
-        self.acc_type = grouped_accidentals[0].type if len(grouped_accidentals) > 0 else 'normal'
+        self.acc_type = grouped_accidentals[0].acc_type if len(grouped_accidentals) > 0 else AccidentalTypes.NATURAL
         self.key = self.find_key(grouped_accidentals)
         self.accidentals = grouped_accidentals
 

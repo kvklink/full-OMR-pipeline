@@ -1,13 +1,14 @@
 import xml.etree.cElementTree as ET
+from typing import List
 
 import cv2 as cv
 
 from mxml.xml_from_objects import create_xml, create_firstpart, add_measure, add_note, add_rest, add_backup
-from notes.build_notes_objects import find_stems, build_notes, detect_accidentals
+from notes.build_notes_objects import find_stems, build_notes, detect_accidentals, group_accidentals
 from notes.find_beams import find_beams
-from notes.note_objects import Head, Flag, Rest
+from notes.note_objects import Head, Flag, Rest, Accidental
 from staffs.seperate_staffs import separate_staffs
-from staffs.staff_objects import Staff, find_measure, Clef, Key, Time, split_measures, select_barlines
+from staffs.staff_objects import Staff, find_measure, Clef, Time, split_measures, select_barlines, Key
 from template_matching.template_matching import template_matching, AvailableTemplates
 
 
@@ -23,51 +24,79 @@ def main():
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(deskewed_image)]
-    temp_staff = staffs[0]  # temporary: do only for first staff while testing
+    temp_staff = staffs[1]  # temporary: do only for first staff while testing
 
     # set threshold for template matching
     threshold = 0.8
 
-    # vanaf hier per staff
-    # find measures
-    measure_locs = template_matching(AvailableTemplates.Barline.value, temp_staff, 0.8)
-    barlines = select_barlines(measure_locs, temp_staff, AvailableTemplates.Barline.value)
-    measures = split_measures(barlines, temp_staff)
-
-    # find clef, key and time
-    # clef
-    clefs = template_matching(AvailableTemplates.ClefG.value, temp_staff, 0.5)
-    clef_objects = []
-    for c in clefs:
-        clef_objects.append(Clef(c[0], c[1], AvailableTemplates.ClefG.value))
-    # key, TODO: by template matching (find groups)
-    temp_acc_group = []
-    if len(temp_acc_group) > 0:
-        for acc in temp_acc_group:
-            acc.find_note(measures[0])
-    temp_key = Key(temp_acc_group)
     # time
     times34 = template_matching(AvailableTemplates.Time3_4.value, temp_staff, 0.7)
     time34_objects = []
     for t in times34:
         time34_objects.append(Time(t[0], t[1], AvailableTemplates.Time3_4.value))
 
-    # for now we use first option (temporary) (to do: order clefs/times by x,
-    # then add to current measure and following upto next clef/time)
-    for meas in measures:
-        meas.set_clef(clef_objects[0].type)
-        meas.set_key(temp_key.key)
-        meas.set_time(time34_objects[0])
+    # find measures
+    measure_locs = template_matching(AvailableTemplates.Barline.value, temp_staff, 0.8)
+    barlines = select_barlines(measure_locs, temp_staff, AvailableTemplates.Barline.value)
+    measures = split_measures(barlines, temp_staff)
 
-    clef_meas = find_measure(measures, clef_objects[0].x)
-    if clef_meas is not None:
-        clef_meas.show_clef = True
-    key_meas = find_measure(measures, temp_key.x)
-    if key_meas is not None:
-        key_meas.show_key = True
     time_meas = find_measure(measures, time34_objects[0].x)
     if time_meas is not None:
         time_meas.show_time = True
+
+    # find accidentals
+    accidental_objects = detect_accidentals(temp_staff, 0.7, time_meas)
+
+    # find clef, key and time
+    # clef
+    clefs = template_matching(AvailableTemplates.ClefF.value, temp_staff, 0.5)
+    clef_objects = []
+    for c in clefs:
+        clef_objects.append(Clef(c[0], c[1], AvailableTemplates.ClefF.value))
+
+    # temp_acc_group = []
+    # if len(temp_acc_group) > 0:
+    #     for acc in temp_acc_group:
+    #         acc.find_note(measures[0])
+    # temp_key = Key(temp_acc_group)
+
+    # Associate accidentals with a certain note
+    global_key_per_measure: List[Accidental] = []
+    # FIXME: iets met global key of ding met maat ofzo zal ik wel missen. help.
+    for measure in measures:
+        print(measure.key)
+        key_per_measure: List[Accidental] = global_key_per_measure.copy()
+        for accidentals in group_accidentals(accidental_objects):
+            if not accidentals[0].is_local:
+                # We encounter a group of key accidentals, update key accordingly
+                global_key_per_measure = accidentals
+            for accidental in accidentals:
+                # Update all accidentals that fit in this measure
+                if measure.start < accidental.x < measure.end:
+                    accidental.find_note(measure)
+                    key_per_measure.append(accidental)
+
+        measure.set_key(Key(key_per_measure))
+
+        # for now we use first option (temporary) (to do: order clefs/times by x,
+        # then add to current measure and following upto next clef/time)
+        measure.set_clef(clef_objects[0].type)
+        # measure.set_key() # FIXME: wat doet dit? Als in, waar is een Key object voor bedoeld?
+        measure.set_time(time34_objects[0])
+
+    # FIXME: denk ik beter om dit binnen de for loop door alle measures te doen ipv ze per stuk op te zoeken
+    # maar ik weet niet zeker of dat wel zomaar kan, vandaar dat ik het zo laat voor nu
+
+    # Sterker nog, clef_meas en key_meas worden nergens anders gebruikt afaik
+    # clef_meas = find_measure(measures, clef_objects[0].x)
+    # if clef_meas is not None:
+    #     clef_meas.show_clef = True
+    # key_meas = find_measure(measures, temp_key.x)
+    # if key_meas is not None:
+    #     key_meas.show_key = True
+
+    # TODO: temp key slaat nergens op. Werkt op dit moment niet met toonsoort-wisselingen of sleutel-wisselingen
+    temp_key = Key(global_key_per_measure)
 
     # do template matching for notes and rests (to do: change to groups)
     # note heads closed
@@ -91,7 +120,8 @@ def main():
     head_objects = []
     for head_obj in closed_heads:
         head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
-        if head_obj.pitch == 'Error': continue
+        if head_obj.pitch == 'Error':
+            continue
         temp_measure = find_measure(measures, head_obj.x)
         # also here, first determine its corresponding measure, and use that to set the note
         # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
@@ -100,7 +130,8 @@ def main():
         head_objects.append(head_obj)  # show in image
     for head_obj in open_heads:
         head_obj.set_pitch(temp_staff)  # determine the pitch based on the Staff line locations
-        if head_obj.pitch == 'Error': continue
+        if head_obj.pitch == 'Error':
+            continue
         temp_measure = find_measure(measures, head_obj.x)
         # also here, first determine its corresponding measure, and use that to set the note
         # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
@@ -118,9 +149,6 @@ def main():
     stem_objects = find_stems(temp_staff)
     # find note beams
     beam_objects = find_beams(temp_staff)
-
-    # find accidentals
-    accidental_objects = detect_accidentals(temp_staff, threshold)
 
     # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
     # in future also should take dots, connection ties, etc.

@@ -34,7 +34,7 @@ def main():
     all_measures: List[Measure] = []
 
     for current_staff in staffs:
-        # Generate Time objects
+        # Generate Time signature objects
         detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.7)
         time_objects: List['Time'] = []
         for template in detected_times.keys():
@@ -47,11 +47,10 @@ def main():
         measures = split_measures(barlines, current_staff)
 
         time_meas = find_measure(measures, time_objects[0].x)
-        if time_meas is not None:
-            time_meas.show_time = True
+        time_meas.show_time = True if time_meas else False
 
         # find accidentals
-        accidental_objects = detect_accidentals(current_staff, 0.7, time_meas)
+        accidental_objects = detect_accidentals(current_staff, 0.7)
 
         # find clef, key and time
         # clef
@@ -60,12 +59,6 @@ def main():
         for template in clefs.keys():
             for match in clefs[template]:
                 clef_objects.append(Clef(match[0], match[1], template))
-
-        # temp_acc_group = []
-        # if len(temp_acc_group) > 0:
-        #     for acc in temp_acc_group:
-        #         acc.find_note(measures[0])
-        # temp_key = Key(temp_acc_group)
 
         # Associate accidentals with a certain note
         global_key_per_measure: List[Accidental] = []

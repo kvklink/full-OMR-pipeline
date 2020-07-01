@@ -1,14 +1,14 @@
 from typing import List, Optional, TYPE_CHECKING
 
-from models.staff_objects import Barline
 from models.measure import Measure
+from models.staff_objects import Barline
 
 if TYPE_CHECKING:
     from models.staff import Staff
     from models.template import Template
 
 
-def split_measures(barlines: List['Barline'], staff: 'Staff'):  # barlines sorted on x
+def split_measures(barlines: List['Barline'], staff: 'Staff') -> List['Measure']:  # barlines sorted on x
     x1, x2 = (0, 0)
     measures = []
     for i in range(0, len(barlines) + 1):

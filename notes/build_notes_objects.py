@@ -15,7 +15,6 @@ from template_matching.template_matching import template_matching_array, Availab
 if TYPE_CHECKING:
     from models.note_objects import Head, Flag, Beam
     from models.staff import Staff
-    from models.staff_objects import Time
 
 
 def find_stems(staff: 'Staff') -> List['Stem']:
@@ -46,13 +45,13 @@ def find_stems(staff: 'Staff') -> List['Stem']:
 
     stem_list: List['Stem'] = []
     for line in lines2_ver:
-        l = line[0]
-        stem_list.append(Stem(l[0], l[1], l[2], l[3]))
+        stem_line = line[0]
+        stem_list.append(Stem(stem_line[0], stem_line[1], stem_line[2], stem_line[3]))
 
     return stem_list
 
 
-def detect_accidentals(staff: 'Staff', threshold: float, signature: 'Time' = None) -> List['Accidental']:
+def detect_accidentals(staff: 'Staff', threshold: float) -> List['Accidental']:
     found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, threshold)
     if len(found_accidentals.keys()) == 0:
         # No accidentals were found, so just cut to the chase already
@@ -84,14 +83,16 @@ def detect_accidentals(staff: 'Staff', threshold: float, signature: 'Time' = Non
             else:
                 current.set_is_local(True)
                 continue
-        else:
-            # clause that catches a single key accidental (so there is no previous)
-            # Only works when at least one time signature was detected earlier!
-            if signature:
-                if current.x < signature.x:
-                    current.set_is_local(False)
-                else:
-                    current.set_is_local(True)
+
+        # TODO: add (working) clause for detecting a single key signature
+        # else:
+        #     # clause that catches a single key accidental (so there is no previous)
+        #     # Only works when at least one time signature was detected earlier!
+        #     if signature:
+        #         if current.x < signature.x:
+        #             current.set_is_local(False)
+        #         else:
+        #             current.set_is_local(True)
 
     return matched_accidentals
 

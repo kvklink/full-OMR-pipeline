@@ -42,8 +42,8 @@ def main():
                 time_objects.append(Time(match[0], match[1], template))
 
         # find measures
-        measure_locs = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
-        barlines = select_barlines(measure_locs, current_staff, AvailableTemplates.Barline.value)
+        measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
+        barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
         measures = split_measures(barlines, current_staff)
 
         time_meas = find_measure(measures, time_objects[0].x)

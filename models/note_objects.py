@@ -6,25 +6,26 @@ from helpers.note_helpers import find_pitch
 if TYPE_CHECKING:
     from models.measure import Measure
     from models.staff import Staff
+    from models.staff_objects import Key
     from models.template import Template
 
 
 @unique
 class AccidentalTypes(Enum):
-    FLAT = ('flat', -0.5)
-    FLAT_DOUBLE = ('double_flat', -1)
-    SHARP = ('sharp', 0.5)
-    SHARP_DOUBLE = ('double_sharp', 1)
+    FLAT = ('flat', -1)
+    FLAT_DOUBLE = ('double_flat', -2)
+    SHARP = ('sharp', 1)
+    SHARP_DOUBLE = ('double_sharp', 2)
     NATURAL = ('natural', 0)
 
-    def __init__(self, acc_type: str, shift: float):
+    def __init__(self, acc_type: str, shift: int):
         self.acc_type = acc_type
         self.shift = shift
 
     @staticmethod
     def get_by_name(acc_type: str):
-        results = [val.acc_type for val in AccidentalTypes.__members__.values()]
-        if acc_type in results:
+        results = [val for val in AccidentalTypes.__members__.values() if acc_type == val.acc_type]
+        if len(results) > 0:
             return results[0]
         else:
             raise ValueError(f'{acc_type} is not a valid Accidental type!')
@@ -60,7 +61,7 @@ class Head:
         self.pitch: Optional[int] = None
         self.note = ''
         self.octave: Optional[int] = None
-        self.accidental: Optional[int] = None
+        self.accidental: Optional['Accidental'] = None
 
         self.measure = None
 
@@ -84,11 +85,11 @@ class Head:
     def set_accidental(self, accidental: Accidental):
         self.accidental = accidental
 
-    def set_key(self, key):
+    def set_key(self, key: 'Key'):
         accidentals = key.accidentals
         for acc in accidentals:
             if acc.note == self.note:
-                self.accidental = acc.pitch_change
+                self.accidental = acc.acc_type
                 break
 
 

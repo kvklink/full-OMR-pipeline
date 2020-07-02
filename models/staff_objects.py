@@ -1,7 +1,9 @@
 from enum import Enum, unique
+from typing import List
 
 from helpers.staff_helpers import find_rect
-from models.note_objects import AccidentalTypes
+from models.note_objects import AccidentalTypes, Accidental
+from models.template import Template
 
 
 class Barline:
@@ -54,7 +56,7 @@ class Key:
         self.acc_type = grouped_accidentals[0].acc_type if len(
             grouped_accidentals) > 0 else AccidentalTypes.NATURAL
         self.key = self.find_key(grouped_accidentals)
-        self.accidentals = grouped_accidentals
+        self.accidentals: List['Accidental'] = grouped_accidentals
 
     def find_key(self, group):
         amount = len(group)
@@ -73,9 +75,10 @@ class Time:
                 '6/4 time': (6, 4), '6/8 time': (6, 8), '7/8 time': (7, 8), '9/8 time': (9, 8), '12/8 time': (12, 8),
                 '4/4 time C': (4, 4)}
 
-    def __init__(self, x, y, template):
+    def __init__(self, x: int, y: int, template: 'Template'):
         self.beats, self.beat_type = self.timedict[template.name]
         self.x = x
         self.y = y
         self.w = template.w
         self.h = template.h
+        self.template = template

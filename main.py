@@ -1,5 +1,5 @@
 import xml.etree.cElementTree as ET
-from typing import List
+from typing import List, Dict
 
 import cv2 as cv
 
@@ -30,16 +30,18 @@ def main():
     # is met 1 voorteken namelijk interessanter voor mij om te testen dan de eerste stem
     staffs = [Staff(s) for s in separate_staffs(deskewed_image)]
 
-#    connections = 
+#    connections =
     connect_staffs(deskewed_image, staffs)
 #    print(connections)
-    
+
 #    staffs = [staffs[1]] # 300 iq oplossing om wel de connect staffs functie te testen en de rest op 2e staff te laten
 
     # set threshold for template matching
     all_measures: List[Measure] = []
+    all_signatures: Dict[int, 'Time'] = {}
 
-    for current_staff in staffs:
+    for staff_index in range(len(staffs)):
+        current_staff: Staff = staffs[staff_index]
         # Generate Time signature objects
         detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.7)
         time_objects: List['Time'] = []
@@ -47,13 +49,29 @@ def main():
             for match in detected_times[template]:
                 time_objects.append(Time(match[0], match[1], template))
 
+        if len(detected_times) is 0:
+            if current_staff.nr_timewise is 1:
+                raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED ON THE FIRST LINE SEND HELP')
+
+            last_staff = [staff for staff in staffs if
+                          staff.nr_timewise == current_staff.nr_timewise - 1 and
+                          staff.nr_instrument == current_staff.nr_instrument][0]
+            last_time: 'Time' = all_signatures[current_staff.nr_instrument]
+
+            # I really hope y isn't really used, and having x == 0 is okay
+            time_objects.append(Time(0, last_time.y, last_time.template))
+
+        # Store the last used time signature per voice number for potential later use
+        all_signatures[current_staff.nr_instrument] = time_objects[-1]
+
         # find measures
         measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
         barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
         measures = split_measures(barlines, current_staff)
 
         time_meas = find_measure(measures, time_objects[0].x)
-        time_meas.show_time = True if time_meas else False
+        if time_meas:
+            time_meas.show_time = True
 
         # find accidentals
         accidental_objects = detect_accidentals(current_staff, 0.7)
@@ -70,6 +88,8 @@ def main():
         for measure in measures:
             key_per_measure: List[Accidental] = global_key_per_measure.copy()
             for accidentals in group_accidentals(accidental_objects):
+                if len(accidentals) is 0:
+                    continue
                 if not accidentals[0].is_local:
                     # We encounter a group of key accidentals, update key accordingly
                     global_key_per_measure = accidentals
@@ -167,7 +187,7 @@ def main():
         all_measures += measures
 
     # test hier voor volledige for loop run
-    
+
     # eerste: groepeer maten naar parts
     parts = []
     for s in staffs:
@@ -175,16 +195,16 @@ def main():
     parts = list(set(parts))
     parts.sort()
     print(parts)
-    
+
 #    voice = 1
 #    root = create_xml()
-    
-    
-    
-    
+
+
+
+
     # -------------------------------------
-    
-    
+
+
     voice = 1
     # write XML file
     root = create_xml()

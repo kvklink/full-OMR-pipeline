@@ -52,7 +52,7 @@ def find_stems(staff: 'Staff') -> List['Stem']:
 
 
 def detect_accidentals(staff: 'Staff', threshold: float) -> List['Accidental']:
-    found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, threshold)
+    found_accidentals = template_matching_array(AvailableTemplates.AllAccidentals.value, staff, threshold)
     if len(found_accidentals.keys()) == 0:
         # No accidentals were found, so just cut to the chase already
         return []

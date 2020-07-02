@@ -13,7 +13,7 @@ from notes.build_notes_objects import detect_accidentals, group_accidentals, bui
 from notes.find_beams import find_beams
 from staffs.seperate_staffs import separate_staffs
 from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
-
+from staffs.connect_staffs import connect_staffs
 
 def main():
     input_file = 'images/sheets/fmttm/input.png'
@@ -28,7 +28,13 @@ def main():
     # separate full sheet music into an image for each staff
     # FIXME: 300 iq shit hiero, we pakken nu alleen maar de tweede stem op de eerste regel
     # is met 1 voorteken namelijk interessanter voor mij om te testen dan de eerste stem
-    staffs = [[Staff(s) for s in separate_staffs(deskewed_image)][1]]
+    staffs = [Staff(s) for s in separate_staffs(deskewed_image)]
+
+#    connections = 
+    connect_staffs(deskewed_image, staffs)
+#    print(connections)
+    
+#    staffs = [staffs[1]] # 300 iq oplossing om wel de connect staffs functie te testen en de rest op 2e staff te laten
 
     # set threshold for template matching
     all_measures: List[Measure] = []
@@ -160,6 +166,25 @@ def main():
 
         all_measures += measures
 
+    # test hier voor volledige for loop run
+    
+    # eerste: groepeer maten naar parts
+    parts = []
+    for s in staffs:
+        parts.append(s.nr_instrument)
+    parts = list(set(parts))
+    parts.sort()
+    print(parts)
+    
+#    voice = 1
+#    root = create_xml()
+    
+    
+    
+    
+    # -------------------------------------
+    
+    
     voice = 1
     # write XML file
     root = create_xml()
@@ -178,7 +203,7 @@ def main():
                     add_note(meas1, obj, voice)
             elif obj.type == 'rest':
                 add_rest(meas1, obj, voice)
-    #
+
     #    for note in m1_notes:
     #        # bij akkoorden: volgorde maakt niet uit behalve bij verschillende nootlengtes
     #        # in dat geval: sorteren op duur, langste eerst, dan 'backup' (hoe in python?)

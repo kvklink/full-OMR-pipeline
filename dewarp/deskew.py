@@ -8,28 +8,24 @@ from denoise.denoise import *
 from utils.util import bgr_imshow, imshow
 
 #====== PARAMS =====================================
-DENOISE_FIRST = True
-EDGEDET_FIRST = True
 # All Hough
 RHO = 1                 # 1 pixel
-THDEG = 90              # 1 degree
+THDEG = 90              # 90 degrees
 THETA = np.pi * THDEG / 180
 # Std Hough
-THRES = 500 #250 #150
+THRES = 500
 # Prob Hough
-PTHRES = 600 #100 #20 #50
+PTHRES = 600
 MIN_PRC = 60
-# MIN_LEN = 100 #0.6 * ncols #500 #100 #50 #100 #50
 MAX_PRC = 5
-# MAX_GAP = 9 #0.05 * ncols #50 #10
 #===================================================
 
 # IO for testing
-DIR = 'images/sheets/trombone-quality/' #mscd-15/' #trombone/'
+DIR = 'images/sheets/mscd-15/' #mscd-15/' #trombone/'
 INPUT_PATH = DIR + 'input.png'
 OUTPUT_PATH = DIR + 'deskewed_denoised.png'
-SHOUGH_TITLE = f"shough ({RHO},{THDEG},{THRES}) [dnois={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
-PHOUGH_TITLE = f"phough ({RHO},{THDEG},{PTHRES},{MIN_PRC}%,{MAX_PRC}%) [dnois={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
+SHOUGH_TITLE = f"shough ({RHO},{THDEG},{THRES})"
+PHOUGH_TITLE = f"phough ({RHO},{THDEG},{PTHRES},{MIN_PRC}%,{MAX_PRC}%)"
 SHOUGH_PATH = DIR + "rotate/" + SHOUGH_TITLE + ".png"
 PHOUGH_PATH = DIR + "rotate/" + PHOUGH_TITLE + ".png"
 
@@ -41,19 +37,14 @@ def rotate(img, angle):
     # bgr_imshow(f"Rotated {angle_deg} degrees", dst)
     return dst
 
+'''Assumes a denoised grayscale image as input'''
 def optimize(img):
-    # Retrieve source
-    if DENOISE_FIRST:
-        img = denoise(img)
-        # bgr_imshow("Source", img)
-
     best_score = 0
     best_angle = 0
     for angle in np.arange(-5, 5, 0.01):
         img_rot = rotate(img, angle)
         sscore, pscore = hough_score(img_rot)
         score = pscore
-        print(sscore, pscore, angle)
         if score > best_score:
             best_score, best_angle = score, angle
     print("Winner winner chicken dinner")
@@ -67,7 +58,8 @@ def hough_score(img):
     ncols = img.shape[1]
     
     # Edge detection
-    if EDGEDET_FIRST:
+    edgdt = True
+    if edgdt:
         dst = cv.Canny(img, 50, 200, None, 3)
         # bgr_imshow("Edge detection", dst)
     else:
@@ -101,21 +93,21 @@ def hough_score(img):
     
     # bgr_imshow(PHOUGH_TITLE, cdstP)
     # cv.imwrite(PHOUGH_PATH, cdstP)
-    
-    cv.waitKey()
+
     nlinesS = len(lines) if lines is not None else 0
     nlinesP = len(linesP) if linesP is not None else 0
     return nlinesS, nlinesP
 
+'''Assumes a denoised grayscale image as input'''
 def deskew(img):
     best_angle = optimize(img)
-    deskewed = rotate(denoise(img), best_angle)
+    deskewed = rotate(img, best_angle)
     return deskewed
-    # cv.imwrite(OUTPUT_PATH, deskewed)
 
 if __name__ == "__main__":
-    img = cv.imread(INPUT_PATH, cv.IMREAD_GRAYSCALE)
-    best_angle = optimize(img) # = 0.62
-    deskewed = rotate(denoise(img), best_angle)
+    img = denoise(cv.imread(INPUT_PATH, cv.IMREAD_GRAYSCALE))
+    deskewed = deskew(img)
+    # best_angle = optimize(denoised) # = 0.62
+    # deskewed = rotate(denoised, best_angle)
     # hough_score(deskewed)
     cv.imwrite(OUTPUT_PATH, deskewed)

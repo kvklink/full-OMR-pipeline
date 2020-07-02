@@ -43,7 +43,7 @@ class Accidental:
 
     def find_note(self, measure):
         pitch = find_pitch(measure.staff, self.x, self.y)
-        self.note = measure.notes[pitch % 7]
+        self.note = measure.note_labels[pitch % 7]
 
     def set_is_local(self, is_local: bool):
         self.is_local = is_local
@@ -77,7 +77,7 @@ class Head:
     def set_note(self, measure: 'Measure'):
         # print(f"pitch: {self.pitch}")
         # print(f"measure notes: {measure.notes}")
-        self.note = measure.notes[self.pitch % 7]
+        self.note = measure.note_labels[self.pitch % 7]
         self.octave = measure.octave - int(self.pitch / 7)
         self.measure = measure
 

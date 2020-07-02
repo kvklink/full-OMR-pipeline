@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 
 
 class Measure:
-    Gnotes = ['G', 'F', 'E', 'D', 'C', 'B', 'A']
-    Goctave = 6
+    note_labels_G = ['G', 'F', 'E', 'D', 'C', 'B', 'A']
+    octave_G = 6
 
     def __init__(self, input_staff: 'Staff', nr: int, start: int, end: int):
         self.lines = input_staff.lines
@@ -30,8 +30,8 @@ class Measure:
 
         self.clef_line = 2
 
-        self.notes = self.Gnotes
-        self.octave = self.Goctave
+        self.note_labels = self.note_labels_G
+        self.octave = self.octave_G
         self.divisions = input_staff.divisions
         self.staff = input_staff
 
@@ -57,16 +57,16 @@ class Measure:
     def update_clef(self):
         if self.clef.type == ClefTypes.G_CLEF.name:
             self.clef_line = 2
-            self.notes = self.Gnotes
-            self.octave = self.Goctave
+            self.note_labels = self.note_labels_G
+            self.octave = self.octave_G
         elif self.clef.type == ClefTypes.C_CLEF.name:
             self.clef_line = 3
-            self.notes = self.Gnotes[6:] + self.Gnotes[:6]
-            self.octave = self.Goctave - 1
+            self.note_labels = self.note_labels_G[6:] + self.note_labels_G[:6]
+            self.octave = self.octave_G - 1
         elif self.clef.type == ClefTypes.F_CLEF.name:
             self.clef_line = 4
-            self.notes = self.Gnotes[5:] + self.Gnotes[:5]
-            self.octave = self.Goctave - 2
+            self.note_labels = self.note_labels_G[5:] + self.note_labels_G[:5]
+            self.octave = self.octave_G - 2
         else:
             raise ValueError(f'{self.clef.type} is an unsupported Clef type')
 

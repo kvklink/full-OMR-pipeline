@@ -86,9 +86,11 @@ class AvailableTemplates(Enum):
     RestEighth = Template('eighth_rest', 'images/templates/rests/8th-rest-with-line.jpg', 2)
     RestSixteenth = Template('sixteenth_rest', 'images/templates/rests/16th-rest-with-lines.png', 3)
     RestThirtySecond = Template('thirty_second_rest', 'images/templates/rests/32nd-rest-with-lines.png', 4)
-    Dot = Template('dot', 'images/templates/rests/punt-halfhoogte.png', 0.5)
 
-    AllRests = [RestFull, RestHalf, RestFourth, RestEighth, RestSixteenth, RestThirtySecond, Dot]
+    ShortRests = [RestFourth, RestEighth, RestSixteenth, RestThirtySecond]
+    LongRests = [RestFull, RestHalf]
+    
+    Dot = Template('dot', 'images/templates/punt-halfhoogte.png', 0.5)
 
     # Clefs
     #    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)

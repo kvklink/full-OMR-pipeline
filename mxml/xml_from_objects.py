@@ -75,7 +75,7 @@ def add_note(measure, note, voice, addchord=False):
     ET.SubElement(note1, "type").text = note.durname
     ET.SubElement(note1, "voice").text = f"{voice}"
 
-    ET.SubElement(pitch1, "alter").text = "0" if note.accidental is None else note.accidental.shift
+    ET.SubElement(pitch1, "alter").text = "0" if note.accidental is None else f"{note.accidental.acc_type.shift}"
     # ET.SubElement(note1, "voice").text = ? ("1" oid)
     # ET.SubElement(note1, "staff").text = ? ("1" oid)
     # ET.SubElement(note1, "stem").text = ? ("up" or "down")

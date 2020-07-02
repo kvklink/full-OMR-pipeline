@@ -26,15 +26,9 @@ def main():
     deskewed_image = cv.imread(input_file)  # temporary
 
     # separate full sheet music into an image for each staff
-    # FIXME: 300 iq shit hiero, we pakken nu alleen maar de tweede stem op de eerste regel
-    # is met 1 voorteken namelijk interessanter voor mij om te testen dan de eerste stem
     staffs = [Staff(s) for s in separate_staffs(deskewed_image)]
 
-#    connections =
     connect_staffs(deskewed_image, staffs)
-#    print(connections)
-
-#    staffs = [staffs[1]] # 300 iq oplossing om wel de connect staffs functie te testen en de rest op 2e staff te laten
 
     # set threshold for template matching
     all_measures: List[Measure] = []
@@ -49,13 +43,10 @@ def main():
             for match in detected_times[template]:
                 time_objects.append(Time(match[0], match[1], template))
 
-        if len(detected_times) is 0:
-            if current_staff.nr_timewise is 1:
+        if len(detected_times) == 0:
+            if current_staff.nr_timewise == 1:
                 raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED ON THE FIRST LINE SEND HELP')
 
-            last_staff = [staff for staff in staffs if
-                          staff.nr_timewise == current_staff.nr_timewise - 1 and
-                          staff.nr_instrument == current_staff.nr_instrument][0]
             last_time: 'Time' = all_signatures[current_staff.nr_instrument]
 
             # I really hope y isn't really used, and having x == 0 is okay
@@ -88,7 +79,7 @@ def main():
         for measure in measures:
             key_per_measure: List[Accidental] = global_key_per_measure.copy()
             for accidentals in group_accidentals(accidental_objects):
-                if len(accidentals) is 0:
+                if len(accidentals) == 0:
                     continue
                 if not accidentals[0].is_local:
                     # We encounter a group of key accidentals, update key accordingly
@@ -108,26 +99,31 @@ def main():
             measure.set_time(relevant_time)
 
         # do template matching for notes and rests (to do: change to groups)
-        # note heads closed
-        matches_head = template_matching(AvailableTemplates.NoteheadClosed.value, current_staff, 0.8)
-        matches_head2 = template_matching(AvailableTemplates.NoteheadOpen.value, current_staff, 0.8)
+        matches_noteheads = template_matching_array(AvailableTemplates.AllNoteheads.value, current_staff, 0.7)
+        head_objects: List['Head'] = []
+        for template in matches_noteheads.keys():
+            print(template)
+            for match in matches_noteheads[template]:
+                head_objects.append(Head(match[0], match[1], template))
 
-        # single upside down flag
-        matches_flag = template_matching(AvailableTemplates.FlagUpsideDown1.value, current_staff, 0.5)
+        matches_flags = template_matching_array(AvailableTemplates.AllFlags.value, current_staff, 0.5)
+        flag_objects: List['Head'] = []
+        for template in matches_flags.keys():
+            for match in matches_flags[template]:
+                flag_objects.append(Flag(match[0], match[1], template))
 
-        matches_rest = template_matching(AvailableTemplates.RestEighth.value, current_staff, 0.7)
+        matches_short_rest = template_matching_array(AvailableTemplates.ShortRests.value, current_staff, 0.7)
+        matches_long_rest = template_matching_array(AvailableTemplates.LongRests.value, current_staff, 0.9)
+        matches_rest = {**matches_short_rest, **matches_long_rest}
+        rest_objects: List['Head'] = []
+        for template in matches_rest.keys():
+            for match in matches_rest[template]:
+                if (match[1] + template.h) < current_staff.lines[0][1] or match[1] > current_staff.lines[-1][1]:
+                    print('rest out of bounds')
+                else:
+                    rest_objects.append(Rest(match[0], match[1], template, current_staff))
 
-        # turn the found head symbols into objects and add corresponding information
-        closed_heads = []
-        for head in matches_head:  # for each note head location found with template matching:
-            closed_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadClosed.value))  # turn into object
-
-        open_heads = []
-        for head in matches_head2:
-            open_heads.append(Head(head[0], head[1], AvailableTemplates.NoteheadOpen.value))
-
-        head_objects = []
-        for head_obj in closed_heads + open_heads:
+        for head_obj in head_objects:
             head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
             if head_obj.pitch is None:
                 continue
@@ -136,28 +132,6 @@ def main():
             # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
             head_obj.set_note(relevant_measure)
             head_obj.set_key(find_measure(measures, head_obj.x).key)
-            head_objects.append(head_obj)  # show in image
-
-        # Is now included in the loop above, since they were identical
-        #
-        # for head_obj in open_heads:
-        #     head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
-        #     if head_obj.pitch == 'Error':
-        #         continue
-        #     relevant_measure = find_measure(measures, head_obj.x)
-        #     # also here, first determine its corresponding measure, and use that to set the note
-        #     # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
-        #     head_obj.set_note(relevant_measure)
-        #     head_obj.set_key(find_measure(measures, head_obj.x).key)
-        #     head_objects.append(head_obj)  # show in image
-
-        # turn the found flag symbols into objects
-        flag_objects = [Flag(flag[0], flag[1], AvailableTemplates.FlagUpsideDown1.value) for flag in
-                        matches_flag]
-
-        # turn rest into object
-        rest_objects = [Rest(rest[0], rest[1], AvailableTemplates.RestEighth.value, current_staff) for rest
-                        in matches_rest]
 
         # find note stems
         stem_objects = find_stems(current_staff)
@@ -175,31 +149,33 @@ def main():
         unique_notes = []
         note_coords = []
         for note in notes:
-            if (note.x, note.y) not in note_coords:
-                note_coords.append((note.x, note.y))
+            if (note.x, note.pitch, note.duration) not in note_coords:
+                for i in range(-2,3):
+                    note_coords.append((note.x+i, note.pitch, note.duration))
                 unique_notes.append(note)
 
         # vanaf hier per measure
-        for meas in measures:
+        for i, meas in enumerate(measures):
             meas.assign_objects(unique_notes, rest_objects)
-            meas.find_backups()
+            if i == 2:
+                meas.find_backups(1)
+            else:
+                meas.find_backups(0)
 
         all_measures += measures
 
-    # test hier voor volledige for loop run
 
-    # eerste: groepeer maten naar parts
+    # groepeer maten naar parts------------
     parts = []
     for s in staffs:
         parts.append(s.nr_instrument)
     parts = list(set(parts))
     parts.sort()
-    print(parts)
 
 #    voice = 1
 #    root = create_xml()
 
-
+    # TO DO!! xml voor verschillende parts/instrumenten
 
 
     # -------------------------------------
@@ -224,14 +200,7 @@ def main():
             elif obj.type == 'rest':
                 add_rest(meas1, obj, voice)
 
-    #    for note in m1_notes:
-    #        # bij akkoorden: volgorde maakt niet uit behalve bij verschillende nootlengtes
-    #        # in dat geval: sorteren op duur, langste eerst, dan 'backup' (hoe in python?)
-    #        add_note(meas1, note)
-    #
-    # write to file
     tree = ET.ElementTree(root)
-    #    tree.write("mxml/filename.xml")
 
     with open('mxml/filename.xml', 'wb') as f:
         f.write(

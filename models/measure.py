@@ -1,7 +1,9 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
+
 from models.staff_objects import ClefTypes
 
 if TYPE_CHECKING:
+    from models.note_objects import Rest, Note, Spacial
     from models.staff import Staff
     from models.staff_objects import Key, Clef, Time
 
@@ -70,10 +72,12 @@ class Measure:
     def set_divisions(self, div):
         self.divisions = div
 
-    def assign_objects(self, notes, rests):
-        m1_notes = [note for note in notes if self.start < note.x < self.end]
-        m1_rests = [rest for rest in rests if self.start < rest.x < self.end]
-        m1_objects = m1_notes + m1_rests
+    def assign_objects(self, notes: List['Note'], rests: List['Rest']):
+        m1_notes: List['Note'] = [note for note in notes if self.start < note.x < self.end]
+        m1_rests: List['Rest'] = [rest for rest in rests if self.start < rest.x < self.end]
+        # is oke trust me
+        # noinspection PyTypeChecker
+        m1_objects: List['Spacial'] = m1_notes + m1_rests
         self.objects = sorted(m1_objects, key=lambda x: x.x)
 
     def find_backups(self):

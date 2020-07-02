@@ -15,9 +15,9 @@ RHO = 1                 # 1 pixel
 THDEG = 90              # 1 degree
 THETA = np.pi * THDEG / 180
 # Std Hough
-THRES = 400 #250 #150
+THRES = 500 #250 #150
 # Prob Hough
-PTHRES = 300 #100 #20 #50
+PTHRES = 600 #100 #20 #50
 MIN_PRC = 60
 # MIN_LEN = 100 #0.6 * ncols #500 #100 #50 #100 #50
 MAX_PRC = 5
@@ -27,17 +27,17 @@ MAX_PRC = 5
 # IO for testing
 DIR = 'images/sheets/trombone-quality/' #mscd-15/' #trombone/'
 INPUT_PATH = DIR + 'input.png'
+OUTPUT_PATH = DIR + 'deskewed_denoised.png'
 SHOUGH_TITLE = f"shough ({RHO},{THDEG},{THRES}) [dnois={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
-PHOUGH_TITLE = f"phough ({RHO},{THDEG},{PTHRES},{MIN_PRC}%,{MAX_PRC}%) [denos={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
-SHOUGH_PATH = DIR + SHOUGH_TITLE + ".png"
-PHOUGH_PATH = DIR + PHOUGH_TITLE + ".png"
+PHOUGH_TITLE = f"phough ({RHO},{THDEG},{PTHRES},{MIN_PRC}%,{MAX_PRC}%) [dnois={DENOISE_FIRST}, canny={EDGEDET_FIRST}]"
+SHOUGH_PATH = DIR + "rotate/" + SHOUGH_TITLE + ".png"
+PHOUGH_PATH = DIR + "rotate/" + PHOUGH_TITLE + ".png"
 
-def rotate(img, angle_deg):
-    angle = np.pi * angle_deg / 180
+def rotate(img, angle):
     nrows, ncols = img.shape 
-    center = (nrows/2, ncols/2)
+    center = (ncols/2, nrows/2)
     mat = cv.getRotationMatrix2D(center, angle, 1)
-    dst = cv.warpAffine(img, mat, (ncols, nrows))
+    dst = cv.warpAffine(img, mat, (ncols, nrows), flags=cv.INTER_LINEAR)
     # bgr_imshow(f"Rotated {angle_deg} degrees", dst)
     return dst
 
@@ -49,19 +49,19 @@ def optimize(img):
 
     best_score = 0
     best_angle = 0
-    for angle in np.arange(0.0, 10, 0.1):
+    for angle in np.arange(-5, 5, 0.01):
         img_rot = rotate(img, angle)
-        score = hough_score(img_rot)[1]
-        print(angle, score)
+        sscore, pscore = hough_score(img_rot)
+        score = pscore
+        print(sscore, pscore, angle)
         if score > best_score:
             best_score, best_angle = score, angle
     print("Winner winner chicken dinner")
     print(best_score)
     print(best_angle)
-
     # rotate img until optimal
     # optimality is tested by counting succesful hough 90deg line recognization
-    return img
+    return best_angle
 
 def hough_score(img):
     ncols = img.shape[1]
@@ -103,10 +103,19 @@ def hough_score(img):
     # cv.imwrite(PHOUGH_PATH, cdstP)
     
     cv.waitKey()
-    no_lines = 0
-    return len(lines), len(linesP)
+    nlinesS = len(lines) if lines is not None else 0
+    nlinesP = len(linesP) if linesP is not None else 0
+    return nlinesS, nlinesP
+
+def deskew(img):
+    best_angle = optimize(img)
+    deskewed = rotate(denoise(img), best_angle)
+    return deskewed
+    # cv.imwrite(OUTPUT_PATH, deskewed)
 
 if __name__ == "__main__":
     img = cv.imread(INPUT_PATH, cv.IMREAD_GRAYSCALE)
-    rotate(img, 7.1)
-    optimize(img)
+    best_angle = optimize(img) # = 0.62
+    deskewed = rotate(denoise(img), best_angle)
+    # hough_score(deskewed)
+    cv.imwrite(OUTPUT_PATH, deskewed)

@@ -49,6 +49,12 @@ class Accidental:
         self.is_local = is_local
 
 
+class Spacial:
+    # Class that doesn't do anything except for allow to type hint more generally
+    # Pretty much anything that takes up beats in a measure goes here
+    pass
+
+
 class Head:
     def __init__(self, x: int, y: int, template: 'Template'):
         self.x = x
@@ -118,7 +124,7 @@ class Flag:
         self.w = template.w
 
 
-class Rest:
+class Rest(Spacial):
     duration_dict = {
         'full_rest': 4,
         'half_rest': 2,
@@ -157,7 +163,7 @@ class Relation:
         self.w = template.w
 
 
-class Note:
+class Note(Spacial):
     def __init__(self, base, durname: str, duration: int, loc: (int, int, int, int)):
         self.type = 'note'
 

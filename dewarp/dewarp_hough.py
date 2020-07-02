@@ -16,7 +16,7 @@ DENOISE_FIRST = True
 EDGEDET_FIRST = True
 # All Hough
 RHO = 1                 # 1 pixel
-THDEG = 0.2              # 1 degree
+THDEG = 0.2             # 1 degree
 THETA = np.pi * THDEG / 180
 # Std Hough
 THRES = 400 #250 #150

@@ -54,8 +54,8 @@ class AvailableTemplates(Enum):
     Barline = Template('barline', 'images/templates/barline.png', 4)
 
     # Notes
-    NoteheadClosed = Template('closed_notehead', 'images/templates/head-filled.png', 1)
-    NoteheadOpen = Template('open_notehead', 'images/templates/head-open.png', 1)
+    NoteheadClosed = Template('closed_notehead', 'images/templates/noteheads/head-filled.png', 1)
+    NoteheadOpen = Template('open_notehead', 'images/templates/noteheads/head-open.png', 1)
     FlagUpsideDown1 = Template('flag_upside_down_1', 'images/templates/flags/down-1.png', 3)
     FlagUpsideDown2 = Template('flag_upside_down_2', 'images/templates/flags/down-2.png', 3)
     FlagUpsideDown3 = Template('flag_upside_down_3', 'images/templates/flags/down-3.png', 4)

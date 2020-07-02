@@ -13,6 +13,7 @@ from models.note_objects import Accidental, Stem, AccidentalTypes, Note
 from template_matching.template_matching import template_matching_array, AvailableTemplates
 
 if TYPE_CHECKING:
+    from models.measure import Measure
     from models.note_objects import Head, Flag, Beam
     from models.staff import Staff
 
@@ -98,7 +99,7 @@ def detect_accidentals(staff: 'Staff', threshold: float) -> List['Accidental']:
 
 
 def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], beams: List['Beam'],
-                accidentals: List['Accidental'], staff: 'Staff') -> List['Note']:
+                accidentals: List['Accidental'], measures: List['Measure'], staff: 'Staff') -> List['Note']:
     dist = staff.dist
     nd = int(dist / 8)
 
@@ -192,7 +193,6 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
     # TODO: somehow create full notes (check open heads not in note list?)
 
     # Apply accidentals to notes
-    # FIXME: is this necessary?
     grouped_accidentals = group_accidentals(accidentals)
     for accidental_arr in grouped_accidentals:
         for accidental in accidental_arr:

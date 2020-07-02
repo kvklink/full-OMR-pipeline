@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from helpers.note_helpers import find_pitch
 
@@ -49,12 +49,6 @@ class Accidental:
         self.is_local = is_local
 
 
-class Spacial:
-    # Class that doesn't do anything except for allow to type hint more generally
-    # Pretty much anything that takes up beats in a measure goes here
-    pass
-
-
 class Head:
     def __init__(self, x: int, y: int, template: 'Template'):
         self.x = x
@@ -63,10 +57,10 @@ class Head:
         self.h = template.h
         self.w = template.w
 
-        self.pitch = float('NaN')
+        self.pitch: Optional[int] = None
         self.note = ''
-        self.octave = float('NaN')
-        self.accidental = float('NaN')
+        self.octave: Optional[int] = None
+        self.accidental: Optional[int] = None
 
         self.measure = None
 
@@ -124,7 +118,7 @@ class Flag:
         self.w = template.w
 
 
-class Rest(Spacial):
+class Rest:
     duration_dict = {
         'full_rest': 4,
         'half_rest': 2,
@@ -163,7 +157,7 @@ class Relation:
         self.w = template.w
 
 
-class Note(Spacial):
+class Note:
     def __init__(self, base, durname: str, duration: int, loc: (int, int, int, int)):
         self.type = 'note'
 

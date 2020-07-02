@@ -103,7 +103,7 @@ def main():
         head_objects = []
         for head_obj in closed_heads + open_heads:
             head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
-            if head_obj.pitch == 'Error':
+            if head_obj.pitch is None:
                 continue
             relevant_measure = find_measure(measures, head_obj.x)
             # also here, first determine its corresponding measure, and use that to set the note
@@ -141,7 +141,7 @@ def main():
         # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
         # in future also should take dots, connection ties, etc.
         notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, accidental_objects,
-                            current_staff)
+                            measures, current_staff)
 
         # sort notes by x, and thus by time (later add rests first)
         notes.sort(key=lambda x: x.x)
@@ -167,7 +167,7 @@ def main():
     for meas in all_measures:
         meas1 = add_measure(part1, meas)
 
-        for i, obj in enumerate(meas.objects):
+        for i, obj in enumerate(meas.get_objects()):
             if i in meas.backup_locs:
                 add_backup(meas1, meas.backup_times[i])
                 voice = voice + 1  # hier eigenlijk nog weer op een manier soms terug naar vorige voice

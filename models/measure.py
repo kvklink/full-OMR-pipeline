@@ -1,9 +1,9 @@
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Union
 
 from models.staff_objects import ClefTypes
 
 if TYPE_CHECKING:
-    from models.note_objects import Rest, Note, Spacial
+    from models.note_objects import Rest, Note
     from models.staff import Staff
     from models.staff_objects import Key, Clef, Time
 
@@ -20,9 +20,9 @@ class Measure:
         self.start = start
         self.end = end
 
-        self.show_clef = False
-        self.show_key = False
-        self.show_time = False
+        self.show_clef: bool = False
+        self.show_key: bool = False
+        self.show_time: bool = False
 
         self.clef: Optional['Clef'] = None
         self.key: Optional['Key'] = None
@@ -35,7 +35,8 @@ class Measure:
         self.divisions = input_staff.divisions
         self.staff = input_staff
 
-        self.objects = []
+        self.note_objects: List['Note'] = []
+        self.rest_objects: List['Rest'] = []
         self.chord_locs = []
         self.backup_locs = []
         self.backup_times = {}
@@ -73,17 +74,19 @@ class Measure:
         self.divisions = div
 
     def assign_objects(self, notes: List['Note'], rests: List['Rest']):
-        m1_notes: List['Note'] = [note for note in notes if self.start < note.x < self.end]
-        m1_rests: List['Rest'] = [rest for rest in rests if self.start < rest.x < self.end]
-        # is oke trust me
-        # noinspection PyTypeChecker
-        m1_objects: List['Spacial'] = m1_notes + m1_rests
-        self.objects = sorted(m1_objects, key=lambda x: x.x)
+        self.note_objects = [note for note in notes if self.start < note.x < self.end]
+        self.rest_objects = [rest for rest in rests if self.start < rest.x < self.end]
+
+    def get_objects(self) -> List[Union['Note', 'Rest']]:
+        result: List[Union['Note', 'Rest']] = self.note_objects
+        result += self.rest_objects
+        return sorted(result, key=lambda x: x.x)
 
     def find_backups(self):
-        for i in range(1, len(self.objects)):
-            obj_1 = self.objects[i - 1]
-            obj_2 = self.objects[i]
+        objects = self.get_objects()
+        for i in range(1, len(objects)):
+            obj_1 = objects[i - 1]
+            obj_2 = objects[i]
             if obj_1.x + obj_1.w > obj_2.x:
                 if obj_1.duration == obj_2.duration:
                     if obj_1.type == obj_2.type == 'note':
@@ -95,8 +98,8 @@ class Measure:
                     self.backup_locs.append(i)
                     self.backup_times[i] = obj_1.duration
                 else:
-                    self.objects[i - 1] = obj_2
-                    self.objects[i] = obj_1
+                    objects[i - 1] = obj_2
+                    objects[i] = obj_1
                     # switch objects
                     self.backup_locs.append(i)
                     self.backup_times[i] = obj_2.duration

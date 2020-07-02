@@ -79,7 +79,7 @@ class Head:
         # print(f"pitch: {self.pitch}")
         # print(f"measure notes: {measure.notes}")
         self.note = measure.note_labels[self.pitch % 7]
-        self.octave = measure.octave - int(self.pitch / 7)
+        self.octave = measure.octave - int((self.pitch+2) / 7)
         self.measure = measure
 
     def set_accidental(self, accidental: Accidental):

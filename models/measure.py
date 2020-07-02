@@ -37,6 +37,7 @@ class Measure:
 
         self.note_objects: List['Note'] = []
         self.rest_objects: List['Rest'] = []
+        self.all_objects: List['Note and Rest'] = []
         self.chord_locs = []
         self.backup_locs = []
         self.backup_times = {}
@@ -74,20 +75,24 @@ class Measure:
         self.divisions = div
 
     def assign_objects(self, notes: List['Note'], rests: List['Rest']):
-        self.note_objects = [note for note in notes if self.start < note.x < self.end]
+        note_objects = [note for note in notes if self.start < note.x < self.end]
+        self.note_objects = [obj for obj in note_objects if obj.pitch is not None]
         self.rest_objects = [rest for rest in rests if self.start < rest.x < self.end]
+        self.all_objects = sorted(self.note_objects + self.rest_objects, key=lambda x: x.x)
+        
 
     def get_objects(self) -> List[Union['Note', 'Rest']]:
-        result: List[Union['Note', 'Rest']] = self.note_objects
-        result += self.rest_objects
-        return sorted(result, key=lambda x: x.x)
+        return self.all_objects
 
-    def find_backups(self):
+    def find_backups(self, p):
         objects = self.get_objects()
         for i in range(1, len(objects)):
             obj_1 = objects[i - 1]
             obj_2 = objects[i]
             if obj_1.x + obj_1.w > obj_2.x:
+                if p:
+                    print(obj_1.type, obj_1.duration, obj_1.x, obj_1.x+obj_1.w)
+                    print(obj_2.type, obj_2.duration, obj_2.x)
                 if obj_1.duration == obj_2.duration:
                     if obj_1.type == obj_2.type == 'note':
                         self.chord_locs.append(i)
@@ -98,8 +103,8 @@ class Measure:
                     self.backup_locs.append(i)
                     self.backup_times[i] = obj_1.duration
                 else:
-                    objects[i - 1] = obj_2
-                    objects[i] = obj_1
+                    self.all_objects[i - 1] = obj_2
+                    self.all_objects[i] = obj_1
                     # switch objects
                     self.backup_locs.append(i)
                     self.backup_times[i] = obj_2.duration

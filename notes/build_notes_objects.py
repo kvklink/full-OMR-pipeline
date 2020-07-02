@@ -101,7 +101,8 @@ def detect_accidentals(staff: 'Staff', threshold: float) -> List['Accidental']:
 def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], beams: List['Beam'],
                 accidentals: List['Accidental'], measures: List['Measure'], staff: 'Staff') -> List['Note']:
     dist = staff.dist
-    nd = int(dist / 8)
+    nd = int(dist / 4)
+    print(nd)
 
     beam_names = {
         'single_beam': ('eighth', 2),
@@ -119,7 +120,8 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
             sx1, sy1 = stem.x, stem.y
             sx2, sy2 = (sx1 + stem.w, sy1 + stem.h)
 
-            if sy1 in range(hy1, hy2 + 1) or sy2 in range(hy1, hy2 + 1):
+            if sy1 < hy1 < sy2 or sy1 < hy2 < sy2 or sy2 < hy1 < sy1 or sy2 < hy2 < sy1:
+#            if sy1 in range(hy1, hy2 + 1) or sy2 in range(hy1, hy2 + 1) or (min(sy1,sy2) < hy1 and max(sy1,sy2) > hy2):
                 if sx1 in range(hx1 - nd, hx2 + nd + 1) or sx2 in range(hx1 - nd, hx2 + nd + 1):
                     x_min = min(sx1, sx2, hx1, hx2)
                     x_max = max(sx1, sx2, hx1, hx2)
@@ -137,12 +139,14 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
                     else:
                         duration = 1
                         duration_text = 'unknown'
+                    print(head.name)
                     notes.append(Note(head, duration_text, duration * staff.divisions, (x_min, y_min, x_max, y_max)))
+                    
 
         if not head.connected:
             notes.append(Note(head, 'whole', 4 * staff.divisions, (hx1, hy1, hx2, hy2)))
 
-    for note in notes:
+    for note in (n for n in notes if n.durname == 'quarter'):
         nx1, ny1 = note.x, note.y
         nx2, ny2 = (nx1 + note.w, ny1 + note.h)
 
@@ -152,6 +156,7 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
 
             if fy1 in range(ny1, ny2 + 1) or fy2 in range(ny1, ny2 + 1):
                 if fx1 in range(nx1 - nd, nx2 + nd + 1) or fx2 in range(nx1 - nd, nx2 + nd + 1):
+                    
                     x_min = min(fx1, fx2, nx1, nx2)
                     x_max = max(fx1, fx2, nx1, nx2)
                     y_min = min(fy1, fy2, ny1, ny2)
@@ -172,8 +177,12 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
                         div = 2
                         duration_text = 'unknown'
 
-                    note.update_location(new_loc)
-                    note.update_duration(duration_text, int(note.duration / div))
+                    if note.duration < staff.divisions:
+                        pass
+#                        notes.append(Note(note, duration_text, int(staff.divisions / div), new_loc))
+                    else:
+                        note.update_location(new_loc)
+                        note.update_duration(duration_text, int(note.duration / div))
 
         for beam in beams:
             bx1, by1 = beam.x, beam.y

@@ -7,7 +7,7 @@ Created on Mon Jun 22 12:46:16 2020
 import cv2
 import math
 import numpy as np
-from notes.note_objects import Beam
+from models.note_objects import Beam
 
 def find_beams(staff):
     img = staff.image.copy()

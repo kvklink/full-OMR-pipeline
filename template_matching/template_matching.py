@@ -1,15 +1,19 @@
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, TYPE_CHECKING
 
 import cv2
 import imutils
 import numpy as np
 
-from notes.note_objects import Template, AccidentalTypes
-from staffs.staff_objects import Staff
+from models.note_objects import AccidentalTypes
+from models.staff_objects import ClefTypes
+from models.template import Template
+
+if TYPE_CHECKING:
+    from models.staff import Staff
 
 
-def template_matching(template: Template, staff: Staff, threshold: float) -> List[List]:
+def template_matching(template: Template, staff: 'Staff', threshold: float) -> List[List[int]]:
     img_gray = cv2.cvtColor(staff.image, cv2.COLOR_BGR2GRAY)
 
     # Resize template to match staff height
@@ -36,7 +40,7 @@ def template_matching(template: Template, staff: Staff, threshold: float) -> Lis
     return unique_matches
 
 
-def template_matching_array(templates: List[Template], staff: Staff, threshold: float) -> Dict[Template, List]:
+def template_matching_array(templates: List['Template'], staff: 'Staff', threshold: float) -> Dict['Template', List]:
     result = {}
     for template in templates:
         potential_result = template_matching(template, staff, threshold)
@@ -49,45 +53,60 @@ def template_matching_array(templates: List[Template], staff: Staff, threshold: 
 class AvailableTemplates(Enum):
     Barline = Template('barline', 'images/templates/barline.png', 4)
 
-    # Notes
-    NoteheadClosed = Template('closed_notehead', 'images/templates/head-filled.png', 1)
-    NoteheadOpen = Template('open_notehead', 'images/templates/head-open.png', 1)
+    # Note heads
+    NoteheadClosed = Template('closed_notehead', 'images/templates/noteheads/head-filled.png', 1)
+    NoteheadOpen = Template('open_notehead', 'images/templates/noteheads/head-open.png', 1)
+    NoteheadOpenWithLine = Template('open_notehead', 'images/templates/noteheads/head-open-line.png', 1)
+    NoteWhole = Template('open_notehead', 'images/templates/noteheads/whole-note.png', 1)
+    NoteWholeWithLine = Template('open_notehead', 'images/templates/noteheads/whole-note-line.png', 1)
+
+    AllNoteheads = [NoteheadClosed, NoteheadOpen, NoteheadOpenWithLine, NoteWhole, NoteWholeWithLine]
+
+    # Flags
     FlagUpsideDown1 = Template('flag_upside_down_1', 'images/templates/flags/down-1.png', 3)
+    FlagUpsideDown1Lines1 = Template('flag_upside_down_1', 'images/templates/flags/down-1-with-lines.png', 3)
+    FlagUpsideDown1Lines2 = Template('flag_upside_down_1', 'images/templates/flags/down-1-with-lines2.png', 3)
     FlagUpsideDown2 = Template('flag_upside_down_2', 'images/templates/flags/down-2.png', 3)
     FlagUpsideDown3 = Template('flag_upside_down_3', 'images/templates/flags/down-3.png', 4)
     Flag1 = Template('flag_1', 'images/templates/flags/up-1.png', 3)
+    Flag1Lines1 = Template('flag_1', 'images/templates/flags/up-1-with-lines.png', 3)
+    Flag1Lines2 = Template('flag_1', 'images/templates/flags/up-1-with-lines2.png', 3)
     Flag2 = Template('flag_2', 'images/templates/flags/up-2.png', 3)
     Flag3 = Template('flag_3', 'images/templates/flags/up-3.png', 4)
 
-    AllNotes = [NoteheadClosed, NoteheadOpen, FlagUpsideDown1, FlagUpsideDown2,
-                FlagUpsideDown3, Flag1, Flag2, Flag3]
+    AllFlags = [FlagUpsideDown1, FlagUpsideDown1Lines1, FlagUpsideDown1Lines2, FlagUpsideDown2, FlagUpsideDown3,
+                Flag1, Flag1Lines1, Flag1Lines2, Flag2, Flag3]
+
+    AllNotes = AllNoteheads + AllFlags
 
     # Rests
     RestFull = Template('full_rest', 'images/templates/rests/full-rest-on-line.jpg', 1)
-    # !! Half and full rest are *very* similar templates, maybe these would have to be
-    # merged and distinguished in a later step eg. using context
     RestHalf = Template('half_rest', 'images/templates/rests/half-rest-on-line.jpg', 1)
     RestFourth = Template('fourth_rest', 'images/templates/rests/4th-rest-with-lines.jpg', 4)
     RestEighth = Template('eighth_rest', 'images/templates/rests/8th-rest-with-line.jpg', 2)
+    RestSixteenth = Template('sixteenth_rest', 'images/templates/rests/16th-rest-with-lines.png', 3)
+    RestThirtySecond = Template('thirty_second_rest', 'images/templates/rests/32nd-rest-with-lines.png', 4)
+    Dot = Template('dot', 'images/templates/rests/punt-halfhoogte.png', 0.5)
 
-    AllRests = [RestFull, RestHalf, RestFourth, RestEighth]
+    AllRests = [RestFull, RestHalf, RestFourth, RestEighth, RestSixteenth, RestThirtySecond, Dot]
 
     # Clefs
     #    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
-    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines-2.jpg', 4)
-    ClefF = Template('f-clef', 'images/templates/clefs/f-clef-with-lines.jpg', 4)
-    ClefC = Template('c-clef', 'images/templates/clefs/c-clef-with-lines.jpg', 4)
+    ClefG = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/g-clef-with-lines-2.jpg', 4)
+    ClefG_full = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
+    ClefF = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/f-clef-with-lines.jpg', 4)
+    ClefC = Template(ClefTypes.C_CLEF.name, 'images/templates/clefs/c-clef-with-lines.jpg', 4)
 
-    AllClefs = [ClefG, ClefF, ClefC]
+    AllClefs = [ClefG, ClefG_full, ClefF, ClefC]
 
-    # Keys
+    # Accidentals
     Flat = Template(AccidentalTypes.FLAT.acc_type, 'images/templates/accidentals/flat.jpg', 2.4)
     FlatDouble = Template(AccidentalTypes.FLAT_DOUBLE.acc_type, 'images/templates/accidentals/double-flat.jpg', 2.4)
     Sharp = Template(AccidentalTypes.SHARP.acc_type, 'images/templates/accidentals/sharp.jpg', 2.8)
     SharpDouble = Template(AccidentalTypes.SHARP_DOUBLE.acc_type, 'images/templates/accidentals/double-sharp.jpg', 1)
     Natural = Template(AccidentalTypes.NATURAL.acc_type, 'images/templates/accidentals/natural.jpg', 3)
 
-    AllKeys = [Flat, FlatDouble, Sharp, SharpDouble, Natural]
+    AllAccidentals = [Flat, FlatDouble, Sharp, SharpDouble, Natural]
 
     # Symbols
     Fermate = Template('fermate', 'images/templates/fermate.jpg', 1.5)

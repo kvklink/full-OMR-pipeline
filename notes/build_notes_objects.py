@@ -5,16 +5,19 @@ Created on Sat Jun 13 16:52:35 2020
 @author: super
 """
 import math
-from typing import List
+from typing import List, TYPE_CHECKING
 
 import cv2
 
-from notes.note_objects import Stem, Note, Head, Flag, Beam, Accidental, AccidentalTypes
-from staffs.staff_objects import Staff
+from models.note_objects import Accidental, Stem, AccidentalTypes, Note
 from template_matching.template_matching import template_matching_array, AvailableTemplates
 
+if TYPE_CHECKING:
+    from models.note_objects import Head, Flag, Beam
+    from models.staff import Staff
 
-def find_stems(staff: Staff) -> List[Stem]:
+
+def find_stems(staff: 'Staff') -> List['Stem']:
     img_bar = staff.image
     img_struct_ver = img_bar.copy()
     ver_size = int(img_bar.shape[0] / 15)
@@ -40,34 +43,36 @@ def find_stems(staff: Staff) -> List[Stem]:
     #
     #    cv2.imshow('stems', imcopy)
 
-    stem_list: List[Stem] = []
+    stem_list: List['Stem'] = []
     for line in lines2_ver:
-        l = line[0]
-        stem_list.append(Stem(l[0], l[1], l[2], l[3]))
+        stem_line = line[0]
+        stem_list.append(Stem(stem_line[0], stem_line[1], stem_line[2], stem_line[3]))
 
     return stem_list
 
 
-def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
-    found_accidentals = template_matching_array(AvailableTemplates.AllKeys.value, staff, threshold)
+def detect_accidentals(staff: 'Staff', threshold: float) -> List['Accidental']:
+    found_accidentals = template_matching_array(AvailableTemplates.AllAccidentals.value, staff, threshold)
     if len(found_accidentals.keys()) == 0:
         # No accidentals were found, so just cut to the chase already
         return []
 
-    matched_accidentals: List[Accidental] = []
+    matched_accidentals: List['Accidental'] = []
     for template in found_accidentals.keys():
         for match in found_accidentals[template]:
             matched_accidentals.append(Accidental(match[0], match[1], template))
+
+    # Accidentals are sorted from left to right, in order to ease the application to notes later on
     matched_accidentals.sort(key=lambda acc: acc.x)
 
     for i in range(len(matched_accidentals)):
-        current: Accidental = matched_accidentals[i]
+        current: 'Accidental' = matched_accidentals[i]
         if current.acc_type in [AccidentalTypes.FLAT_DOUBLE, AccidentalTypes.SHARP_DOUBLE, AccidentalTypes.NATURAL]:
             # It is either a double flat, double sharp or a natural (and must therefore be local)
             current.set_is_local(True)
             continue
 
-        previous: Accidental = matched_accidentals[i - 1]
+        previous: 'Accidental' = matched_accidentals[i - 1]
         if previous:
             if previous.x - current.x < (staff.dist * 1.5) \
                     and (previous.y - current.y) > (staff.dist * 0.5) \
@@ -79,13 +84,21 @@ def detect_accidentals(staff: Staff, threshold: float) -> List[Accidental]:
                 current.set_is_local(True)
                 continue
 
-        # TODO: add clause that catches a single key accidental (so there is no previous)
+        # TODO: add (working) clause for detecting a single key signature
+        # else:
+        #     # clause that catches a single key accidental (so there is no previous)
+        #     # Only works when at least one time signature was detected earlier!
+        #     if signature:
+        #         if current.x < signature.x:
+        #             current.set_is_local(False)
+        #         else:
+        #             current.set_is_local(True)
 
     return matched_accidentals
 
 
-def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: List[Beam],
-                accidentals: List[Accidental], staff: Staff) -> List[Note]:
+def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], beams: List['Beam'],
+                accidentals: List['Accidental'], staff: 'Staff') -> List['Note']:
     dist = staff.dist
     nd = int(dist / 8)
 
@@ -95,7 +108,7 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
         'triple_beam': ('demisemiquaver', 8)
     }
 
-    notes = []
+    notes: List['Note'] = []
 
     for head in heads:
         hx1, hy1 = head.x, head.y
@@ -115,15 +128,15 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
                     head.connect()
 
                     if head.name == 'closed_notehead':
-                        dur = 1
-                        durname = 'quarter'
+                        duration = 1
+                        duration_text = 'quarter'
                     elif head.name == 'open_notehead':
-                        dur = 2
-                        durname = 'half'
+                        duration = 2
+                        duration_text = 'half'
                     else:
-                        dur = 1
-                        durname = 'unknown'
-                    notes.append(Note(head, durname, dur * staff.divisions, (x_min, y_min, x_max, y_max)))
+                        duration = 1
+                        duration_text = 'unknown'
+                    notes.append(Note(head, duration_text, duration * staff.divisions, (x_min, y_min, x_max, y_max)))
 
         if not head.connected:
             notes.append(Note(head, 'whole', 4 * staff.divisions, (hx1, hy1, hx2, hy2)))
@@ -147,19 +160,19 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
 
                     if flag.name in ['flag_upside_down_1', 'flag_1']:
                         div = 2
-                        durname = 'eighth'
+                        duration_text = 'eighth'
                     elif flag.name in ['flag_upside_down_2', 'flag_2']:
                         div = 4
-                        durname = 'sixteenth'
+                        duration_text = 'sixteenth'
                     elif flag.name in ['flag_upside_down_3', 'flag_3']:
                         div = 8
-                        durname = 'demisemiquaver'
+                        duration_text = 'demisemiquaver'
                     else:
                         div = 2
-                        durname = 'unknown'
+                        duration_text = 'unknown'
 
                     note.update_location(new_loc)
-                    note.update_duration(durname, int(note.duration / div))
+                    note.update_duration(duration_text, int(note.duration / div))
 
         for beam in beams:
             bx1, by1 = beam.x, beam.y
@@ -175,6 +188,52 @@ def build_notes(heads: List[Head], stems: List[Stem], flags: List[Flag], beams: 
                     note.add_beam('end', beam_names[beam.durname])
                 elif nx1 > bx1 + nd and nx2 < bx2 - nd:
                     note.add_beam('continue', beam_names[beam.durname])
-    # somehow create full notes (check open heads not in note list?)
+
+    # TODO: somehow create full notes (check open heads not in note list?)
+
+    # Apply accidentals to notes
+    # FIXME: is this necessary?
+    grouped_accidentals = group_accidentals(accidentals)
+    for accidental_arr in grouped_accidentals:
+        for accidental in accidental_arr:
+            # Determine ranges for applying the accidentals (in case there is a key change somewhere in the staff)
+            x_start = accidental_arr[0].x
+            x_end = accidental_arr[-1].x + staff.dist * 1.5
+            for _note in notes:
+                # print(f'Note: {_note.note} Accidental: {accidental.note}')
+                if x_start <= _note.x < x_end and _note.note == accidental.note:
+                    # Apply the accidental when it is in range, the same note,
+                    # and non-local, or sufficiently close to the current note
+                    if not accidental.is_local:
+                        # print("apply 1")
+                        _note.accidental = accidental
+                    elif _note.x - accidental.x < staff.dist * 1.5:
+                        # print("apply 2")
+                        # FIXME: local accidentals should be applied to the rest of the measure!
+                        _note.accidental = accidental
+                    # else:
+                    #     print(f'hmmmmm: {accidental.x}   {_note.x}   {staff.dist}')
+                # elif _note.note == accidental.note:
+                #     print(f'{x_start}    {x_end}    {_note.x}')
 
     return notes
+
+
+# Group accidentals together in groups. Groups consist of local and nonlocal accidentals in alternating order
+# Example: [n,n,n,l,l,l,l,n,l,l] -> [[n,n,n],[l,l,l,l],[n],[l,l]]
+def group_accidentals(accidentals: List['Accidental']) -> List[List['Accidental']]:
+    result: List[List['Accidental']] = [[]]
+    group_index = 0
+    for i in range(len(accidentals)):
+        if accidentals[i].is_local:
+            result[group_index].append(accidentals[i])
+            group_index += 1
+            continue
+        else:
+            while not accidentals[i].is_local:
+                result[group_index].append(accidentals[i])
+                i += 1
+            group_index += 1
+            continue
+
+    return result

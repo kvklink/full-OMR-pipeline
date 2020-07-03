@@ -97,10 +97,6 @@ def main():
 
         current_staff.measures = measures
 
-        time_meas = find_measure(measures, time_objects[0].x)
-        if time_meas:
-            time_meas.show_time = True
-
         # find accidentals
         accidental_objects = detect_accidentals(current_staff, 0.7)
 
@@ -178,6 +174,9 @@ def main():
             relevant_time = max([time for time in time_objects if time.x < measure.end], key=lambda time: time.x)
             measure.set_time(relevant_time)
 
+        time_meas = find_measure(measures, time_objects[0].x)
+        if time_meas:
+            time_meas.show_time = True
 
 
         matches_flags = template_matching_array(AvailableTemplates.AllFlags.value, current_staff, 0.5)
@@ -263,7 +262,6 @@ def main():
                     meas.show_clef = True
                     last_sign = meas.clef.letter
 
-    voice = 1
     root = create_xml()
 
     all_parts = []
@@ -273,6 +271,7 @@ def main():
         else:
             all_parts.append(add_part(root, f"Instrument {k+1}", k+1))
         for j, meas in enumerate(part):
+            voice = 1
             meas1 = add_measure(all_parts[k], meas, j+1)
 
             for i, obj in enumerate(meas.get_objects()):

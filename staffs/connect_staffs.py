@@ -14,7 +14,6 @@ def connect_staffs(img, staffs):
     staff_bottom = [s.bottom for s in staffs]
     staff_start = [s.x for s in staffs]
     
-    
     img_struct_ver = img.copy()
     ver_size = int(img.shape[0] / 15)
     ver_struct = cv2.getStructuringElement(cv2.MORPH_RECT, (1, ver_size))

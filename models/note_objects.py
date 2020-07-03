@@ -23,7 +23,7 @@ class AccidentalTypes(Enum):
         self.shift = shift
 
     @staticmethod
-    def get_by_name(acc_type: str):
+    def get_by_name(acc_type: str) -> 'AccidentalTypes':
         results = [val for val in AccidentalTypes.__members__.values() if acc_type == val.acc_type]
         if len(results) > 0:
             return results[0]
@@ -43,11 +43,17 @@ class Accidental:
         self.is_local = is_local
 
     def find_note(self, measure):
-        pitch = find_pitch(measure.staff, self.x, self.y)
+        pitch = find_pitch(measure.staff, self.x, self.adjusted_y())
         self.note = measure.note_labels[pitch % 7]
 
     def set_is_local(self, is_local: bool):
         self.is_local = is_local
+
+    def adjusted_y(self) -> int:
+        if self.acc_type in [AccidentalTypes.FLAT, AccidentalTypes.FLAT_DOUBLE]:
+            return int(self.y + (self.h * 0.8))
+        else:
+            return int(self.y + (self.h * 0.5))
 
 
 class Head:
@@ -172,7 +178,7 @@ class Note:
         self.octave = base.octave
         self.durname = durname
         self.duration = int(duration)
-        self.accidental = base.accidental
+        self.accidental: 'AccidentalTypes' = base.accidental
         self.beam = False
 
     def add_beam(self, relation, dur_info):
@@ -203,5 +209,5 @@ class Note:
         self.w = new_loc[2] - new_loc[0]
         self.h = new_loc[3] - new_loc[1]
 
-    def set_accidental(self, accidental):
-        self.accidental = accidental
+    def set_accidental(self, accidental: 'AccidentalTypes'):
+        self.accidental: 'AccidentalTypes' = accidental

@@ -37,7 +37,7 @@ class Measure:
 
         self.note_objects: List['Note'] = []
         self.rest_objects: List['Rest'] = []
-        self.all_objects: List['Note and Rest'] = []
+        self.all_objects: List[Union['Note', 'Rest']] = []
         self.chord_locs = []
         self.backup_locs = []
         self.backup_times = {}
@@ -79,7 +79,6 @@ class Measure:
         self.note_objects = [obj for obj in note_objects if obj.pitch is not None]
         self.rest_objects = [rest for rest in rests if self.start < rest.x < self.end]
         self.all_objects = sorted(self.note_objects + self.rest_objects, key=lambda x: x.x)
-        
 
     def get_objects(self) -> List[Union['Note', 'Rest']]:
         return self.all_objects

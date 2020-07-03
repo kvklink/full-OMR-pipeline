@@ -14,9 +14,13 @@ from models.staff_objects import Time, Clef, Key
 from mxml.xml_from_objects import add_backup, add_note, add_rest, add_measure, create_firstpart, create_xml, add_part
 from notes.build_notes_objects import detect_accidentals, group_accidentals, build_notes, find_stems
 from notes.find_beams import find_beams
+from staffs.connect_staffs import connect_staffs
 from staffs.seperate_staffs import separate_staffs
 from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
 from staffs.connect_staffs import connect_staffs
+from helpers.note_helpers import find_pitch
+from utils.util import imshow
+
 
 def main():
     input_file = 'images/sheets/fmttm/input.png'
@@ -60,19 +64,9 @@ def main():
         # Store the last used time signature per voice number for potential later use
         all_signatures[current_staff.nr_instrument] = time_objects[-1]
 
-        # find measures
-#        measure_matches = template_matching_array(AvailableTemplates.AllBarlines.value, current_staff, 0.8)
-#        measure_locations = []
-#        imcopy = current_staff.image.copy()
-#        for template in measure_matches.keys():
-#            for meas in measure_matches[template]:
-#                measure_locations.append(meas)
-#                cv.rectangle(imcopy, (meas[0],meas[1]), (meas[0]+template.w, meas[1]+template.h), (0,0,255),2)
-#        cv.imshow('bar lines %d'%staff_index, imcopy)
-        
         measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
         barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
-        
+
         # now first finding noteheads to weed out some incorrect barline matches
         # do template matching for notes and rests (to do: change to groups)
         matches_noteheads = template_matching_array(AvailableTemplates.AllNoteheads.value, current_staff, 0.7)
@@ -80,7 +74,7 @@ def main():
         for template in matches_noteheads.keys():
             for match in matches_noteheads[template]:
                 head_objects.append(Head(match[0], match[1], template))
-                
+
         delete_barlines = []
         for bar in barlines:
             for h in head_objects:
@@ -90,8 +84,10 @@ def main():
         for bar in barlines:
             if bar not in delete_barlines:
                 real_barlines.append(bar)
-        
+
         measures = split_measures(real_barlines, current_staff)
+
+        current_staff.measures = measures
 
         time_meas = find_measure(measures, time_objects[0].x)
         if time_meas:
@@ -103,9 +99,50 @@ def main():
         # find clef
         clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
         clef_objects: List['Clef'] = []
-        for template in clefs.keys():
+
+        # because of low threshold: eliminate non-clefs
+        for i, template in enumerate(clefs.keys()):
             for match in clefs[template]:
-                clef_objects.append(Clef(match[0], match[1], template))
+                overlap = 0
+                if find_measure(measures, match[0]) == find_measure(measures, match[0]+template.w):
+                    for h in head_objects:
+                        if match[0] <= h.x <= match[0]+template.w or match[0] <= h.x+h.w <= match[0]+template.w:
+                            overlap += 1
+                    if overlap == 0:
+                        curr_clef = Clef(match[0], match[1], template)
+                        clef_objects.append(curr_clef)
+
+        real_clefs = []
+        remove_clefs = []
+        for i in range(len(clef_objects)):
+            c1 = clef_objects[i]
+            c1x1, c1x2 = (c1.x, c1.x+c1.w)
+
+            if i in remove_clefs:
+                remove = 1
+            else:
+                remove = 0
+
+                for j in range(i+1, len(clef_objects)):
+                    c2 = clef_objects[j]
+                    c2x1, c2x2 = (c2.x, c2.x+c2.w)
+                    if c1x1 <= c2x1 <= c1x2 or c2x1 <= c1x1 <= c2x2:
+                        if c1.type != c2.type:
+                            if c1.type == 'F_CLEF':
+                                if find_pitch(current_staff, c1.x, c1.y) not in range(7,10):
+                                    remove = 1
+                                else:
+                                    remove_clefs.append(j)
+                            elif c2.type == 'F_CLEF':
+                                if find_pitch(current_staff, c2.x, c2.y) not in range(7,10):
+                                    remove_clefs.append(j)
+                                else:
+                                    remove = 1
+                        else:
+                            remove = 1
+
+            if remove == 0:
+                real_clefs.append(c1)
 
         # Associate accidentals with a certain note
         global_key_per_measure: List[Accidental] = []
@@ -127,14 +164,16 @@ def main():
 
             relevant_clef = max([clef for clef in clef_objects if clef.x < measure.end], key=lambda clef: clef.x)
             measure.set_clef(relevant_clef)
+            if relevant_clef.x > measure.start:
+                measure.show_clef = True
 
             relevant_time = max([time for time in time_objects if time.x < measure.end], key=lambda time: time.x)
             measure.set_time(relevant_time)
 
-        
+
 
         matches_flags = template_matching_array(AvailableTemplates.AllFlags.value, current_staff, 0.5)
-        flag_objects: List['Head'] = []
+        flag_objects: List['Flag'] = []
         for template in matches_flags.keys():
             for match in matches_flags[template]:
                 flag_objects.append(Flag(match[0], match[1], template))
@@ -142,7 +181,7 @@ def main():
         matches_short_rest = template_matching_array(AvailableTemplates.ShortRests.value, current_staff, 0.7)
         matches_long_rest = template_matching_array(AvailableTemplates.LongRests.value, current_staff, 0.9)
         matches_rest = {**matches_short_rest, **matches_long_rest}
-        rest_objects: List['Head'] = []
+        rest_objects: List['Rest'] = []
         for template in matches_rest.keys():
             for match in matches_rest[template]:
                 if (match[1] + template.h) < current_staff.lines[0][1] or match[1] > current_staff.lines[-1][1]:
@@ -165,14 +204,6 @@ def main():
         # find note beams
         beam_objects = find_beams(current_staff)
 
-#        for acc in accidental_objects:
-#            print(acc)
-#            print(acc.acc_type)
-
-#        for head in head_objects:
-#            if head.accidental is not None:
-#                print(head.accidental)
-
         # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
         # in future also should take dots, connection ties, etc.
         notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, accidental_objects,
@@ -185,8 +216,8 @@ def main():
         note_coords = []
         for note in notes:
             if (note.x, note.pitch, note.duration) not in note_coords:
-                for i in range(-2,3):
-                    note_coords.append((note.x+i, note.pitch, note.duration))
+                for i in range(-2, 3):
+                    note_coords.append((note.x + i, note.pitch, note.duration))
                 unique_notes.append(note)
 
         # vanaf hier per measure
@@ -194,27 +225,39 @@ def main():
             meas.assign_objects(unique_notes, rest_objects)
             meas.find_backups()
 
+        # imcopy = current_staff.image.copy()
+        # for n in accidentals:
+        #     cv.rectangle(imcopy, (n.x, n.y), (n.x + n.w, n.y + n.h), (255, 0, 0), 2)
+        #     cv.line(imcopy, (n.x, int(n.adjusted_y())), (n.x + n.w, int(n.adjusted_y())), (0, 255, 0), 2)
+        # imshow(f'{n.note}    {n.x}', imcopy)
+
         all_measures += measures
 
-
-    # groepeer maten naar parts------------
+    # groepeer maten naar parts
     parts = []
     for s in staffs:
         parts.append(s.nr_instrument)
     parts = list(set(parts))
     parts.sort()
-    
+
     meas_per_part = []
     for i in parts:
         meas_per_part.append([])
     for part in parts:
+        last_sign = ''
         for meas in all_measures:
             if meas.staff.nr_instrument == part:
                 meas_per_part[part-1].append(meas)
 
+                if meas.clef.letter == last_sign:
+                    meas.show_clef = False
+                else:
+                    meas.show_clef = True
+                    last_sign = meas.clef.letter
+
     voice = 1
     root = create_xml()
-    
+
     all_parts = []
     for k, part in enumerate(meas_per_part):
         if k==0:
@@ -223,7 +266,7 @@ def main():
             all_parts.append(add_part(root, f"Instrument {k+1}", k+1))
         for j, meas in enumerate(part):
             meas1 = add_measure(all_parts[k], meas, j+1)
-            
+
             for i, obj in enumerate(meas.get_objects()):
                 if i in meas.backup_locs:
                     add_backup(meas1, meas.backup_times[i])
@@ -236,8 +279,8 @@ def main():
                         add_note(meas1, obj, voice)
                 elif obj.type == 'rest':
                     add_rest(meas1, obj, voice)
-                    
-    
+
+
     tree = ET.ElementTree(root)
     with open('mxml/filename.xml', 'wb') as f:
         f.write(
@@ -246,39 +289,6 @@ def main():
                 'utf8'))
         tree.write(f, 'utf-8')
 
-    # TO DO!! xml voor verschillende parts/instrumenten
-
-
-    # -------------------------------------
-
-
-#    voice = 1
-#    # write XML file
-#    root = create_xml()
-#    part1 = create_firstpart(root, "Piano R")
-#    for meas in all_measures:
-#        meas1 = add_measure(part1, meas)
-#
-#        for i, obj in enumerate(meas.get_objects()):
-#            if i in meas.backup_locs:
-#                add_backup(meas1, meas.backup_times[i])
-#                voice = voice + 1  # hier eigenlijk nog weer op een manier soms terug naar vorige voice
-#            if obj.type == 'note':
-#                if i in meas.chord_locs:
-#                    add_note(meas1, obj, voice, True)
-#                else:
-#                    add_note(meas1, obj, voice)
-#            elif obj.type == 'rest':
-#                add_rest(meas1, obj, voice)
-#
-#    tree = ET.ElementTree(root)
-#
-#    with open('mxml/filename.xml', 'wb') as f:
-#        f.write(
-#            '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
-#            'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(
-#                'utf8'))
-#        tree.write(f, 'utf-8')
     print("Done")
 
 if __name__ == "__main__":

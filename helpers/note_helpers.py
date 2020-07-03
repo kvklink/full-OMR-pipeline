@@ -24,14 +24,14 @@ def find_pitch(staff: 'Staff', x: int, y: int) -> Optional[int]:
             i = i + 1
             found = (y < line_vals[i])
 
-        s = line_vals[i - 1]
-        e = line_vals[i]
+        upper = line_vals[i - 1]
+        lower = line_vals[i]
 
-        if y in range(int(e - staff.dist / 4) + 1, e + 1):
-            pitch = line_vals.index(e) * 2
-        elif y in range(s, int(s + staff.dist / 4)):
-            pitch = line_vals.index(s) * 2
+        if y in range(int(lower - staff.dist / 4) + 1, lower + 1):
+            pitch = line_vals.index(lower) * 2
+        elif y in range(upper, int(upper + staff.dist / 4)):
+            pitch = line_vals.index(upper) * 2
         else:
-            pitch = line_vals.index(e) * 2 - 1
+            pitch = line_vals.index(lower) * 2 - 1
 
     return pitch

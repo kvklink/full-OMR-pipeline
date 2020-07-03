@@ -84,15 +84,12 @@ class Measure:
     def get_objects(self) -> List[Union['Note', 'Rest']]:
         return self.all_objects
 
-    def find_backups(self, p):
+    def find_backups(self):
         objects = self.get_objects()
         for i in range(1, len(objects)):
             obj_1 = objects[i - 1]
             obj_2 = objects[i]
             if obj_1.x + obj_1.w > obj_2.x:
-                if p:
-                    print(obj_1.type, obj_1.duration, obj_1.x, obj_1.x+obj_1.w)
-                    print(obj_2.type, obj_2.duration, obj_2.x)
                 if obj_1.duration == obj_2.duration:
                     if obj_1.type == obj_2.type == 'note':
                         self.chord_locs.append(i)

@@ -25,19 +25,19 @@ def create_firstpart(root, p1_name):
     return part1
 
 
-def add_part(root, partname):
+def add_part(root, partname, partnr):
     # find part-list and add part
     part_list = root.find('part-list')
-    part_id = ET.SubElement(part_list, "score-part", id=f"P{len(list(root))}")
+    part_id = ET.SubElement(part_list, "score-part", id=f"P{partnr}")
     ET.SubElement(part_id, "part-name").text = partname
     # create part
-    part = ET.SubElement(root, "part", id=f"P{len(list(root))}")
+    part = ET.SubElement(root, "part", id=f"P{partnr}")
 
     return part
 
 
-def add_measure(part, meas):
-    measure = ET.SubElement(part, "measure", number=f"{meas.measure}")
+def add_measure(part, meas, nr):
+    measure = ET.SubElement(part, "measure", number=f"{nr}")
     # add attributes
     attributes = ET.SubElement(measure, "attributes")
 
@@ -54,7 +54,7 @@ def add_measure(part, meas):
 
     if meas.show_clef:
         clef = ET.SubElement(attributes, "clef")
-        ET.SubElement(clef, "sign").text = meas.clef
+        ET.SubElement(clef, "sign").text = meas.clef.letter
         ET.SubElement(clef, "line").text = f"{meas.clef_line}"
 
     return measure

@@ -25,7 +25,7 @@ class ClefTypes(Enum):
 
     @staticmethod
     def get_by_name(clef_name: str):
-        results = [val.name for val in ClefTypes.__members__.values()]
+        results = [val.name for val in ClefTypes.__members__.values() if val.name == clef_name]
         if clef_name in results:
             return results[0]
         else:
@@ -39,12 +39,22 @@ class ClefTypes(Enum):
         else:
             raise ValueError(f'{clef_letter} is not a valid Clef letter!')
 
+    @staticmethod
+    def get_letter_by_name(clef_name: str):
+        results = [val.clef_letter for val in ClefTypes.__members__.values() if val.name == clef_name]
+        names = [val.name for val in ClefTypes.__members__.values() if val.name == clef_name]
+        if clef_name in names:
+            return results[0]
+        else:
+            raise ValueError(f'{clef_name} is not a valid Clef name!')
+
 
 class Clef:
     def __init__(self, x, y, template):
         self.x = x
         self.y = y
         self.type = ClefTypes.get_by_name(template.name)
+        self.letter = ClefTypes.get_letter_by_name(template.name)
         self.h = template.h
         self.w = template.w
 

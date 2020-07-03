@@ -3,6 +3,9 @@ from typing import List, Dict
 
 import cv2 as cv
 
+from utils.util import imshow
+from denoise.denoise import denoise
+from dewarp.dewarp import dewarp
 from helpers.measure_helpers import select_barlines, split_measures, find_measure
 from models.measure import Measure
 from models.note_objects import Accidental, Flag, Rest, Head
@@ -19,18 +22,20 @@ from utils.util import imshow
 
 def main():
     input_file = 'images/sheets/fmttm/input.png'
+    original_img = cv.imread(input_file, cv.IMREAD_COLOR) 
 
     # denoise
-    # denoised_image = denoise(cv.imread(input_file))
+    denoised_image = denoise(original_img, isRgb=True)
 
-    # deskew
-    # deskewed_image = deskew(denoised_image)
-    deskewed_image = cv.imread(input_file)  # temporary
+    # dewarp
+    dewarped_image = dewarp(denoised_image, isRgb=True)
+    # dewarped_image = cv.imread(input_file, cv.IMREAD_COLOR)  # temporary
+    imshow("src", dewarped_image)
 
     # separate full sheet music into an image for each staff
-    staffs = [Staff(s) for s in separate_staffs(deskewed_image)]
+    staffs = [Staff(s) for s in separate_staffs(dewarped_image)]
 
-    connect_staffs(deskewed_image, staffs)
+    connect_staffs(dewarped_image, staffs)
 
     # set threshold for template matching
     all_measures: List[Measure] = []
@@ -325,7 +330,7 @@ def main():
 #            'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(
 #                'utf8'))
 #        tree.write(f, 'utf-8')
-
+    print("Done")
 
 if __name__ == "__main__":
     main()

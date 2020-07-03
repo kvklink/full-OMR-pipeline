@@ -54,7 +54,7 @@ def add_measure(part, meas, nr):
 
     if meas.show_clef:
         clef = ET.SubElement(attributes, "clef")
-        ET.SubElement(clef, "sign").text = meas.clef
+        ET.SubElement(clef, "sign").text = meas.clef.letter
         ET.SubElement(clef, "line").text = f"{meas.clef_line}"
 
     return measure

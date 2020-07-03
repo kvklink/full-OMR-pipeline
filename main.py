@@ -157,7 +157,7 @@ def main():
 
             measure.set_key(Key(key_per_measure))
 
-            relevant_clef = max([clef for clef in clef_objects if clef.x < measure.end], key=lambda clef: clef.x)
+            relevant_clef = max([clef for clef in real_clefs if clef.x < measure.end], key=lambda clef: clef.x)
             measure.set_clef(relevant_clef)
             if relevant_clef.x > measure.start:
                 measure.show_clef = True

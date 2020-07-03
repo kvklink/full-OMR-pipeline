@@ -9,6 +9,8 @@ from typing import List, TYPE_CHECKING
 
 import cv2
 
+from helpers.measure_helpers import find_measure
+from helpers.note_helpers import find_pitch
 from models.note_objects import Accidental, Stem, AccidentalTypes, Note
 from template_matching.template_matching import template_matching_array, AvailableTemplates
 
@@ -75,8 +77,12 @@ def detect_accidentals(staff: 'Staff', threshold: float) -> List['Accidental']:
 
         previous: 'Accidental' = matched_accidentals[i - 1]
         if previous:
+            measure_1 = find_measure(staff.measures, current.x)
+            measure_2 = find_measure(staff.measures, previous.x)
             if previous.x - current.x < (staff.dist * 1.5) \
-                    and (previous.y - current.y) > (staff.dist * 0.5) \
+                    and measure_1 == measure_2 \
+                    and find_pitch(staff, current.x, current.adjusted_y()) == \
+                    find_pitch(staff, previous.x, previous.adjusted_y()) \
                     and previous.acc_type is current.acc_type:
                 # A group of accidentals that are of the same type, sufficiently close and not on the same line
                 previous.set_is_local(False)
@@ -120,7 +126,7 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
             sx2, sy2 = (sx1 + stem.w, sy1 + stem.h)
 
             if sy1 < hy1 < sy2 or sy1 < hy2 < sy2 or sy2 < hy1 < sy1 or sy2 < hy2 < sy1:
-#            if sy1 in range(hy1, hy2 + 1) or sy2 in range(hy1, hy2 + 1) or (min(sy1,sy2) < hy1 and max(sy1,sy2) > hy2):
+                # if sy1 in range(hy1, hy2 + 1) or sy2 in range(hy1, hy2 + 1) or (min(sy1,sy2) < hy1 and max(sy1,sy2) > hy2):
                 if sx1 in range(hx1 - nd, hx2 + nd + 1) or sx2 in range(hx1 - nd, hx2 + nd + 1):
                     x_min = min(sx1, sx2, hx1, hx2)
                     x_max = max(sx1, sx2, hx1, hx2)
@@ -139,7 +145,6 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
                         duration = 1
                         duration_text = 'unknown'
                     notes.append(Note(head, duration_text, duration * staff.divisions, (x_min, y_min, x_max, y_max)))
-                    
 
         if not head.connected:
             notes.append(Note(head, 'whole', 4 * staff.divisions, (hx1, hy1, hx2, hy2)))
@@ -154,7 +159,7 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
 
             if fy1 in range(ny1, ny2 + 1) or fy2 in range(ny1, ny2 + 1):
                 if fx1 in range(nx1 - nd, nx2 + nd + 1) or fx2 in range(nx1 - nd, nx2 + nd + 1):
-                    
+
                     x_min = min(fx1, fx2, nx1, nx2)
                     x_max = max(fx1, fx2, nx1, nx2)
                     y_min = min(fy1, fy2, ny1, ny2)
@@ -177,7 +182,7 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
 
                     if note.duration < staff.divisions:
                         pass
-#                        notes.append(Note(note, duration_text, int(staff.divisions / div), new_loc))
+                    #                        notes.append(Note(note, duration_text, int(staff.divisions / div), new_loc))
                     else:
                         note.update_location(new_loc)
                         note.update_duration(duration_text, int(note.duration / div))
@@ -211,17 +216,11 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
                 if x_start <= _note.x < x_end and _note.note == accidental.note:
                     # Apply the accidental when it is in range, the same note,
                     # and non-local, or sufficiently close to the current note
-                    if not accidental.is_local:
+                    if accidental.x < _note.x or not accidental.is_local:
                         # print("apply 1")
                         _note.accidental = accidental
-                    elif _note.x - accidental.x < staff.dist * 1.5:
-                        # print("apply 2")
-                        # FIXME: local accidentals should be applied to the rest of the measure!
-                        _note.accidental = accidental
-                    # else:
-                    #     print(f'hmmmmm: {accidental.x}   {_note.x}   {staff.dist}')
-                # elif _note.note == accidental.note:
-                #     print(f'{x_start}    {x_end}    {_note.x}')
+                    else:
+                        print(f'dit had niet moeten gebeuren 🙀: {accidental.x}   {_note.x}   {staff.dist}')
 
     return notes
 
@@ -229,18 +228,26 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
 # Group accidentals together in groups. Groups consist of local and nonlocal accidentals in alternating order
 # Example: [n,n,n,l,l,l,l,n,l,l] -> [[n,n,n],[l,l,l,l],[n],[l,l]]
 def group_accidentals(accidentals: List['Accidental']) -> List[List['Accidental']]:
-    result: List[List['Accidental']] = [[]]
+    result: List[List['Accidental']] = []
     group_index = 0
     for i in range(len(accidentals)):
-        if accidentals[i].is_local:
+        # if accidentals[i].is_local:
+        if group_index >= len(result):
+            result.append([accidentals[i]])
+            continue
+        if result[group_index][0].is_local == accidentals[i].is_local:
             result[group_index].append(accidentals[i])
             group_index += 1
+            result[group_index] = [accidentals[i]]
             continue
         else:
-            while not accidentals[i].is_local:
-                result[group_index].append(accidentals[i])
-                i += 1
             group_index += 1
             continue
+        # else:
+        #     while not accidentals[i].is_local:
+        #         result[group_index].append(accidentals[i])
+        #         i += 1
+        #     group_index += 1
+        #     continue
 
     return result

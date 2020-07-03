@@ -193,11 +193,11 @@ def main():
             meas.assign_objects(unique_notes, rest_objects)
             meas.find_backups()
 
-        imcopy = current_staff.image.copy()
-        for n in accidentals:
-            cv.rectangle(imcopy, (n.x, n.y), (n.x + n.w, n.y + n.h), (255, 0, 0), 2)
-            cv.line(imcopy, (n.x, int(n.adjusted_y())), (n.x + n.w, int(n.adjusted_y())), (0, 255, 0), 2)
-        imshow(f'{n.note}    {n.x}', imcopy)
+        # imcopy = current_staff.image.copy()
+        # for n in accidentals:
+        #     cv.rectangle(imcopy, (n.x, n.y), (n.x + n.w, n.y + n.h), (255, 0, 0), 2)
+        #     cv.line(imcopy, (n.x, int(n.adjusted_y())), (n.x + n.w, int(n.adjusted_y())), (0, 255, 0), 2)
+        # imshow(f'{n.note}    {n.x}', imcopy)
 
         all_measures += measures
 

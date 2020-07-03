@@ -89,10 +89,6 @@ def main():
 
         current_staff.measures = measures
 
-        time_meas = find_measure(measures, time_objects[0].x)
-        if time_meas:
-            time_meas.show_time = True
-
         # find accidentals
         accidental_objects = detect_accidentals(current_staff, 0.7)
 
@@ -170,6 +166,9 @@ def main():
             relevant_time = max([time for time in time_objects if time.x < measure.end], key=lambda time: time.x)
             measure.set_time(relevant_time)
 
+        time_meas = find_measure(measures, time_objects[0].x)
+        if time_meas:
+            time_meas.show_time = True
 
 
         matches_flags = template_matching_array(AvailableTemplates.AllFlags.value, current_staff, 0.5)

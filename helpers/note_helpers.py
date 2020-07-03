@@ -27,7 +27,6 @@ def find_pitch(staff: 'Staff', x: int, y: int) -> Optional[int]:
         upper = line_vals[i - 1]
         lower = line_vals[i]
 
-        # TODO: use key from a measure instead
         if y in range(int(lower - staff.dist / 4) + 1, lower + 1):
             pitch = line_vals.index(lower) * 2
         elif y in range(upper, int(upper + staff.dist / 4)):

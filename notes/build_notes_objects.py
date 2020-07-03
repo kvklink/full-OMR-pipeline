@@ -102,7 +102,6 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
                 accidentals: List['Accidental'], measures: List['Measure'], staff: 'Staff') -> List['Note']:
     dist = staff.dist
     nd = int(dist / 4)
-    print(nd)
 
     beam_names = {
         'single_beam': ('eighth', 2),
@@ -139,7 +138,6 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
                     else:
                         duration = 1
                         duration_text = 'unknown'
-                    print(head.name)
                     notes.append(Note(head, duration_text, duration * staff.divisions, (x_min, y_min, x_max, y_max)))
                     
 

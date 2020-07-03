@@ -51,7 +51,14 @@ def template_matching_array(templates: List['Template'], staff: 'Staff', thresho
 
 
 class AvailableTemplates(Enum):
-    Barline = Template('barline', 'images/templates/barline.png', 4)
+    # Bar lines
+    Barline = Template('barline', 'images/templates/barlines/barline.png', 4)
+    BarlineTop = Template('barline', 'images/templates/barlines/barline-top.png', 6)
+    BarlineBottom = Template('barline', 'images/templates/barlines/barline-bottom.png', 6)
+    BarlineMiddle = Template('barline', 'images/templates/barlines/barline-middle.png', 6)
+    BarlineSingle = Template('barline', 'images/templates/barlines/barline-single.png', 6)
+    
+    AllBarlines = [BarlineTop, BarlineBottom, BarlineMiddle, BarlineSingle]
 
     # Note heads
     NoteheadClosed = Template('closed_notehead', 'images/templates/noteheads/head-filled.png', 1)
@@ -90,7 +97,7 @@ class AvailableTemplates(Enum):
     ShortRests = [RestFourth, RestEighth, RestSixteenth, RestThirtySecond]
     LongRests = [RestFull, RestHalf]
     
-    Dot = Template('dot', 'images/templates/punt-halfhoogte.png', 0.5)
+    Dot = Template('dot', 'images/templates/punt-halfhoogte.png', 0.5) # nog niet in gebruik
 
     # Clefs
     #    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)

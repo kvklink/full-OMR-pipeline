@@ -89,7 +89,7 @@ class Head:
         accidentals = key.accidentals
         for acc in accidentals:
             if acc.note == self.note:
-                self.accidental = acc.acc_type
+                self.accidental = acc
                 break
 
 

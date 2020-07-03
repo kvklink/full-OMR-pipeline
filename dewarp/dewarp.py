@@ -23,7 +23,7 @@ MAX_PRC = 5
 # IO for testing
 DIR = 'images/sheets/mscd-15/' #mscd-15/' #trombone/'
 INPUT_PATH = DIR + 'input.png'
-OUTPUT_PATH = DIR + 'deskewed_denoised.png'
+OUTPUT_PATH = DIR + 'dewarped_denoised.png'
 SHOUGH_TITLE = f"shough ({RHO},{THDEG},{THRES})"
 PHOUGH_TITLE = f"phough ({RHO},{THDEG},{PTHRES},{MIN_PRC}%,{MAX_PRC}%)"
 SHOUGH_PATH = DIR + "rotate/" + SHOUGH_TITLE + ".png"
@@ -98,16 +98,20 @@ def hough_score(img):
     nlinesP = len(linesP) if linesP is not None else 0
     return nlinesS, nlinesP
 
-'''Assumes a denoised grayscale image as input'''
-def deskew(img):
+'''Dewarps an image. Assumes input is already denoised. The output color scheme matches input (gray or RGB).'''
+def dewarp(img, isRgb=False):
+    if isRgb:
+        img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
     best_angle = optimize(img)
-    deskewed = rotate(img, best_angle)
-    return deskewed
+    dewarped = rotate(img, best_angle)
+    if isRgb:
+        dewarped = cv.cvtColor(dewarped, cv.COLOR_GRAY2RGB)
+    return dewarped
 
 if __name__ == "__main__":
     img = denoise(cv.imread(INPUT_PATH, cv.IMREAD_GRAYSCALE))
-    deskewed = deskew(img)
+    dewarped = dewarp(img)
     # best_angle = optimize(denoised) # = 0.62
-    # deskewed = rotate(denoised, best_angle)
-    # hough_score(deskewed)
-    cv.imwrite(OUTPUT_PATH, deskewed)
+    # dewarped = rotate(denoised, best_angle)
+    # hough_score(dewarped)
+    cv.imwrite(OUTPUT_PATH, dewarped)

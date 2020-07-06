@@ -17,7 +17,6 @@ from notes.find_beams import find_beams
 from staffs.connect_staffs import connect_staffs
 from staffs.seperate_staffs import separate_staffs
 from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
-from utils.util import imshow
 
 
 def main():
@@ -63,14 +62,14 @@ def main():
         all_signatures[current_staff.nr_instrument] = time_objects[-1]
 
         # find measures
-#        measure_matches = template_matching_array(AvailableTemplates.AllBarlines.value, current_staff, 0.8)
-#        measure_locations = []
-#        imcopy = current_staff.image.copy()
-#        for template in measure_matches.keys():
-#            for meas in measure_matches[template]:
-#                measure_locations.append(meas)
-#                cv.rectangle(imcopy, (meas[0],meas[1]), (meas[0]+template.w, meas[1]+template.h), (0,0,255),2)
-#        cv.imshow('bar lines %d'%staff_index, imcopy)
+        # measure_matches = template_matching_array(AvailableTemplates.AllBarlines.value, current_staff, 0.8)
+        # measure_locations = []
+        # imcopy = current_staff.image.copy()
+        # for template in measure_matches.keys():
+        # for meas in measure_matches[template]:
+        #       measure_locations.append(meas)
+        #       cv.rectangle(imcopy, (meas[0],meas[1]), (meas[0]+template.w, meas[1]+template.h), (0,0,255),2)
+        # cv.imshow('bar lines %d'%staff_index, imcopy)
 
         measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
         barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
@@ -86,7 +85,7 @@ def main():
         delete_barlines = []
         for bar in barlines:
             for h in head_objects:
-                if h.x-2 <= bar.x <= h.x+h.w+2:
+                if h.x - 2 <= bar.x <= h.x + h.w + 2:
                     delete_barlines.append(bar)
         real_barlines = []
         for bar in barlines:
@@ -95,7 +94,7 @@ def main():
 
         measures = split_measures(real_barlines, current_staff)
 
-        current_staff.measures = measures
+        current_staff.set_measures(measures)
 
         # find accidentals
         accidental_objects = detect_accidentals(current_staff, 0.7)
@@ -211,6 +210,14 @@ def main():
         # find note beams
         beam_objects = find_beams(current_staff)
 
+        # for acc in accidental_objects:
+        #     print(acc)
+        #     print(acc.acc_type)
+
+        # for head in head_objects:
+        #     if head.accidental is not None:
+        #         print(head.accidental)
+
         # takes all noteheads, stems and flags, accidentals and the Staff object to determine full notes
         # in future also should take dots, connection ties, etc.
         notes = build_notes(head_objects, stem_objects, flag_objects, beam_objects, accidental_objects,
@@ -266,10 +273,10 @@ def main():
 
     all_parts = []
     for k, part in enumerate(meas_per_part):
-        if k==0:
-            all_parts.append(create_firstpart(root, f"Instrument {k+1}"))
+        if k == 0:
+            all_parts.append(create_firstpart(root, f"Instrument {k + 1}"))
         else:
-            all_parts.append(add_part(root, f"Instrument {k+1}", k+1))
+            all_parts.append(add_part(root, f"Instrument {k + 1}", k + 1))
         for j, meas in enumerate(part):
             voice = 1
             meas1 = add_measure(all_parts[k], meas, j+1)
@@ -287,7 +294,6 @@ def main():
                 elif obj.type == 'rest':
                     add_rest(meas1, obj, voice)
 
-
     tree = ET.ElementTree(root)
     with open('mxml/filename.xml', 'wb') as f:
         f.write(
@@ -297,7 +303,6 @@ def main():
         tree.write(f, 'utf-8')
 
     # TODO: xml voor verschillende parts/instrumenten
-
 
     # -------------------------------------
 

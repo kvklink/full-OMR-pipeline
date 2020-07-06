@@ -82,11 +82,14 @@ class Head:
         self.pitch = find_pitch(staff, mid_x, mid_y)
 
     def set_note(self, measure: 'Measure'):
-        # print(f"pitch: {self.pitch}")
-        # print(f"measure notes: {measure.notes}")
-        self.note = measure.note_labels[self.pitch % 7]
-        self.octave = measure.octave - int((self.pitch+2) / 7)
         self.measure = measure
+        self.note = measure.note_labels[self.pitch % 7]
+        if measure.clef.letter == 'G':
+            self.octave = measure.octave - int((self.pitch+2) / 7)
+        elif measure.clef.letter == 'F':
+            self.octave = measure.octave - int((self.pitch) / 7)
+        elif measure.clef.letter == 'C':
+            self.octave = measure.octave - int((self.pitch-1) / 7)
 
     def set_accidental(self, accidental: Accidental):
         self.accidental = accidental

@@ -3,10 +3,10 @@ from typing import List, Dict
 
 import cv2 as cv
 
-from utils.util import imshow
 from denoise.denoise import denoise
 from dewarp.dewarp import dewarp
 from helpers.measure_helpers import select_barlines, split_measures, find_measure
+from helpers.note_helpers import find_pitch
 from models.measure import Measure
 from models.note_objects import Accidental, Flag, Rest, Head
 from models.staff import Staff
@@ -17,11 +17,12 @@ from notes.find_beams import find_beams
 from staffs.connect_staffs import connect_staffs
 from staffs.seperate_staffs import separate_staffs
 from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
+from utils.util import imshow
 
 
 def main():
     input_file = 'images/sheets/fmttm/input.png'
-    original_img = cv.imread(input_file, cv.IMREAD_COLOR) 
+    original_img = cv.imread(input_file, cv.IMREAD_COLOR)
 
     # denoise
     denoised_image = denoise(original_img, isRgb=True)
@@ -107,9 +108,9 @@ def main():
         for i, template in enumerate(clefs.keys()):
             for match in clefs[template]:
                 overlap = 0
-                if find_measure(measures, match[0]) == find_measure(measures, match[0]+template.w):
+                if find_measure(measures, match[0]) == find_measure(measures, match[0] + template.w):
                     for h in head_objects:
-                        if match[0] <= h.x <= match[0]+template.w or match[0] <= h.x+h.w <= match[0]+template.w:
+                        if match[0] <= h.x <= match[0] + template.w or match[0] <= h.x + h.w <= match[0] + template.w:
                             overlap += 1
                     if overlap == 0:
                         curr_clef = Clef(match[0], match[1], template)
@@ -119,25 +120,25 @@ def main():
         remove_clefs = []
         for i in range(len(clef_objects)):
             c1 = clef_objects[i]
-            c1x1, c1x2 = (c1.x, c1.x+c1.w)
-            
+            c1x1, c1x2 = (c1.x, c1.x + c1.w)
+
             if i in remove_clefs:
                 remove = 1
             else:
                 remove = 0
-            
-                for j in range(i+1, len(clef_objects)):
+
+                for j in range(i + 1, len(clef_objects)):
                     c2 = clef_objects[j]
-                    c2x1, c2x2 = (c2.x, c2.x+c2.w)
+                    c2x1, c2x2 = (c2.x, c2.x + c2.w)
                     if c1x1 <= c2x1 <= c1x2 or c2x1 <= c1x1 <= c2x2:
                         if c1.type != c2.type:
                             if c1.type == 'F_CLEF':
-                                if find_pitch(current_staff, c1.x, c1.y) not in range(7,10):
+                                if find_pitch(current_staff, c1.x, c1.y) not in range(7, 10):
                                     remove = 1
                                 else:
                                     remove_clefs.append(j)
                             elif c2.type == 'F_CLEF':
-                                if find_pitch(current_staff, c2.x, c2.y) not in range(7,10):
+                                if find_pitch(current_staff, c2.x, c2.y) not in range(7, 10):
                                     remove_clefs.append(j)
                                 else:
                                     remove = 1
@@ -176,7 +177,6 @@ def main():
         time_meas = find_measure(measures, time_objects[0].x)
         if time_meas:
             time_meas.show_time = True
-
 
         matches_flags = template_matching_array(AvailableTemplates.AllFlags.value, current_staff, 0.5)
         flag_objects: List['Flag'] = []
@@ -261,8 +261,8 @@ def main():
         last_sign = ''
         for meas in all_measures:
             if meas.staff.nr_instrument == part:
-                meas_per_part[part-1].append(meas)
-                
+                meas_per_part[part - 1].append(meas)
+
                 if meas.clef.letter == last_sign:
                     meas.show_clef = False
                 else:
@@ -335,6 +335,7 @@ def main():
 #                'utf8'))
 #        tree.write(f, 'utf-8')
     print("Done")
+
 
 if __name__ == "__main__":
     main()

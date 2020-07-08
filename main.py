@@ -254,7 +254,6 @@ def main():
                     meas.show_clef = True
                     last_sign = meas.clef.letter
 
-    voice = 1
     root = create_xml()
 
     all_parts = []
@@ -264,6 +263,7 @@ def main():
         else:
             all_parts.append(add_part(root, f"Instrument {k+1}", k+1))
         for j, meas in enumerate(part):
+            voice = 1
             meas1 = add_measure(all_parts[k], meas, j+1)
 
             for i, obj in enumerate(meas.get_objects()):

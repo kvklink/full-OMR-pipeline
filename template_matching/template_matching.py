@@ -116,6 +116,8 @@ class AvailableTemplates(Enum):
     AllSymbols = [Fermate]
 
     # Times
+    Time2_2 = Template('2/2 time', 'images/templates/times/2_2.jpg', 4)
+    Time2_4 = Template('2/4 time', 'images/templates/times/2_4.jpg', 4)
     Time3_4 = Template('3/4 time', 'images/templates/times/3_4.jpg', 4)
     Time3_8 = Template('3/8 time', 'images/templates/times/3_8.jpg', 4)
     Time4_4 = Template('4/4 time', 'images/templates/times/4_4.jpg', 4)
@@ -129,5 +131,5 @@ class AvailableTemplates(Enum):
     TimeAllaBreve = Template('alla breve', 'images/templates/times/alla_breve.jpg', 4)
     TimeC = Template('4/4 time C', 'images/templates/times/c.jpg', 4)
 
-    AllTimes = [Time3_4, Time3_8, Time4_4, Time5_4, Time5_8, Time6_4,
+    AllTimes = [Time2_2, Time2_4, Time3_4, Time3_8, Time4_4, Time5_4, Time5_8, Time6_4,
                 Time6_8, Time7_8, Time9_8, Time12_8, TimeAllaBreve, TimeC]

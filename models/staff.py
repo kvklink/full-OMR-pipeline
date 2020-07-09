@@ -12,7 +12,7 @@ class Staff:
         self.top, self.bottom = staff_tup[1]
         self.x = staff_tup[2]  # nu nog altijd 0
 
-        first_lines = detect_staff_lines(self.image)
+        first_lines = detect_staff_lines(self.image, self.bottom-self.top)
         self.dist = calc_avg_distance(first_lines)
         self.lines = sorted(
             calc_higher_lines(calc_lower_lines(first_lines, self.dist, self.image.shape[1]), self.dist,

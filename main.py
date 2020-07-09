@@ -21,8 +21,8 @@ from utils.util import imshow
 
 
 def main():
-    input_file = 'images/sheets/fmttm/input.png'
-    original_img = cv.imread(input_file, cv.IMREAD_COLOR)
+    input_folder = 'images/sheets/sonate/'
+    original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
 
     # denoise
     denoised_image = denoise(original_img, isRgb=True)
@@ -30,7 +30,10 @@ def main():
     # dewarp
     dewarped_image = dewarp(denoised_image, isRgb=True)
     # dewarped_image = cv.imread(input_file, cv.IMREAD_COLOR)  # temporary
+#    cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
+    
     imshow("src", dewarped_image)
+#    dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_image)]
@@ -295,7 +298,7 @@ def main():
                     add_rest(meas1, obj, voice)
 
     tree = ET.ElementTree(root)
-    with open('mxml/filename.xml', 'wb') as f:
+    with open('input_folder/digitalized.xml', 'wb') as f:
         f.write(
             '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
             'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(

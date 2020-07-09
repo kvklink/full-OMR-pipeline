@@ -100,14 +100,12 @@ class AvailableTemplates(Enum):
     Dot = Template('dot', 'images/templates/punt-halfhoogte.png', 0.5) # nog niet in gebruik
 
     # Clefs
-    #    ClefG = Template('g-clef', 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
     ClefG = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/g-clef-with-lines-2.jpg', 4)
     ClefG_full = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
     ClefF = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/f-clef-with-lines.jpg', 3)
-    ClefF_nolines = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/f-clef-no-lines.jpg', 3)
     ClefC = Template(ClefTypes.C_CLEF.name, 'images/templates/clefs/c-clef-with-lines.jpg', 4)
 
-    AllClefs = [ClefG, ClefG_full, ClefF, ClefC]#, ClefF_nolines]
+    AllClefs = [ClefG, ClefG_full, ClefF, ClefC]
 
     # Accidentals
     Flat = Template(AccidentalTypes.FLAT.acc_type, 'images/templates/accidentals/flat.jpg', 2.4)

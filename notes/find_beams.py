@@ -113,6 +113,8 @@ def find_beams(staff):
 
     beam_tuples = []
     for beam in beams:
+        if len(beam[0])==0 or len(beam[1])==0:
+            continue
         beam_tup = (beam[0][0],beam[0][1],beam[1][0],beam[1][1])
         if beam_tup not in beam_tuples:
             beam_tuples.append(beam_tup)

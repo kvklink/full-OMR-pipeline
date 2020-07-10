@@ -51,8 +51,8 @@ def template_matching_array(templates: List['Template'], staff: 'Staff', thresho
 
 
 class AvailableTemplates(Enum):
-    # Bar lines
-    Barline = Template('barline', 'images/templates/barlines/barline.png', 4)
+#    # Bar lines
+#    Barline = Template('barline', 'images/templates/barlines/barline.png', 4)
 
     # Note heads
     NoteheadClosed = Template('closed_notehead', 'images/templates/noteheads/head-filled.png', 1)
@@ -98,8 +98,10 @@ class AvailableTemplates(Enum):
     ClefG_full = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
     ClefF = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/f-clef-with-lines.jpg', 3)
     ClefC = Template(ClefTypes.C_CLEF.name, 'images/templates/clefs/c-clef-with-lines.jpg', 4)
+#    ClefF_hacky = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/hacky-f.png', 4)
+#    ClefG_hacky = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/hacky-g.png', 4)
 
-    AllClefs = [ClefG, ClefG_full, ClefF, ClefC]
+    AllClefs = [ClefG, ClefG_full, ClefF, ClefC]#, ClefF_hacky, ClefG_hacky]
 
     # Accidentals
     Flat = Template(AccidentalTypes.FLAT.acc_type, 'images/templates/accidentals/flat.jpg', 2.4)
@@ -130,6 +132,8 @@ class AvailableTemplates(Enum):
     Time12_8 = Template('12/8 time', 'images/templates/times/12_8.jpg', 4)
     TimeAllaBreve = Template('alla breve', 'images/templates/times/alla_breve.jpg', 4)
     TimeC = Template('4/4 time C', 'images/templates/times/c.jpg', 4)
+#    Time2_top = Template('2 top', 'images/templates/times/2-top.jpg', 2)
+#    Time2_bottom = Template('2 bottom', 'images/templates/times/2-bottom.jpg', 2)
 
     AllTimes = [Time2_2, Time2_4, Time3_4, Time3_8, Time4_4, Time5_4, Time5_8, Time6_4,
-                Time6_8, Time7_8, Time9_8, Time12_8, TimeAllaBreve, TimeC]
+                Time6_8, Time7_8, Time9_8, Time12_8, TimeAllaBreve, TimeC]#, Time2_top, Time2_bottom]

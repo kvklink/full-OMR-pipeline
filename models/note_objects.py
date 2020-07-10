@@ -44,7 +44,7 @@ class Accidental:
 
     def find_note(self, measure: 'Measure'):
         pitch = find_pitch(measure.staff, self.x, self.adjusted_y())
-        self.note = measure.note_labels[pitch % 7]
+        self.note = measure.note_labels[pitch % 7] if pitch is not None else 'Unknown'
 
     def set_is_local(self, is_local: bool):
         self.is_local = is_local

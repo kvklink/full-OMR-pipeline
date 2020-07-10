@@ -9,13 +9,15 @@ if TYPE_CHECKING:
 
 
 def split_measures(barlines: List['Barline'], staff: 'Staff') -> List['Measure']:  # barlines sorted on x
-    x1, x2 = (0, 0)
+    x1, x2 = (staff.x-2, 0)
     measures = []
     for i in range(0, len(barlines) + 1):
         if i == len(barlines):
             x2 = staff.lines[0][2]
         else:
             x2 = barlines[i].x
+            if x2 < x1:
+                continue
         measures.append(Measure(staff, i, x1, x2))
         x1 = x2
     return measures

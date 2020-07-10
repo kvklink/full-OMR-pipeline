@@ -162,7 +162,10 @@ def detect_staff_lines(img_bar, staff_height):
             if i == len(long_lines) - 1:
                 unique_lines.append(l)
         elif i == len(long_lines) - 1:
-            unique_lines.append(long_lines[i - 1])
+            if skip == False:
+                unique_lines.append(long_lines[i - 1])
+            elif len(unique_lines) < 4:
+                unique_lines.append(l)
         else:
             l1 = long_lines[i - 2]
             l2 = long_lines[i - 1]

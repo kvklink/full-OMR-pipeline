@@ -2,6 +2,7 @@ import xml.etree.cElementTree as ET
 from typing import List, Dict
 
 import cv2 as cv
+import imutils
 
 from denoise.denoise import denoise
 from dewarp.dewarp import dewarp
@@ -18,22 +19,28 @@ from staffs.connect_staffs import connect_staffs
 from staffs.seperate_staffs import separate_staffs
 from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
 from utils.util import imshow
+from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    input_folder = 'images/sheets/sonate/'
-    original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
-
-    # denoise
-    denoised_image = denoise(original_img, isRgb=True)
-
-    # dewarp
-    dewarped_image = dewarp(denoised_image, isRgb=True)
-    # dewarped_image = cv.imread(input_file, cv.IMREAD_COLOR)  # temporary
-#    cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
+    input_folder = 'images/sheets/fmttm/'
+    preprocess = False
     
-    imshow("src", dewarped_image)
-#    dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
+    if preprocess == True:
+        original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
+    
+        # denoise
+        denoised_image = denoise(original_img, isRgb=True)
+    
+        # dewarp
+        dewarped_image = dewarp(denoised_image, isRgb=True)
+        
+        # save image
+        cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
+
+    else:
+        # load image
+        dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_image)]
@@ -43,11 +50,34 @@ def main():
     # set threshold for template matching
     all_measures: List[Measure] = []
     all_signatures: Dict[int, 'Time'] = {}
+    all_clefs: Dict[int, 'Clef'] = {}
+
+    # groepeer maten naar parts
+    parts = [s.nr_instrument for s in staffs]
+    if None in parts:
+        parts = fix_staff_relations(staffs)
+    parts = list(set(parts))
+    parts.sort()
 
     for staff_index in range(len(staffs)):
+        print(f"staff {staff_index}")
         current_staff: Staff = staffs[staff_index]
+        
+#        #for testing size of template
+#        if staff_index == 0:
+##            print(current_staff.dist)
+#            fclef = cv.imread('images/templates/clefs/hacky-g.png', cv.IMREAD_COLOR)
+#            fclef = imutils.resize(fclef, height=int(current_staff.dist * 4))
+#            fh, fw = fclef.shape[:2]
+#            
+#            imf = current_staff.image.copy()
+#            ystart = current_staff.lines[4][1]
+#            imf[ystart:ystart+fh, 275:275+fw] = fclef
+##            imf[ystart:ystart+4*current_staff.dist, 200:300] = (0,0,255)
+#            imshow('test', imf)
+        
         # Generate Time signature objects
-        detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.7)
+        detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.5)
         time_objects: List['Time'] = []
         for template in detected_times.keys():
             for match in detected_times[template]:
@@ -65,18 +95,12 @@ def main():
         # Store the last used time signature per voice number for potential later use
         all_signatures[current_staff.nr_instrument] = time_objects[-1]
 
-        # find measures
-        # measure_matches = template_matching_array(AvailableTemplates.AllBarlines.value, current_staff, 0.8)
-        # measure_locations = []
-        # imcopy = current_staff.image.copy()
-        # for template in measure_matches.keys():
-        # for meas in measure_matches[template]:
-        #       measure_locations.append(meas)
-        #       cv.rectangle(imcopy, (meas[0],meas[1]), (meas[0]+template.w, meas[1]+template.h), (0,0,255),2)
-        # cv.imshow('bar lines %d'%staff_index, imcopy)
+#        measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
+#        barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
 
-        measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
-        barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
+        # find note stems and barlines
+        stem_objects, barlines = find_stems(current_staff)
+        
 
         # now first finding noteheads to weed out some incorrect barline matches
         # do template matching for notes and rests (to do: change to groups)
@@ -150,7 +174,7 @@ def main():
 
             if remove == 0:
                 real_clefs.append(c1)
-
+            
         # Associate accidentals with a certain note
         global_key_per_measure: List[Accidental] = []
         for measure in measures:
@@ -168,13 +192,36 @@ def main():
                         key_per_measure.append(accidental)
 
             measure.set_key(Key(key_per_measure))
+            
+            prev_clefs = [clef for clef in real_clefs if clef.x < measure.end]
 
-            relevant_clef = max([clef for clef in real_clefs if clef.x < measure.end], key=lambda clef: clef.x)
+            if len(prev_clefs) == 0:
+                if current_staff.nr_timewise == 1:
+                    # kan gebruikt worden voor het testen van volgende stappen
+#                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
+                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
+                else:
+                    last_clef: 'Clef' = all_clefs[current_staff.nr_instrument]
+                    relevant_clef = last_clef
+            else:
+                relevant_clef = max(prev_clefs, key=lambda clef: clef.x)
+            all_clefs[current_staff.nr_instrument] = relevant_clef
             measure.set_clef(relevant_clef)
             if relevant_clef.x > measure.start:
                 measure.show_clef = True
 
-            relevant_time = max([time for time in time_objects if time.x < measure.end], key=lambda time: time.x)
+            prev_times = [time for time in time_objects if time.x < measure.end]
+            if len(prev_times) == 0:
+                if current_staff.nr_timewise == 1:
+                    # kan gebruikt worden voor het testen van volgende stappen
+#                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
+                    raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
+                else:
+                    last_time: 'Time' = all_signatures[current_staff.nr_instrument]
+                    relevant_time = last_time
+            else:
+                relevant_time = max(prev_times, key=lambda time: time.x)
+            all_signatures[current_staff.nr_instrument] = relevant_time
             measure.set_time(relevant_time)
 
         time_meas = find_measure(measures, time_objects[0].x)
@@ -208,8 +255,7 @@ def main():
             head_obj.set_note(relevant_measure)
             head_obj.set_key(find_measure(measures, head_obj.x).key)
 
-        # find note stems
-        stem_objects = find_stems(current_staff)
+        
         # find note beams
         beam_objects = find_beams(current_staff)
 
@@ -250,12 +296,7 @@ def main():
 
         all_measures += measures
 
-    # groepeer maten naar parts
-    parts = []
-    for s in staffs:
-        parts.append(s.nr_instrument)
-    parts = list(set(parts))
-    parts.sort()
+    
 
     meas_per_part = []
     for i in parts:
@@ -298,7 +339,7 @@ def main():
                     add_rest(meas1, obj, voice)
 
     tree = ET.ElementTree(root)
-    with open('input_folder/digitalized.xml', 'wb') as f:
+    with open(input_folder+'digitalized.xml', 'wb') as f:
         f.write(
             '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
             'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(

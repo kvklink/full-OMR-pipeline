@@ -25,10 +25,10 @@ def main():
     original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
 
     # denoise
-    denoised_image = denoise(original_img, isRgb=True)
+    denoised_image = denoise(original_img, is_rgb=True)
 
     # dewarp
-    dewarped_image = dewarp(denoised_image, isRgb=True)
+    dewarped_image = dewarp(denoised_image, is_rgb=True)
     # dewarped_image = cv.imread(input_file, cv.IMREAD_COLOR)  # temporary
 #    cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
     

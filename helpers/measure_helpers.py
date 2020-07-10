@@ -16,7 +16,7 @@ def split_measures(barlines: List['Barline'], staff: 'Staff') -> List['Measure']
             x2 = staff.lines[0][2]
         else:
             x2 = barlines[i].x
-            if x2 < x1:
+            if x2 < x1+2*staff.dist:
                 continue
         measures.append(Measure(staff, i, x1, x2))
         x1 = x2

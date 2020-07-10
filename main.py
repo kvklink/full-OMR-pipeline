@@ -2,6 +2,7 @@ import xml.etree.cElementTree as ET
 from typing import List, Dict
 
 import cv2 as cv
+import imutils
 
 from denoise.denoise import denoise
 from dewarp.dewarp import dewarp
@@ -18,22 +19,23 @@ from staffs.connect_staffs import connect_staffs
 from staffs.seperate_staffs import separate_staffs
 from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
 from utils.util import imshow
+from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
     input_folder = 'images/sheets/sonate/'
-    original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
-
-    # denoise
-    denoised_image = denoise(original_img, isRgb=True)
-
-    # dewarp
-    dewarped_image = dewarp(denoised_image, isRgb=True)
-    # dewarped_image = cv.imread(input_file, cv.IMREAD_COLOR)  # temporary
-#    cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
-    
-    imshow("src", dewarped_image)
-#    dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
+#    original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
+#
+#    # denoise
+#    denoised_image = denoise(original_img, isRgb=True)
+#
+#    # dewarp
+#    dewarped_image = dewarp(denoised_image, isRgb=True)
+#    # dewarped_image = cv.imread(input_file, cv.IMREAD_COLOR)  # temporary
+##    cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
+#    
+#    imshow("src", dewarped_image)
+    dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_image)]
@@ -43,11 +45,31 @@ def main():
     # set threshold for template matching
     all_measures: List[Measure] = []
     all_signatures: Dict[int, 'Time'] = {}
+    all_clefs: Dict[int, 'Clef'] = {}
+
+    timewises = [s.nr_timewise for s in staffs]
+    instruments = [s.nr_instrument for s in staffs]
+    print(f"times: {timewises}")
+    print(f"instruments: {instruments}")
 
     for staff_index in range(len(staffs)):
+        print(staff_index)
         current_staff: Staff = staffs[staff_index]
+        
+#        if staff_index == 1:
+##            print(current_staff.dist)
+##            fclef = cv.imread('images/templates/clefs/hacky-f.png', cv.IMREAD_COLOR)
+##            fclef = imutils.resize(fclef, height=int(current_staff.dist * 3))
+##            fh, fw = fclef.shape[:2]
+#            
+#            imf = current_staff.image.copy()
+#            ystart = current_staff.lines[4][1]
+##            imf[ystart:ystart+fh, 0:fw] = fclef
+#            imf[ystart:ystart+4*current_staff.dist, 300:350] = (0,0,255)
+#            imshow('test', imf)
+        
         # Generate Time signature objects
-        detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.7)
+        detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.5)
         time_objects: List['Time'] = []
         for template in detected_times.keys():
             for match in detected_times[template]:
@@ -159,7 +181,15 @@ def main():
 
             measure.set_key(Key(key_per_measure))
 
-            relevant_clef = max([clef for clef in real_clefs if clef.x < measure.end], key=lambda clef: clef.x)
+            if len(real_clefs) == 0:
+                if current_staff.nr_timewise == 1:
+                    raise ValueError('OH BOY NO CLEF WAS DETECTED ON THE FIRST LINE SEND HELP')
+                else:
+                    last_clef: 'Clef' = all_clefs[current_staff.nr_instrument]
+                    relevant_clef = last_clef
+            else:
+                relevant_clef = max([clef for clef in real_clefs if clef.x < measure.end], key=lambda clef: clef.x)
+            all_clefs[current_staff.nr_instrument] = relevant_clef
             measure.set_clef(relevant_clef)
             if relevant_clef.x > measure.start:
                 measure.show_clef = True
@@ -233,9 +263,9 @@ def main():
         all_measures += measures
 
     # groepeer maten naar parts
-    parts = []
-    for s in staffs:
-        parts.append(s.nr_instrument)
+    parts = [s.nr_instrument for s in staffs]
+    if None in parts:
+        parts = fix_staff_relations(staffs)
     parts = list(set(parts))
     parts.sort()
 
@@ -280,7 +310,7 @@ def main():
                     add_rest(meas1, obj, voice)
 
     tree = ET.ElementTree(root)
-    with open('input_folder/digitalized.xml', 'wb') as f:
+    with open(input_folder+'digitalized.xml', 'wb') as f:
         f.write(
             '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
             'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(

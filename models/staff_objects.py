@@ -83,7 +83,7 @@ class Key:
 class Time:
     timedict = {'2/2 time':(2, 2), '2/4 time':(2, 4), '3/4 time': (3, 4), '3/8 time': (3, 8), '4/4 time': (4, 4), '5/4 time': (5, 4), '5/8 time': (5, 8),
                 '6/4 time': (6, 4), '6/8 time': (6, 8), '7/8 time': (7, 8), '9/8 time': (9, 8), '12/8 time': (12, 8),
-                '4/4 time C': (4, 4)}
+                '4/4 time C': (4, 4), 'alla breve': (2, 2), '2 top': (2, 2), '2 bottom': (2, 2)}
 
     def __init__(self, x: int, y: int, template: 'Template'):
         self.beats, self.beat_type = self.timedict[template.name]

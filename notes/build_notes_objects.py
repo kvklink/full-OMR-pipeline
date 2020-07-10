@@ -237,8 +237,9 @@ def group_accidentals(accidentals: List['Accidental']) -> List[List['Accidental'
             continue
         if result[group_index][0].is_local == accidentals[i].is_local:
             result[group_index].append(accidentals[i])
-            group_index += 1
-            result[group_index] = [accidentals[i]]
+            if group_index < len(result)-1:
+                group_index += 1
+                result[group_index] = [accidentals[i]]
             continue
         else:
             group_index += 1

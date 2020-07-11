@@ -52,20 +52,28 @@ def main():
     print(f"times: {timewises}")
     print(f"instruments: {instruments}")
 
+    # groepeer maten naar parts
+    parts = [s.nr_instrument for s in staffs]
+    if None in parts:
+        parts = fix_staff_relations(staffs)
+    parts = list(set(parts))
+    parts.sort()
+
     for staff_index in range(len(staffs)):
         print(staff_index)
         current_staff: Staff = staffs[staff_index]
         
-#        if staff_index == 1:
+#        #for testing size of template
+#        if staff_index == 0:
 ##            print(current_staff.dist)
-##            fclef = cv.imread('images/templates/clefs/hacky-f.png', cv.IMREAD_COLOR)
-##            fclef = imutils.resize(fclef, height=int(current_staff.dist * 3))
-##            fh, fw = fclef.shape[:2]
+#            fclef = cv.imread('images/templates/clefs/hacky-g.png', cv.IMREAD_COLOR)
+#            fclef = imutils.resize(fclef, height=int(current_staff.dist * 4))
+#            fh, fw = fclef.shape[:2]
 #            
 #            imf = current_staff.image.copy()
 #            ystart = current_staff.lines[4][1]
-##            imf[ystart:ystart+fh, 0:fw] = fclef
-#            imf[ystart:ystart+4*current_staff.dist, 300:350] = (0,0,255)
+#            imf[ystart:ystart+fh, 275:275+fw] = fclef
+##            imf[ystart:ystart+4*current_staff.dist, 200:300] = (0,0,255)
 #            imshow('test', imf)
         
         # Generate Time signature objects
@@ -87,8 +95,12 @@ def main():
         # Store the last used time signature per voice number for potential later use
         all_signatures[current_staff.nr_instrument] = time_objects[-1]
 
-        measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
-        barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
+#        measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
+#        barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
+
+        # find note stems and barlines
+        stem_objects, barlines = find_stems(current_staff)
+        
 
         # now first finding noteheads to weed out some incorrect barline matches
         # do template matching for notes and rests (to do: change to groups)
@@ -181,20 +193,34 @@ def main():
 
             measure.set_key(Key(key_per_measure))
 
-            if len(real_clefs) == 0:
+            prev_clefs = [clef for clef in real_clefs if clef.x < measure.end]
+
+            if len(prev_clefs) == 0:
                 if current_staff.nr_timewise == 1:
-                    raise ValueError('OH BOY NO CLEF WAS DETECTED ON THE FIRST LINE SEND HELP')
+                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
+#                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
+                    # even uitgezet voor het testen van volgende stappen
                 else:
                     last_clef: 'Clef' = all_clefs[current_staff.nr_instrument]
                     relevant_clef = last_clef
             else:
-                relevant_clef = max([clef for clef in real_clefs if clef.x < measure.end], key=lambda clef: clef.x)
+                relevant_clef = max(prev_clefs, key=lambda clef: clef.x)
             all_clefs[current_staff.nr_instrument] = relevant_clef
             measure.set_clef(relevant_clef)
             if relevant_clef.x > measure.start:
                 measure.show_clef = True
 
-            relevant_time = max([time for time in time_objects if time.x < measure.end], key=lambda time: time.x)
+            prev_times = [time for time in time_objects if time.x < measure.end]
+            if len(prev_times) == 0:
+                if current_staff.nr_timewise == 1:
+                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
+                    # hacky oplossing voor nu
+                else:
+                    last_time: 'Time' = all_signatures[current_staff.nr_instrument]
+                    relevant_time = last_time
+            else:
+                relevant_time = max(prev_times, key=lambda time: time.x)
+            all_signatures[current_staff.nr_instrument] = relevant_time
             measure.set_time(relevant_time)
 
         time_meas = find_measure(measures, time_objects[0].x)
@@ -228,8 +254,7 @@ def main():
             head_obj.set_note(relevant_measure)
             head_obj.set_key(find_measure(measures, head_obj.x).key)
 
-        # find note stems
-        stem_objects = find_stems(current_staff)
+        
         # find note beams
         beam_objects = find_beams(current_staff)
 
@@ -262,12 +287,7 @@ def main():
 
         all_measures += measures
 
-    # groepeer maten naar parts
-    parts = [s.nr_instrument for s in staffs]
-    if None in parts:
-        parts = fix_staff_relations(staffs)
-    parts = list(set(parts))
-    parts.sort()
+    
 
     meas_per_part = []
     for i in parts:

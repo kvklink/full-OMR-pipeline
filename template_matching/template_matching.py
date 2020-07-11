@@ -98,9 +98,10 @@ class AvailableTemplates(Enum):
     ClefG_full = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/g-clef-with-lines.jpg', 7.5)
     ClefF = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/f-clef-with-lines.jpg', 3)
     ClefC = Template(ClefTypes.C_CLEF.name, 'images/templates/clefs/c-clef-with-lines.jpg', 4)
-    ClefF_hacky = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/hacky-f.png', 3)
+    ClefF_hacky = Template(ClefTypes.F_CLEF.name, 'images/templates/clefs/hacky-f.png', 4)
+    ClefG_hacky = Template(ClefTypes.G_CLEF.name, 'images/templates/clefs/hacky-g.png', 4)
 
-    AllClefs = [ClefG, ClefG_full, ClefF, ClefC, ClefF_hacky]
+    AllClefs = [ClefG, ClefG_full, ClefF, ClefC, ClefF_hacky, ClefG_hacky]
 
     # Accidentals
     Flat = Template(AccidentalTypes.FLAT.acc_type, 'images/templates/accidentals/flat.jpg', 2.4)

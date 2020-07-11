@@ -13,6 +13,9 @@ from helpers.measure_helpers import find_measure
 from helpers.note_helpers import find_pitch
 from models.note_objects import Accidental, Stem, AccidentalTypes, Note
 from template_matching.template_matching import template_matching_array, AvailableTemplates
+from utils.util import imshow
+from helpers.staff_helpers import calc_y
+from models.staff_objects import Barline
 
 if TYPE_CHECKING:
     from models.measure import Measure
@@ -47,12 +50,25 @@ def find_stems(staff: 'Staff') -> List['Stem']:
     #    cv2.imshow('stems', imcopy)
 
     stem_list: List['Stem'] = []
+    line_list = []
     for line in lines2_ver:
         stem_line = line[0]
         stem_list.append(Stem(stem_line[0], stem_line[1], stem_line[2], stem_line[3]))
+        line_list.append(stem_line)
+    
+    barlines = select_barlines(line_list, staff)
 
-    return stem_list
+    return stem_list, barlines
 
+
+def select_barlines(lines: (int, int, int, int), staff: 'Staff') -> List['Barline']:
+    barlines = []
+    measure_locations = sorted(lines, key=lambda x: x[0])
+    for meas in measure_locations:
+        if min(meas[1], meas[3]) <= calc_y(staff.lines[4], meas[0])+1 and max(meas[1], meas[3]) >= calc_y(staff.lines[8], meas[0])-1:
+            barlines.append(Barline(meas[0], min(meas[1], meas[3]), max(meas[1], meas[3])))
+
+    return barlines
 
 def detect_accidentals(staff: 'Staff', threshold: float) -> List['Accidental']:
     found_accidentals = template_matching_array(AvailableTemplates.AllAccidentals.value, staff, threshold)

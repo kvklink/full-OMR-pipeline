@@ -1,16 +1,13 @@
-import sys
 import math
-import cv2 as cv
+
 import numpy as np
-import matplotlib.pyplot as plt
 
 from denoise.denoise import *
-from utils.util import bgr_imshow, imshow
 
-#====== PARAMS =====================================
+# ====== PARAMS =====================================
 # All Hough
-RHO = 1                 # 1 pixel
-THDEG = 90              # 90 degrees
+RHO = 1  # 1 pixel
+THDEG = 90  # 90 degrees
 THETA = np.pi * THDEG / 180
 # Std Hough
 THRES = 500
@@ -18,10 +15,10 @@ THRES = 500
 PTHRES = 600
 MIN_PRC = 60
 MAX_PRC = 5
-#===================================================
+# ===================================================
 
 # IO for testing
-DIR = 'images/sheets/mscd-15/' #mscd-15/' #trombone/'
+DIR = 'images/sheets/mscd-15/'  # mscd-15/' #trombone/'
 INPUT_PATH = DIR + 'input.png'
 OUTPUT_PATH = DIR + 'dewarped_denoised.png'
 SHOUGH_TITLE = f"shough ({RHO},{THDEG},{THRES})"
@@ -29,15 +26,19 @@ PHOUGH_TITLE = f"phough ({RHO},{THDEG},{PTHRES},{MIN_PRC}%,{MAX_PRC}%)"
 SHOUGH_PATH = DIR + "rotate/" + SHOUGH_TITLE + ".png"
 PHOUGH_PATH = DIR + "rotate/" + PHOUGH_TITLE + ".png"
 
+
 def rotate(img, angle):
-    nrows, ncols = img.shape 
-    center = (ncols/2, nrows/2)
+    nrows, ncols = img.shape
+    center = (ncols / 2, nrows / 2)
     mat = cv.getRotationMatrix2D(center, angle, 1)
     dst = cv.warpAffine(img, mat, (ncols, nrows), flags=cv.INTER_LINEAR)
     # bgr_imshow(f"Rotated {angle_deg} degrees", dst)
     return dst
 
+
 '''Assumes a denoised grayscale image as input'''
+
+
 def optimize(img):
     best_score = 0
     best_angle = 0
@@ -54,9 +55,10 @@ def optimize(img):
     # optimality is tested by counting succesful hough 90deg line recognization
     return best_angle
 
+
 def hough_score(img):
     ncols = img.shape[1]
-    
+
     # Edge detection
     edgdt = True
     if edgdt:
@@ -66,7 +68,7 @@ def hough_score(img):
         dst = cv.bitwise_not(img)
     cdst = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
     cdstP = np.copy(cdst)
-    
+
     # Standard Hough    
     lines = cv.HoughLines(dst, RHO, THETA, THRES, None, 0, 0)
     if lines is not None:
@@ -78,9 +80,9 @@ def hough_score(img):
             b = math.sin(theta)
             x0 = a * rho
             y0 = b * rho
-            pt1 = (int(x0 + line_len*(-b)), int(y0 + line_len*(a)))
-            pt2 = (int(x0 - line_len*(-b)), int(y0 - line_len*(a)))
-            cv.line(cdst, pt1, pt2, (0,0,255), thickness=1, lineType=cv.LINE_AA)
+            pt1 = (int(x0 + line_len * (-b)), int(y0 + line_len * (a)))
+            pt2 = (int(x0 - line_len * (-b)), int(y0 - line_len * (a)))
+            cv.line(cdst, pt1, pt2, (0, 0, 255), thickness=1, lineType=cv.LINE_AA)
     # bgr_imshow(SHOUGH_TITLE, cdst)
     # cv.imwrite(SHOUGH_PATH, cdst)
 
@@ -89,8 +91,8 @@ def hough_score(img):
     if linesP is not None:
         for i in range(0, len(linesP)):
             l = linesP[i][0]
-            cv.line(cdstP, (l[0], l[1]), (l[2], l[3]), (0,0,255), thickness=1, lineType=cv.LINE_AA)
-    
+            cv.line(cdstP, (l[0], l[1]), (l[2], l[3]), (0, 0, 255), thickness=1, lineType=cv.LINE_AA)
+
     # bgr_imshow(PHOUGH_TITLE, cdstP)
     # cv.imwrite(PHOUGH_PATH, cdstP)
 
@@ -98,15 +100,19 @@ def hough_score(img):
     nlinesP = len(linesP) if linesP is not None else 0
     return nlinesS, nlinesP
 
+
 '''Dewarps an image. Assumes input is already denoised. The output color scheme matches input (gray or RGB).'''
-def dewarp(img, isRgb=False):
-    if isRgb:
+
+
+def dewarp(img, is_rgb=False):
+    if is_rgb:
         img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
     best_angle = optimize(img)
     dewarped = rotate(img, best_angle)
-    if isRgb:
+    if is_rgb:
         dewarped = cv.cvtColor(dewarped, cv.COLOR_GRAY2RGB)
     return dewarped
+
 
 if __name__ == "__main__":
     img = denoise(cv.imread(INPUT_PATH, cv.IMREAD_GRAYSCALE))

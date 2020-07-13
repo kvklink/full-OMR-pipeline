@@ -23,19 +23,24 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    input_folder = 'images/sheets/sonate/'
-#    original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
-#
-#    # denoise
-#    denoised_image = denoise(original_img, isRgb=True)
-#
-#    # dewarp
-#    dewarped_image = dewarp(denoised_image, isRgb=True)
-#    # dewarped_image = cv.imread(input_file, cv.IMREAD_COLOR)  # temporary
-##    cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
-#    
-#    imshow("src", dewarped_image)
-    dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
+    input_folder = 'images/sheets/fmttm/'
+    preprocess = False
+    
+    if preprocess == True:
+        original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
+    
+        # denoise
+        denoised_image = denoise(original_img, isRgb=True)
+    
+        # dewarp
+        dewarped_image = dewarp(denoised_image, isRgb=True)
+        
+        # save image
+        cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
+
+    else:
+        # load image
+        dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_image)]
@@ -47,11 +52,6 @@ def main():
     all_signatures: Dict[int, 'Time'] = {}
     all_clefs: Dict[int, 'Clef'] = {}
 
-    timewises = [s.nr_timewise for s in staffs]
-    instruments = [s.nr_instrument for s in staffs]
-    print(f"times: {timewises}")
-    print(f"instruments: {instruments}")
-
     # groepeer maten naar parts
     parts = [s.nr_instrument for s in staffs]
     if None in parts:
@@ -60,7 +60,7 @@ def main():
     parts.sort()
 
     for staff_index in range(len(staffs)):
-        print(staff_index)
+        print(f"staff {staff_index}")
         current_staff: Staff = staffs[staff_index]
         
 #        #for testing size of template
@@ -130,7 +130,7 @@ def main():
         # find clef
         clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
         clef_objects: List['Clef'] = []
-
+        
         # because of low threshold: eliminate non-clefs
         for i, template in enumerate(clefs.keys()):
             for match in clefs[template]:
@@ -174,7 +174,7 @@ def main():
 
             if remove == 0:
                 real_clefs.append(c1)
-
+            
         # Associate accidentals with a certain note
         global_key_per_measure: List[Accidental] = []
         for measure in measures:
@@ -192,14 +192,14 @@ def main():
                         key_per_measure.append(accidental)
 
             measure.set_key(Key(key_per_measure))
-
+            
             prev_clefs = [clef for clef in real_clefs if clef.x < measure.end]
 
             if len(prev_clefs) == 0:
                 if current_staff.nr_timewise == 1:
-                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
-#                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
-                    # even uitgezet voor het testen van volgende stappen
+                    # kan gebruikt worden voor het testen van volgende stappen
+#                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
+                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
                 else:
                     last_clef: 'Clef' = all_clefs[current_staff.nr_instrument]
                     relevant_clef = last_clef
@@ -213,8 +213,9 @@ def main():
             prev_times = [time for time in time_objects if time.x < measure.end]
             if len(prev_times) == 0:
                 if current_staff.nr_timewise == 1:
-                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
-                    # hacky oplossing voor nu
+                    # kan gebruikt worden voor het testen van volgende stappen
+#                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
+                    raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
                 else:
                     last_time: 'Time' = all_signatures[current_staff.nr_instrument]
                     relevant_time = last_time

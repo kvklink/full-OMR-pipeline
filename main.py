@@ -26,16 +26,11 @@ def main():
     input_folder = 'images/sheets/sonate/'
 
     if os.path.isfile(input_folder+'dewarped.png'):
-        # load image
         dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
-
     else:
         original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
-        # denoise
         denoised_image = denoise(original_img, isRgb=True)
-        # dewarp
         dewarped_image = dewarp(denoised_image, isRgb=True)
-        # save image
         cv.imwrite(input_folder+'dewarped.png',dewarped_image)
 
     # separate full sheet music into an image for each staff

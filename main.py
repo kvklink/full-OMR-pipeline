@@ -27,7 +27,7 @@ def main():
     show_steps = True
     
 
-    if False:# os.path.isfile(input_folder+'dewarped.png'):
+    if os.path.isfile(input_folder+'dewarped.png'):
         dewarped_img = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
     else:
         original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)

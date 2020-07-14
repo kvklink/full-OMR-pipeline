@@ -872,6 +872,8 @@ def dewarp_at(imgfile):
     return dewarp(img)
 
 def dewarp(img):
+    # TODO(LK): Add margin to input image, to account for 
+    # images that need much dewarping
     small = resize_to_screen(img, maxw=4000, maxh=4000)
     basename = "input_file" #os.path.basename(imgfile)
     name = "input" #name, _ = os.path.splitext(basename)

@@ -23,18 +23,21 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    input_folder = 'images/sheets/allemande/'
-    show_steps = True
-    
+    INPUT_DIR = 'images/sheets/trombone-quality2/'
+    INPUT_PATH = INPUT_DIR + 'input.png'
+    DEWARPED_FILE = 'dewarped.png'
+    DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
+    SHOW_STEPS = True
+    FORCE_PREPRC = True
 
-    if os.path.isfile(input_folder+'dewarped.png'):
-        dewarped_img = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
+    if os.path.isfile(DEWARPED_PATH) and not FORCE_PREPRC:
+        dewarped_img = cv.imread(DEWARPED_PATH, cv.IMREAD_COLOR)
     else:
-        original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
+        original_img = cv.imread(INPUT_PATH, cv.IMREAD_COLOR)
         denoised_img = denoise(original_img, is_rgb=True)
         dewarped_img = dewarp(denoised_img)
-        imshow("dewarped", dewarped_img)
-        cv.imwrite(input_folder+'dewarped.png', dewarped_img)
+        imshow(DEWARPED_FILE, dewarped_img)
+        cv.imwrite(DEWARPED_PATH, dewarped_img)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_img)]
@@ -57,7 +60,7 @@ def main():
         print(f"staff {staff_index}")
         current_staff: Staff = staffs[staff_index]
         
-        if show_steps:
+        if SHOW_STEPS:
             imcopy = current_staff.image.copy()
             for l in current_staff.lines:
                 cv.line(imcopy, (l[0], l[1]), (l[2], l[3]), (0,255,255), 1)
@@ -83,13 +86,13 @@ def main():
             for match in detected_times[template]:
                 time_objects.append(Time(match[0], match[1], template))
 
-        if show_steps:
+        if SHOW_STEPS:
             for t in time_objects:
                 cv.rectangle(imcopy, (t.x, t.y), (t.x+t.w, t.y+t.h), (255,0,0), 1)
 
         if len(detected_times) == 0:
             if current_staff.nr_timewise == 1:
-                if show_steps:
+                if SHOW_STEPS:
                     imshow('staff lines and height', imcopy)
                     # kan gebruikt worden voor het testen van volgende stappen
 #                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
@@ -124,7 +127,7 @@ def main():
             if bar not in delete_barlines:
                 real_barlines.append(bar)
 
-        if show_steps:
+        if SHOW_STEPS:
             for b in real_barlines:
                 cv.line(imcopy, (b.x, b.y1), (b.x, b.y2), (0,0,255), 1)
             
@@ -135,7 +138,7 @@ def main():
         # find accidentals
         accidental_objects = detect_accidentals(current_staff, 0.7)
 
-        if show_steps:
+        if SHOW_STEPS:
             for a in accidental_objects:
                 cv.rectangle(imcopy, (a.x, a.y), (a.x+a.w, a.y+a.h), (0,255,0), 1)
 
@@ -143,7 +146,7 @@ def main():
         clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
         clef_objects: List['Clef'] = []
         
-        if show_steps:
+        if SHOW_STEPS:
             for temp in clefs:
                 for loc in clefs[temp]:
                     cv.rectangle(imcopy, (loc[0], loc[1]), (loc[0]+temp.w, loc[1]+temp.h), (255,0,255), 1)
@@ -216,7 +219,7 @@ def main():
                 if current_staff.nr_timewise == 1:
                     # kan gebruikt worden voor het testen van volgende stappen
 #                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
-                    if show_steps:
+                    if SHOW_STEPS:
                         imshow('detected objects', imcopy)
                     raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
                 else:
@@ -234,7 +237,7 @@ def main():
                 if current_staff.nr_timewise == 1:
                     # kan gebruikt worden voor het testen van volgende stappen
 #                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
-                    if show_steps:
+                    if SHOW_STEPS:
                         imshow('detected objects', imcopy)
                     raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
                 else:
@@ -266,7 +269,7 @@ def main():
                 else:
                     rest_objects.append(Rest(match[0], match[1], template, current_staff))
         
-        if show_steps:
+        if SHOW_STEPS:
             for r in rest_objects:
                 cv.rectangle(imcopy, (r.x, r.y), (r.x+r.w, r.y+r.h), (255,150,0), 1)
 
@@ -308,7 +311,7 @@ def main():
                     note_coords.append((note.x + i, note.pitch, note.duration))
                 unique_notes.append(note)
 
-        if show_steps:
+        if SHOW_STEPS:
             for n in unique_notes:
                 cv.rectangle(imcopy, (n.x, n.y), (n.x+n.w, n.y+n.h), (150,0,0), 1)
             imshow('found objects', imcopy)
@@ -363,7 +366,7 @@ def main():
                     add_rest(meas1, obj, voice)
 
     tree = ET.ElementTree(root)
-    with open(input_folder+'digitalized.xml', 'wb') as f:
+    with open(INPUT_DIR+'digitalized.xml', 'wb') as f:
         f.write(
             '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
             'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(

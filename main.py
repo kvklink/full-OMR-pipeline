@@ -2,7 +2,7 @@ import xml.etree.cElementTree as ET
 from typing import List, Dict
 
 import cv2 as cv
-import imutils
+import os.path
 
 from denoise.denoise import denoise
 from dewarp.dewarp import dewarp
@@ -23,24 +23,20 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    input_folder = 'images/sheets/fmttm/'
-    preprocess = False
-    
-    if preprocess == True:
-        original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
-    
-        # denoise
-        denoised_image = denoise(original_img, isRgb=True)
-    
-        # dewarp
-        dewarped_image = dewarp(denoised_image, isRgb=True)
-        
-        # save image
-        cv.imwrite(input_folder+'dewarped.png',dewarped_image) 
+    input_folder = 'images/sheets/sonate/'
 
-    else:
+    if os.path.isfile(input_folder+'dewarped.png'):
         # load image
         dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
+
+    else:
+        original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
+        # denoise
+        denoised_image = denoise(original_img, isRgb=True)
+        # dewarp
+        dewarped_image = dewarp(denoised_image, isRgb=True)
+        # save image
+        cv.imwrite(input_folder+'dewarped.png',dewarped_image)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_image)]

@@ -42,13 +42,6 @@ def find_stems(staff: 'Staff') -> List['Stem']:
     lines2_ver = cv2.HoughLinesP(edges2_ver, 1, math.pi, 1, None, 10,
                                  10)  # edges, rho, theta, threshold, --, minlinelen, maxlinegap
 
-    #    imcopy = img_bar.copy()
-    #    for linearr in lines2_ver:
-    #        line = linearr[0]
-    #        cv2.line(imcopy, (line[0],line[1]),(line[2],line[3]),(0,0,255),2)
-    #
-    #    cv2.imshow('stems', imcopy)
-
     stem_list: List['Stem'] = []
     line_list = []
     for line in lines2_ver:
@@ -65,7 +58,9 @@ def select_barlines(lines: (int, int, int, int), staff: 'Staff') -> List['Barlin
     barlines = []
     measure_locations = sorted(lines, key=lambda x: x[0])
     for meas in measure_locations:
-        if min(meas[1], meas[3]) <= calc_y(staff.lines[4], meas[0])+1 and max(meas[1], meas[3]) >= calc_y(staff.lines[8], meas[0])-1:
+        topline = calc_y(staff.lines[4], meas[0]) + staff.dist/2
+        bottomline = calc_y(staff.lines[8], meas[0]) - staff.dist/2
+        if min(meas[1], meas[3]) <= topline and max(meas[1], meas[3]) >= bottomline:
             barlines.append(Barline(meas[0], min(meas[1], meas[3]), max(meas[1], meas[3])))
 
     return barlines
@@ -162,7 +157,7 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
                         duration_text = 'unknown'
                     notes.append(Note(head, duration_text, duration * staff.divisions, (x_min, y_min, x_max, y_max)))
 
-        if not head.connected:
+        if not head.connected and head.name == 'open_notehead':
             notes.append(Note(head, 'whole', 4 * staff.divisions, (hx1, hy1, hx2, hy2)))
 
     for note in (n for n in notes if n.durname == 'quarter'):

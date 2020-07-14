@@ -15,10 +15,9 @@ def separate_staffs(img) -> List:
     rows, cols = img.shape[:2]
 
     img_struct = img.copy()
-    #    gray = img.copy()
-
     gray = cv2.cvtColor(img_struct, cv2.COLOR_BGR2GRAY)
-    (thresh, im_bw) = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    
+    (thresh, im_bw) = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)# | cv2.THRESH_OTSU)
 
     erode_struct = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 20))
     dilate_struct = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 1))
@@ -26,6 +25,8 @@ def separate_staffs(img) -> List:
     step1 = cv2.erode(im_bw, erode_struct, 1)
     step2 = cv2.dilate(step1, dilate_struct, 1)
     im_inv = cv2.bitwise_not(step2)
+
+    imshow('structed', im_inv)
 
     img_row_sum: List = np.sum(im_inv, axis=1).tolist()
 
@@ -68,17 +69,16 @@ def separate_staffs(img) -> List:
             i -= 1
         xs.append(i)
 
-#    imcopy = cv2.cvtColor(im_inv, cv2.COLOR_GRAY2BGR)
-#    colours = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)]
-#    for i in range(len(start)):
-#        s = start[i]
-#        e = end[i]
-#        x = xs[i]
-#        cv2.line(imcopy, (x, s), (cols, s), colours[i], 2)
-#        cv2.line(imcopy, (x, e), (cols, e), colours[i], 2)
-#
-#    img_small = cv2.resize(imcopy, (0,0), fx=0.5, fy=0.5)
-#    cv2.imshow('staff start', img_small)
+    imcopy = img.copy()#cv2.cvtColor(im_inv, cv2.COLOR_GRAY2BGR)
+    colours = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)]
+    for i in range(len(start)):
+        s = start[i]
+        e = end[i]
+        x = xs[i]
+        cv2.line(imcopy, (x, s), (cols, s), colours[i%4], 1)
+        cv2.line(imcopy, (x, e), (cols, e), colours[i%4], 1)
+
+    imshow('staff start', imcopy)
 
     cut = []
     for i, val in enumerate(full):
@@ -99,6 +99,6 @@ def separate_staffs(img) -> List:
     staffs = []
     for i in range(len(cut)):
         crop1 = img[cut[i][0]:cut[i][1], 0:img.shape[1]]
-        staffs.append((crop1, (start[i],end[i]), xs[i])) #0 nog veranderen in x waarde start van staff
+        staffs.append((crop1, (start[i],end[i]), (cut[i][0], cut[i][1]), xs[i]))
 
     return staffs

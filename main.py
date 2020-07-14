@@ -6,7 +6,7 @@ import os.path
 
 from denoise.denoise import denoise
 from dewarp.dewarp import dewarp
-from helpers.measure_helpers import select_barlines, split_measures, find_measure
+from helpers.measure_helpers import split_measures, find_measure
 from helpers.note_helpers import find_pitch
 from models.measure import Measure
 from models.note_objects import Accidental, Flag, Rest, Head
@@ -17,7 +17,7 @@ from notes.build_notes_objects import detect_accidentals, group_accidentals, bui
 from notes.find_beams import find_beams
 from staffs.connect_staffs import connect_staffs
 from staffs.seperate_staffs import separate_staffs
-from template_matching.template_matching import template_matching, AvailableTemplates, template_matching_array
+from template_matching.template_matching import AvailableTemplates, template_matching_array
 from utils.util import imshow
 from helpers.staff_fixers import fix_staff_relations
 
@@ -28,7 +28,7 @@ def main():
     DEWARPED_FILE = 'dewarped.png'
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
     SHOW_STEPS = True
-    FORCE_PREPRC = True
+    FORCE_PREPRC = False
 
     if os.path.isfile(DEWARPED_PATH) and not FORCE_PREPRC:
         dewarped_img = cv.imread(DEWARPED_PATH, cv.IMREAD_COLOR)
@@ -36,7 +36,7 @@ def main():
         original_img = cv.imread(INPUT_PATH, cv.IMREAD_COLOR)
         denoised_img = denoise(original_img, is_rgb=True)
         dewarped_img = dewarp(denoised_img)
-        imshow(DEWARPED_FILE, dewarped_img)
+#        imshow(DEWARPED_FILE, dewarped_img)
         cv.imwrite(DEWARPED_PATH, dewarped_img)
 
     # separate full sheet music into an image for each staff
@@ -59,26 +59,26 @@ def main():
     for staff_index in range(len(staffs)):
         print(f"staff {staff_index}")
         current_staff: Staff = staffs[staff_index]
-        
+
         if SHOW_STEPS:
             imcopy = current_staff.image.copy()
             for l in current_staff.lines:
                 cv.line(imcopy, (l[0], l[1]), (l[2], l[3]), (0,255,255), 1)
-        
-            cv.line(imcopy, (300, current_staff.lines[4][1]), (300, current_staff.lines[4][1]+4*current_staff.dist), (255,255,0), 2)
+
+            cv.line(imcopy, (2, current_staff.lines[4][1]), (2, current_staff.lines[4][1]+4*current_staff.dist), (255,255,0), 2)
 #        #for testing size of template
 #        if staff_index == 0:
 ##            print(current_staff.dist)
 #            fclef = cv.imread('images/templates/clefs/hacky-g.png', cv.IMREAD_COLOR)
 #            fclef = imutils.resize(fclef, height=int(current_staff.dist * 4))
 #            fh, fw = fclef.shape[:2]
-#            
+#
 #            imf = current_staff.image.copy()
 #            ystart = current_staff.lines[4][1]
 #            imf[ystart:ystart+fh, 275:275+fw] = fclef
 ##            imf[ystart:ystart+4*current_staff.dist, 200:300] = (0,0,255)
 #            imshow('test', imf)
-        
+
         # Generate Time signature objects
         detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.5)
         time_objects: List['Time'] = []
@@ -117,10 +117,17 @@ def main():
             for match in matches_noteheads[template]:
                 head_objects.append(Head(match[0], match[1], template))
 
+        if SHOW_STEPS:
+            for h in head_objects:
+                cv.rectangle(imcopy, (h.x, h.y), (h.x+h.w, h.y+h.h), (150,255,150), 1)
+
         delete_barlines = []
         for bar in barlines:
             for h in head_objects:
                 if h.x - 2 <= bar.x <= h.x + h.w + 2:
+                    delete_barlines.append(bar)
+            for t in time_objects:
+                if t.x - 2 <= bar.x <= t.x + t.w + 2:
                     delete_barlines.append(bar)
         real_barlines = []
         for bar in barlines:
@@ -130,7 +137,7 @@ def main():
         if SHOW_STEPS:
             for b in real_barlines:
                 cv.line(imcopy, (b.x, b.y1), (b.x, b.y2), (0,0,255), 1)
-            
+
         measures = split_measures(real_barlines, current_staff)
 
         current_staff.set_measures(measures)
@@ -145,24 +152,27 @@ def main():
         # find clef
         clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
         clef_objects: List['Clef'] = []
-        
+
         if SHOW_STEPS:
             for temp in clefs:
                 for loc in clefs[temp]:
                     cv.rectangle(imcopy, (loc[0], loc[1]), (loc[0]+temp.w, loc[1]+temp.h), (255,0,255), 1)
-        
+
         # because of low threshold: eliminate non-clefs
         for i, template in enumerate(clefs.keys()):
             for match in clefs[template]:
-                overlap = 0
+#                overlap = 0
                 if find_measure(measures, match[0]) == find_measure(measures, match[0] + template.w):
-                    for h in head_objects:
-                        if match[0] <= h.x <= match[0] + template.w or match[0] <= h.x + h.w <= match[0] + template.w:
-                            overlap += 1
-                    if overlap == 0:
-                        curr_clef = Clef(match[0], match[1], template)
-                        clef_objects.append(curr_clef)
-        
+#                    for h in head_objects:
+#                        if match[0] <= h.x <= match[0] + template.w or match[0] <= h.x + h.w <= match[0] + template.w:
+#                            overlap += 1
+#                            print(h.x, h.y)
+#                    if overlap == 0:
+                    curr_clef = Clef(match[0], match[1], template)
+                    clef_objects.append(curr_clef)
+
+
+
         real_clefs = []
         remove_clefs = []
         for i in range(len(clef_objects)):
@@ -194,7 +204,7 @@ def main():
 
             if remove == 0:
                 real_clefs.append(c1)
-            
+
         # Associate accidentals with a certain note
         global_key_per_measure: List[Accidental] = []
         for measure in measures:
@@ -212,7 +222,7 @@ def main():
                         key_per_measure.append(accidental)
 
             measure.set_key(Key(key_per_measure))
-            
+
             prev_clefs = [clef for clef in real_clefs if clef.x < measure.end]
 
             if len(prev_clefs) == 0:
@@ -268,7 +278,7 @@ def main():
                     print('rest out of bounds')
                 else:
                     rest_objects.append(Rest(match[0], match[1], template, current_staff))
-        
+
         if SHOW_STEPS:
             for r in rest_objects:
                 cv.rectangle(imcopy, (r.x, r.y), (r.x+r.w, r.y+r.h), (255,150,0), 1)
@@ -283,7 +293,7 @@ def main():
             head_obj.set_note(relevant_measure)
             head_obj.set_key(find_measure(measures, head_obj.x).key)
 
-        
+
         # find note beams
         beam_objects = find_beams(current_staff)
 
@@ -323,7 +333,7 @@ def main():
 
         all_measures += measures
 
-    
+
 
     meas_per_part = []
     for i in parts:
@@ -406,7 +416,6 @@ def main():
 #                'utf8'))
 #        tree.write(f, 'utf-8')
     print("Done")
-
 
 if __name__ == "__main__":
     main()

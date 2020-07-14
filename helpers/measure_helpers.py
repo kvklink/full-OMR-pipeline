@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def split_measures(barlines: List['Barline'], staff: 'Staff') -> List['Measure']:  # barlines sorted on x
-    x1, x2 = (staff.x-2, 0)
+    x1, x2 = (staff.x-10, 0)
     measures = []
     for i in range(0, len(barlines) + 1):
         if i == len(barlines):

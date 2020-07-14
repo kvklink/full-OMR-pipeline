@@ -56,7 +56,19 @@ def calc_y(line, x):
     return int(y)
 
 
-def detect_staff_lines(img_bar, staff_height):
+def detect_staff_lines(img_bar, staff_top, staff_bottom, im_top):
+    line1 = staff_top - im_top + 9
+    line5 = staff_bottom - im_top - 11
+    line3 = int(line1 + (line5 - line1)/2)
+    line2 = int(line1 + (line3 - line1)/2)
+    line4 = int(line3 + (line5 - line3)/2)
+    
+    lines = [[0,line1,img_bar.shape[1],line1], [0,line2,img_bar.shape[1],line2], [0,line3,img_bar.shape[1],line3], [0,line4,img_bar.shape[1],line4], [0,line5,img_bar.shape[1],line5]]
+    
+    return lines
+    
+    
+def detect_staff_lines_old(img_bar, staff_height): # TO DO: if not needed, remove
     height, width = img_bar.shape[:2]
     img_copy = img_bar.copy()
 
@@ -79,9 +91,6 @@ def detect_staff_lines(img_bar, staff_height):
 
     # getallen nog aanpassen naar schaalbaar tov img size
     lines = cv2.HoughLinesP(edges2, 1, math.pi / 2, 1, None, 50, 10)
-    #        lines = cv2.HoughLines(edges2, 1, math.pi/2, 1, None)
-
-    # Label useless lines for removal and combine consecutive lines
 
     # label lines that are rotated too much for removal
     for i, linearr in enumerate(lines):

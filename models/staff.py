@@ -10,9 +10,10 @@ class Staff:
     def __init__(self, staff_tup):
         self.image = staff_tup[0]
         self.top, self.bottom = staff_tup[1]
-        self.x = staff_tup[2]  # nu nog altijd 0
+        self.imtop, self.imbottom = staff_tup[2]
+        self.x = staff_tup[3]  # nu nog altijd 0
 
-        first_lines = detect_staff_lines(self.image, self.bottom-self.top)
+        first_lines = detect_staff_lines(self.image, self.top, self.bottom, self.imtop)
         self.dist = calc_avg_distance(first_lines)
         self.lines = sorted(
             calc_higher_lines(calc_lower_lines(first_lines, self.dist, self.image.shape[1]), self.dist,

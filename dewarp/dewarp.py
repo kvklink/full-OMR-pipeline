@@ -51,7 +51,7 @@ SPAN_MIN_WIDTH = 1000#100#30    # minimum reduced px width for span
 SPAN_PX_PER_STEP = 50#20#20   # reduced px spacing for sampling along spans
 FOCAL_LENGTH = 1.2       # normalized focal length of camera
 
-DEBUG_LEVEL = 3          # 0=none, 1=some, 2=lots, 3=all
+DEBUG_LEVEL = 0          # 0=none, 1=some, 2=lots, 3=all
 DEBUG_OUTPUT = 'file'    # file, screen, both
 
 WINDOW_NAME = 'Dewarp'   # Window name for visualization
@@ -837,7 +837,7 @@ def remap_image(name, img, small, page_dims, params):
     pil_image = pil_image.convert('1')
 
     threshfile = name + '_thresh.png'
-    pil_image.save(threshfile, dpi=(OUTPUT_DPI, OUTPUT_DPI))
+    # pil_image.save(threshfile, dpi=(OUTPUT_DPI, OUTPUT_DPI))
 
     if DEBUG_LEVEL >= 1:
         height = small.shape[0]
@@ -846,7 +846,7 @@ def remap_image(name, img, small, page_dims, params):
                              interpolation=cv2.INTER_AREA)
         debug_show(name, 6, 'output', display)
 
-    return threshfile
+    return threshfile, remapped
 
 
 def main():
@@ -860,12 +860,12 @@ def main():
     outfiles = []
     for imgfile in sys.argv[1:]:
         outfile = dewarp_at(imgfile)
-        outfiles.append(outfile)
-        print('  wrote', outfile)
-        print
+    #     outfiles.append(outfile)
+    #     print('  wrote', outfile)
+    #     print
 
-    print('to convert to PDF (requires ImageMagick):')
-    print('  convert -compress Group4 ' + ' '.join(outfiles) + ' output.pdf')
+    # print('to convert to PDF (requires ImageMagick):')
+    # print('  convert -compress Group4 ' + ' '.join(outfiles) + ' output.pdf')
 
 def dewarp_at(imgfile):
     img = cv2.imread(imgfile)
@@ -873,8 +873,8 @@ def dewarp_at(imgfile):
 
 def dewarp(img):
     small = resize_to_screen(img, maxw=4000, maxh=4000)
-    basename = os.path.basename(imgfile)
-    name, _ = os.path.splitext(basename)
+    basename = "input_file" #os.path.basename(imgfile)
+    name = "input" #name, _ = os.path.splitext(basename)
 
     print('loaded', basename, 'with size', imgsize(img),)
     print('and resized to', imgsize(small))
@@ -922,8 +922,9 @@ def dewarp(img):
 
     page_dims = get_page_dims(corners, rough_dims, params)
 
-    outfile = remap_image(name, img, small, page_dims, params)
-    return outfile
+    outfile, remapped = remap_image(name, img, small, page_dims, params)
+    remapped = cv2.cvtColor(remapped, cv2.COLOR_BGR2RGB)
+    return remapped
 
 if __name__ == '__main__':
     imgpath = "example_input/trombone2rand.png"#linguistics_thesis_b_rot.jpg"#boston_cooking_a.jpg"

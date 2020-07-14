@@ -27,21 +27,19 @@ def main():
     show_steps = True
     
 
-    if os.path.isfile(input_folder+'dewarped.png'):
-        dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
+    if False:# os.path.isfile(input_folder+'dewarped.png'):
+        dewarped_img = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
     else:
         original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
-        # denoise
-        denoised_image = denoise(original_img, is_rgb=True)
-        # dewarp
-        dewarped_image = dewarp(denoised_image, is_rgb=True)
-        # save image
-        cv.imwrite(input_folder+'dewarped.png',dewarped_image)
+        denoised_img = denoise(original_img, is_rgb=True)
+        dewarped_img = dewarp(denoised_img)
+        imshow("dewarped", dewarped_img)
+        cv.imwrite(input_folder+'dewarped.png', dewarped_img)
 
     # separate full sheet music into an image for each staff
-    staffs = [Staff(s) for s in separate_staffs(dewarped_image)]
+    staffs = [Staff(s) for s in separate_staffs(dewarped_img)]
 
-    connect_staffs(dewarped_image, staffs)
+    connect_staffs(dewarped_img, staffs)
 
     # set threshold for template matching
     all_measures: List[Measure] = []

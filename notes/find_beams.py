@@ -29,6 +29,9 @@ def find_beams(staff):
     edges2 = cv2.Canny(gray2, 100,200)
     lines = cv2.HoughLinesP(edges2, 1, math.pi/180, 1, None, 10, 1)
     
+    if lines is None:
+        return []
+    
     # corner detection
     gray2 = np.float32(gray)
     #image, blockSize (size neighbourhood considered), ksize (aperture for Sobel), k (free param)

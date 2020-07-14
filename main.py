@@ -23,14 +23,19 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    input_folder = 'images/sheets/sonate/'
+    input_folder = 'images/sheets/allemande/'
+    show_steps = True
+    
 
     if os.path.isfile(input_folder+'dewarped.png'):
         dewarped_image = cv.imread(input_folder+'dewarped.png', cv.IMREAD_COLOR)
     else:
         original_img = cv.imread(input_folder+'input.png', cv.IMREAD_COLOR)
-        denoised_image = denoise(original_img, isRgb=True)
-        dewarped_image = dewarp(denoised_image, isRgb=True)
+        # denoise
+        denoised_image = denoise(original_img, is_rgb=True)
+        # dewarp
+        dewarped_image = dewarp(denoised_image, is_rgb=True)
+        # save image
         cv.imwrite(input_folder+'dewarped.png',dewarped_image)
 
     # separate full sheet music into an image for each staff
@@ -54,6 +59,12 @@ def main():
         print(f"staff {staff_index}")
         current_staff: Staff = staffs[staff_index]
         
+        if show_steps:
+            imcopy = current_staff.image.copy()
+            for l in current_staff.lines:
+                cv.line(imcopy, (l[0], l[1]), (l[2], l[3]), (0,255,255), 1)
+        
+            cv.line(imcopy, (300, current_staff.lines[4][1]), (300, current_staff.lines[4][1]+4*current_staff.dist), (255,255,0), 2)
 #        #for testing size of template
 #        if staff_index == 0:
 ##            print(current_staff.dist)
@@ -74,8 +85,14 @@ def main():
             for match in detected_times[template]:
                 time_objects.append(Time(match[0], match[1], template))
 
+        if show_steps:
+            for t in time_objects:
+                cv.rectangle(imcopy, (t.x, t.y), (t.x+t.w, t.y+t.h), (255,0,0), 1)
+
         if len(detected_times) == 0:
             if current_staff.nr_timewise == 1:
+                if show_steps:
+                    imshow('staff lines and height', imcopy)
                 raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED ON THE FIRST LINE SEND HELP')
 
             last_time: 'Time' = all_signatures[current_staff.nr_instrument]
@@ -86,12 +103,8 @@ def main():
         # Store the last used time signature per voice number for potential later use
         all_signatures[current_staff.nr_instrument] = time_objects[-1]
 
-#        measure_locations = template_matching(AvailableTemplates.Barline.value, current_staff, 0.8)
-#        barlines = select_barlines(measure_locations, current_staff, AvailableTemplates.Barline.value)
-
         # find note stems and barlines
         stem_objects, barlines = find_stems(current_staff)
-        
 
         # now first finding noteheads to weed out some incorrect barline matches
         # do template matching for notes and rests (to do: change to groups)
@@ -111,6 +124,10 @@ def main():
             if bar not in delete_barlines:
                 real_barlines.append(bar)
 
+        if show_steps:
+            for b in real_barlines:
+                cv.line(imcopy, (b.x, b.y1), (b.x, b.y2), (0,0,255), 1)
+            
         measures = split_measures(real_barlines, current_staff)
 
         current_staff.set_measures(measures)
@@ -118,9 +135,18 @@ def main():
         # find accidentals
         accidental_objects = detect_accidentals(current_staff, 0.7)
 
+        if show_steps:
+            for a in accidental_objects:
+                cv.rectangle(imcopy, (a.x, a.y), (a.x+a.w, a.y+a.h), (0,255,0), 1)
+
         # find clef
         clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
         clef_objects: List['Clef'] = []
+        
+        if show_steps:
+            for temp in clefs:
+                for loc in clefs[temp]:
+                    cv.rectangle(imcopy, (loc[0], loc[1]), (loc[0]+temp.w, loc[1]+temp.h), (255,0,255), 1)
         
         # because of low threshold: eliminate non-clefs
         for i, template in enumerate(clefs.keys()):
@@ -189,8 +215,10 @@ def main():
             if len(prev_clefs) == 0:
                 if current_staff.nr_timewise == 1:
                     # kan gebruikt worden voor het testen van volgende stappen
-#                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
-                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
+                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
+#                    if show_steps:
+#                        imshow('detected objects', imcopy)
+#                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
                 else:
                     last_clef: 'Clef' = all_clefs[current_staff.nr_instrument]
                     relevant_clef = last_clef
@@ -206,6 +234,8 @@ def main():
                 if current_staff.nr_timewise == 1:
                     # kan gebruikt worden voor het testen van volgende stappen
 #                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
+                    if show_steps:
+                        imshow('detected objects', imcopy)
                     raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
                 else:
                     last_time: 'Time' = all_signatures[current_staff.nr_instrument]
@@ -235,6 +265,10 @@ def main():
                     print('rest out of bounds')
                 else:
                     rest_objects.append(Rest(match[0], match[1], template, current_staff))
+        
+        if show_steps:
+            for r in rest_objects:
+                cv.rectangle(imcopy, (r.x, r.y), (r.x+r.w, r.y+r.h), (255,150,0), 1)
 
         for head_obj in head_objects:
             head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
@@ -274,16 +308,15 @@ def main():
                     note_coords.append((note.x + i, note.pitch, note.duration))
                 unique_notes.append(note)
 
+        if show_steps:
+            for n in unique_notes:
+                cv.rectangle(imcopy, (n.x, n.y), (n.x+n.w, n.y+n.h), (150,0,0), 1)
+            imshow('found objects', imcopy)
+
         # vanaf hier per measure
         for i, meas in enumerate(measures):
             meas.assign_objects(unique_notes, rest_objects)
             meas.find_backups()
-
-        # imcopy = current_staff.image.copy()
-        # for n in accidentals:
-        #     cv.rectangle(imcopy, (n.x, n.y), (n.x + n.w, n.y + n.h), (255, 0, 0), 2)
-        #     cv.line(imcopy, (n.x, int(n.adjusted_y())), (n.x + n.w, int(n.adjusted_y())), (0, 255, 0), 2)
-        # imshow(f'{n.note}    {n.x}', imcopy)
 
         all_measures += measures
 

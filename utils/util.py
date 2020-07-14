@@ -4,6 +4,7 @@ import cv2 as cv
 
 def imshow(title, image, use_plt=True, is_bgr = False):
     if use_plt:
+        plt.figure()
         if is_bgr:
             image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
         plt.imshow(image)

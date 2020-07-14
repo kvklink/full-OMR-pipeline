@@ -91,6 +91,8 @@ def main():
             if current_staff.nr_timewise == 1:
                 if show_steps:
                     imshow('staff lines and height', imcopy)
+                    # kan gebruikt worden voor het testen van volgende stappen
+#                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
                 raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED ON THE FIRST LINE SEND HELP')
 
             last_time: 'Time' = all_signatures[current_staff.nr_instrument]
@@ -213,10 +215,10 @@ def main():
             if len(prev_clefs) == 0:
                 if current_staff.nr_timewise == 1:
                     # kan gebruikt worden voor het testen van volgende stappen
-                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
-#                    if show_steps:
-#                        imshow('detected objects', imcopy)
-#                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
+#                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
+                    if show_steps:
+                        imshow('detected objects', imcopy)
+                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
                 else:
                     last_clef: 'Clef' = all_clefs[current_staff.nr_instrument]
                     relevant_clef = last_clef

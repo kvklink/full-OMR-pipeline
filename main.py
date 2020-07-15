@@ -24,7 +24,7 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    INPUT_DIR = 'images/sheets/fmttm/'#trombone-quality2/'
+    INPUT_DIR = 'images/sheets/fmttm/'
     INPUT_PATH = INPUT_DIR + 'input.png'
     DEWARPED_FILE = 'dewarped.png'
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
@@ -299,10 +299,11 @@ def main():
             if head_obj.pitch is None:
                 continue
             relevant_measure = find_measure(measures, head_obj.x)
+            if relevant_measure is not None:
             # also here, first determine its corresponding measure, and use that to set the note
             # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
-            head_obj.set_note(relevant_measure)
-            head_obj.set_key(find_measure(measures, head_obj.x).key)
+                head_obj.set_note(relevant_measure)
+                head_obj.set_key(find_measure(measures, head_obj.x).key)
 
 
         # find note beams

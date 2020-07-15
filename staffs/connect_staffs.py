@@ -16,18 +16,23 @@ def connect_staffs(img, staffs):
     staff_start = [s.x for s in staffs]
     
     img_struct_ver = img.copy()
-    ver_size = int(img.shape[0] / 15)
-    ver_struct = cv2.getStructuringElement(cv2.MORPH_RECT, (1, ver_size))
+    ver_struct = cv2.getStructuringElement(cv2.MORPH_RECT, (1, int(img.shape[0] / 15)))
     img_struct_ver2 = cv2.dilate(img_struct_ver, ver_struct, 1)
-    img_struct_ver2 = cv2.erode(img_struct_ver2, ver_struct, 1)
+    
+    ver_struct2 = cv2.getStructuringElement(cv2.MORPH_RECT, (1, int(img.shape[0]/10)))
+    img_struct_ver2 = cv2.erode(img_struct_ver2, ver_struct2, 1)
+    
+    hor_struct = cv2.getStructuringElement(cv2.MORPH_RECT, (int(img.shape[1]/100), 1))
+    img_struct_hor = cv2.erode(img_struct_ver2, hor_struct, 1)
 
-    gray_ver = cv2.cvtColor(img_struct_ver2, cv2.COLOR_BGR2GRAY)
-    (thresh_ver, im_bw_ver) = cv2.threshold(gray_ver, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    gray_ver = cv2.cvtColor(img_struct_hor, cv2.COLOR_BGR2GRAY)
+    (thresh_ver, im_bw_ver) = cv2.threshold(gray_ver, 128, 255, cv2.THRESH_BINARY)# | cv2.THRESH_OTSU)
 
     img_canny_ver = im_bw_ver.copy()
     gray2_ver = cv2.cvtColor(img_canny_ver, cv2.COLOR_GRAY2BGR)
+#    gray2_ver = img_struct_hor.copy()
 
-    edges2_ver = cv2.Canny(gray2_ver, 100, 200)
+    edges2_ver = cv2.Canny(gray2_ver, 100, 150)
 
     lines2_ver = cv2.HoughLinesP(edges2_ver, 1, math.pi, 1, None, staff_height*2,
                                  10)  # edges, rho, theta, threshold, --, minlinelen, maxlinegap
@@ -50,9 +55,9 @@ def connect_staffs(img, staffs):
         top = (line[2], line[3])
         bottom = (line[0], line[1])
         for i, (t, b, x) in enumerate(zip(staff_tops, staff_bottom, staff_start)):
-            if t <= top[1] <= b and abs(x - top[0]) < staff_height:
+            if t - staff_height <= top[1] <= b and abs(x - top[0]) < staff_height:
                 topstaff = i
-            if t <= bottom[1] <= b and abs(x - bottom[0]) < staff_height:
+            if t <= bottom[1] <= b + staff_height and abs(x - bottom[0]) < staff_height:
                 bottomstaff = i
         if not (math.isnan(topstaff) or math.isnan(bottomstaff)):
             connected.append((topstaff, bottomstaff))
@@ -60,7 +65,20 @@ def connect_staffs(img, staffs):
     connected = list(set(connected))
     connected.sort(key=lambda x: x[0])
     
-    for i, (s, e) in enumerate(connected):
+    remove_connections = []
+    for i in range(len(connected)):
+        top = connected[i][0]
+        bottom = connected[i][1]
+        for j in range(len(connected)):
+            if connected[j][0] <= top and connected[j][1] >= bottom and i!=j:
+                remove_connections.append(i)
+                
+    valid_connections = []
+    for i in range(len(connected)):
+        if i not in remove_connections:
+            valid_connections.append(connected[i])
+    
+    for i, (s, e) in enumerate(valid_connections):
         s_group = [*range(s, e+1, 1)]
         for j, g in enumerate(s_group):
             staffs[g].set_bar_nrs(i+1, j+1)

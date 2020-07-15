@@ -30,7 +30,7 @@ def separate_staffs(img) -> List:
 
     img_row_sum: List = np.sum(im_inv, axis=1).tolist()
 
-    threshold = 0.5
+    threshold = 0.6
     for i, r in enumerate(img_row_sum):
         perc = r / (255 * im_inv.shape[1])
         img_row_sum[i] = perc
@@ -85,6 +85,12 @@ def separate_staffs(img) -> List:
 
     imshow('staff start', imcopy)
 
+    ind = 0
+    while full[ind] not in start and full[ind] not in end:
+        ind += 1
+    for i in range(ind):
+        del full[i]
+
     cut = []
     for i, val in enumerate(full):
         if i == 0:
@@ -100,6 +106,16 @@ def separate_staffs(img) -> List:
             break
         elif val in start and full[i - 1] in end and full[i + 2] in start:
             cut.append([full[i - 1], full[i + 2]])
+    
+    imcopy = img.copy()#cv2.cvtColor(im_inv, cv2.COLOR_GRAY2BGR)
+    colours = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)]
+    for i in range(len(cut)):
+        s = cut[i][0]
+        e = cut[i][1]
+        cv2.line(imcopy, (0, s), (cols, s), colours[i%4], 1)
+        cv2.line(imcopy, (0, e), (cols, e), colours[i%4], 1)
+
+    imshow('staff cuts', imcopy)
 
     staffs = []
     for i in range(len(cut)):

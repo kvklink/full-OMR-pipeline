@@ -1048,8 +1048,10 @@ def findBlocks(img):
     dst = cv.cvtColor(im_inv_filtered, cv.COLOR_GRAY2BGR)
 
     keypoints = (topl, topr, botl, botr)
+    border = 20
+    red = [0,0,255]
     for x,y in keypoints:
-        dst[y-10:y+10, x-10:x+10] = [0,0,255]
+        dst[y-border:y+border, x-border:x+border] = red
     return dst, keypoints
 
 def findStartInRow(row):
@@ -1062,6 +1064,22 @@ def findEndInRow(row):
     rev_row = reversed(row)
     index = findStartInRow(rev_row)
     return len(row)-1 - index
+
+def fixVerticals(img, keypoints):
+    height, width = img.shape[:2]
+    
+    topl, topr, botl, botr = [list(kp) for kp in keypoints]
+    topl_x = topl[0]
+    topr_x = topr[0]
+    botl_y = botl[1]
+    botr_y = botr[1]
+    src_m = np.array([topl, botl, topr, botr])
+    dst_m = np.array([topl, (topl_x, botl_y), topr, (topr_x, botr_y)])
+
+    h, status = cv.findHomography(src_m, dst_m)
+    img_new = cv.warpPerspective(img, h, (width, height))
+    bgr_imshow("Fix verticals", img_new)
+    return img_new
 
 if __name__ == '__main__':
     imgpath = "example_input/trombone2rand.png"#linguistics_thesis_b_rot.jpg"#boston_cooking_a.jpg"

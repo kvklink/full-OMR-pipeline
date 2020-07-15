@@ -5,7 +5,7 @@ import cv2 as cv
 import os.path
 
 from denoise.denoise import denoise
-from dewarp.dewarp import dewarp, findBlocks
+from dewarp.dewarp import dewarp, findBlocks, fixVerticals
 from dewarp.deskew import rotate
 from helpers.measure_helpers import split_measures, find_measure
 from helpers.note_helpers import find_pitch
@@ -45,8 +45,9 @@ def main():
 
     # TODO(LK): To be moved to the dewarping phase, it is here now
     # for quick testing with the already saved semi dewarped image
-    foundBlocks, coords = findBlocks(dewarped_img)
-    bgr_imshow(f"Found keypoints {coords}", foundBlocks)
+    foundBlocks, keypoints = findBlocks(dewarped_img)
+    bgr_imshow(f"Found keypoints {keypoints}", foundBlocks)
+    dewarped_img = fixVerticals(dewarped_img, keypoints)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_img)]

@@ -55,19 +55,24 @@ def separate_staffs(img) -> List:
         start.pop()
 
     xs = []
+    xe = []
     for s, e in zip(start, end):
         bar = im_inv[s:e, 0:im_inv.shape[1]]
         img_col_sum: List = np.sum(bar, axis=0).tolist()
 
-        threshold = 0.8
         for i, c in enumerate(img_col_sum):
             perc = c / (255 * bar.shape[0])
             img_col_sum[i] = perc
 
         i = int(bar.shape[1]/2)
-        while img_col_sum[i] > 0.5:
+        while img_col_sum[i] > 0.5 and i > 0:
             i -= 1
         xs.append(i)
+        
+        j = int(bar.shape[1]/2)
+        while img_col_sum[j] > 0.5 and j < len(img_col_sum)-1:
+            j += 1
+        xe.append(j)
 
     imcopy = img.copy()#cv2.cvtColor(im_inv, cv2.COLOR_GRAY2BGR)
     colours = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)]
@@ -99,6 +104,6 @@ def separate_staffs(img) -> List:
     staffs = []
     for i in range(len(cut)):
         crop1 = img[cut[i][0]:cut[i][1], 0:img.shape[1]]
-        staffs.append((crop1, (start[i],end[i]), (cut[i][0], cut[i][1]), xs[i]))
+        staffs.append((crop1, (start[i],end[i]), (cut[i][0], cut[i][1]), (xs[i], xe[i])))
 
     return staffs

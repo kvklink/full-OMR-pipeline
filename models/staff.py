@@ -11,7 +11,7 @@ class Staff:
         self.image = staff_tup[0]
         self.top, self.bottom = staff_tup[1]
         self.imtop, self.imbottom = staff_tup[2]
-        self.x = staff_tup[3]  # nu nog altijd 0
+        self.x, self.end = staff_tup[3]  # nu nog altijd 0
 
         first_lines = detect_staff_lines(self.image, self.top, self.bottom, self.imtop)
         self.dist = calc_avg_distance(first_lines)

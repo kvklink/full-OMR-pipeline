@@ -5,7 +5,7 @@ import cv2 as cv
 import os.path
 
 from denoise.denoise import denoise
-from dewarp.dewarp import dewarp
+from dewarp.dewarp import dewarp, findBlocks
 from dewarp.deskew import rotate
 from helpers.measure_helpers import split_measures, find_measure
 from helpers.note_helpers import find_pitch
@@ -19,7 +19,7 @@ from notes.find_beams import find_beams
 from staffs.connect_staffs import connect_staffs
 from staffs.seperate_staffs import separate_staffs
 from template_matching.template_matching import AvailableTemplates, template_matching_array
-from utils.util import imshow
+from utils.util import imshow, bgr_imshow
 from helpers.staff_fixers import fix_staff_relations
 
 
@@ -40,9 +40,13 @@ def main():
         original_img = cv.imread(INPUT_PATH, cv.IMREAD_COLOR)
         denoised_img = denoise(original_img, is_rgb=True)
         dewarped_img = dewarp(denoised_img)
-        # dewarped_img = rotate(dewarp(rotate(dewarped_img, 90, is_rgb=True)), 90, is_rgb=True)
-#        imshow(DEWARPED_FILE, dewarped_img)
+        # imshow(DEWARPED_FILE, dewarped_img)
         cv.imwrite(DEWARPED_PATH, dewarped_img)
+
+    # TODO(LK): To be moved to the dewarping phase, it is here now
+    # for quick testing with the already saved semi dewarped image
+    foundBlocks, coords = findBlocks(dewarped_img)
+    bgr_imshow(f"Found keypoints {coords}", foundBlocks)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_img)]

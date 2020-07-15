@@ -24,7 +24,7 @@ import scipy.optimize
 from utils.util import imshow, bgr_imshow
 from dewarp.deskew import rotate
 
-# for some reason pylint complains about cv2 members being undefined :(
+# for some reason pylint complains about cv members being undefined :(
 # pylint: disable=E1101
 
 HEIGHT_MARGIN_PERC = 10
@@ -1006,8 +1006,62 @@ def getOriginalShape(shape, margins):
 #     ver, hor = getMargins(shape)
 #     return height-2*ver, width-2*hor
 
-# def fixVerticals(img):
+def findBlocks(img):
+    # def find_affine(img):
+    rows, cols = img.shape[:2]
 
+    img_struct = img.copy()
+    gray = cv.cvtColor(img_struct, cv.COLOR_BGR2GRAY)
+
+    (thresh, im_bw) = cv.threshold(gray, 200, 255, cv.THRESH_BINARY)# | cv.THRESH_OTSU)
+
+    erode_struct = cv.getStructuringElement(cv.MORPH_RECT, (1, 100))
+    dilate_struct = cv.getStructuringElement(cv.MORPH_RECT, (20, 1))
+
+    step1 = cv.erode(im_bw, erode_struct, 1)
+    step2 = cv.dilate(step1, dilate_struct, 1)
+    im_inv = cv.bitwise_not(step2)
+    img_row_sum: List = np.sum(im_inv, axis=1).tolist()
+    
+    # Filter irrelevant blocks and get 1 set of global block coordinates
+    threshold = 0.4 * cols
+    im_inv_filtered = []
+    topl, topr = None, None
+    botl, botr = None, None
+    # TODO(LK): Check if it works better if you use the leftmost, rightmost,
+    # leftleast, and rightleast values  
+    for y, row in enumerate(im_inv):
+        if list(row).count(0) > threshold:
+            new_row = np.zeros(cols)
+        else:
+            new_row = row
+            start = (findStartInRow(row), y)
+            end = (findEndInRow(row), y)
+            if topl == None and topr == None:
+                topl = start
+                topr = end
+            botl = start
+            botr = end
+        im_inv_filtered.append(new_row)
+
+    im_inv_filtered = np.array(im_inv_filtered).astype(np.uint8)
+    dst = cv.cvtColor(im_inv_filtered, cv.COLOR_GRAY2BGR)
+
+    keypoints = (topl, topr, botl, botr)
+    for x,y in keypoints:
+        dst[y-10:y+10, x-10:x+10] = [0,0,255]
+    return dst, keypoints
+
+def findStartInRow(row):
+    for i, val in enumerate(row):
+        if val > 0:
+            return i
+    return -1 # Should never happen
+
+def findEndInRow(row):
+    rev_row = reversed(row)
+    index = findStartInRow(rev_row)
+    return len(row)-1 - index
 
 if __name__ == '__main__':
     imgpath = "example_input/trombone2rand.png"#linguistics_thesis_b_rot.jpg"#boston_cooking_a.jpg"

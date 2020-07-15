@@ -27,12 +27,16 @@ SHOUGH_PATH = DIR + "rotate/" + SHOUGH_TITLE + ".png"
 PHOUGH_PATH = DIR + "rotate/" + PHOUGH_TITLE + ".png"
 
 
-def rotate(img, angle):
+def rotate(img, angle, is_rgb=False):
+    if is_rgb:
+        img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
     nrows, ncols = img.shape
     center = (ncols / 2, nrows / 2)
     mat = cv.getRotationMatrix2D(center, angle, 1)
     dst = cv.warpAffine(img, mat, (ncols, nrows), flags=cv.INTER_LINEAR)
     # bgr_imshow(f"Rotated {angle_deg} degrees", dst)
+    if is_rgb:
+        dst = cv.cvtColor(dst, cv.COLOR_GRAY2RGB)
     return dst
 
 
@@ -43,7 +47,7 @@ def optimize(img):
     best_score = 0
     best_angle = 0
     for angle in np.arange(-5, 5, 0.01):
-        img_rot = rotate(img, angle)
+        img_rot = rotate(img, angle, is_rgb=False)
         sscore, pscore = hough_score(img_rot)
         score = pscore
         if score > best_score:
@@ -108,7 +112,7 @@ def dewarp(img, is_rgb=False):
     if is_rgb:
         img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
     best_angle = optimize(img)
-    dewarped = rotate(img, best_angle)
+    dewarped = rotate(img, best_angle, is_rgb=False)
     if is_rgb:
         dewarped = cv.cvtColor(dewarped, cv.COLOR_GRAY2RGB)
     return dewarped

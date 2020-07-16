@@ -15,12 +15,12 @@ def connect_staffs(img, staffs):
     staff_bottom = [s.bottom for s in staffs]
     staff_start = [s.x for s in staffs]
     
-    img_struct_ver = img.copy()
+    img_struct = img.copy()
     ver_struct = cv2.getStructuringElement(cv2.MORPH_RECT, (1, int(img.shape[0] / 15)))
-    img_struct_ver2 = cv2.dilate(img_struct_ver, ver_struct, 1)
+    img_struct_ver = cv2.dilate(img_struct, ver_struct, 1)
     
     ver_struct2 = cv2.getStructuringElement(cv2.MORPH_RECT, (1, int(img.shape[0]/10)))
-    img_struct_ver2 = cv2.erode(img_struct_ver2, ver_struct2, 1)
+    img_struct_ver2 = cv2.erode(img_struct_ver, ver_struct2, 1)
     
     hor_struct = cv2.getStructuringElement(cv2.MORPH_RECT, (int(img.shape[1]/100), 1))
     img_struct_hor = cv2.erode(img_struct_ver2, hor_struct, 1)
@@ -47,6 +47,10 @@ def connect_staffs(img, staffs):
 #        cv2.circle(imcopy, (x, b), 1, (0, 255, 0), 3)
 #    imshow('vertical lines', imcopy)
 #    # --------
+    if lines2_ver is None:
+        for i, s in enumerate(staffs):
+            s.set_bar_nrs(i+1, 1)
+        return
 
     connected = []
     for linearr in lines2_ver:

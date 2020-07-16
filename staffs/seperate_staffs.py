@@ -83,8 +83,6 @@ def separate_staffs(img) -> List:
         cv2.line(imcopy, (x, s), (cols, s), colours[i%4], 1)
         cv2.line(imcopy, (x, e), (cols, e), colours[i%4], 1)
 
-    imshow('staff start', imcopy)
-
     ind = 0
     while full[ind] not in start and full[ind] not in end:
         ind += 1
@@ -114,8 +112,6 @@ def separate_staffs(img) -> List:
         e = cut[i][1]
         cv2.line(imcopy, (0, s), (cols, s), colours[i%4], 1)
         cv2.line(imcopy, (0, e), (cols, e), colours[i%4], 1)
-
-    imshow('staff cuts', imcopy)
 
     staffs = []
     for i in range(len(cut)):

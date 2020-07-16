@@ -1,6 +1,6 @@
+import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
-
 
 def imshow(title, image, use_plt=True, is_bgr = False):
     if use_plt:
@@ -21,3 +21,6 @@ def bgr_imshow(title, image, use_plt=True):
 
 def get_dir(file_path):
     return file_path[::-1].split('/',1)[1][::-1]
+
+def to_radians(degrees):
+    return np.pi * degrees / 180

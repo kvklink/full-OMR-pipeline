@@ -5,8 +5,7 @@ import cv2 as cv
 import os.path
 
 from denoise.denoise import denoise
-from dewarp.dewarp import dewarp, findCorners, findCornersHarris, fixVerticals
-from dewarp.deskew import rotate
+from dewarp.dewarp import dewarp
 from helpers.measure_helpers import split_measures, find_measure
 from helpers.note_helpers import find_pitch
 from models.measure import Measure
@@ -24,12 +23,12 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    INPUT_DIR = 'images/sheets/fmttm/'
+    INPUT_DIR = 'images/sheets/trombone-quality/'
     INPUT_PATH = INPUT_DIR + 'input.png'
     DEWARPED_FILE = 'dewarped.png'
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
     SHOW_STEPS = True
-    FORCE_PREPRC = False
+    FORCE_PREPRC = True
 
     if not os.path.isfile(INPUT_PATH):
         raise FileNotFoundError
@@ -39,16 +38,9 @@ def main():
     else:
         original_img = cv.imread(INPUT_PATH, cv.IMREAD_COLOR)
         denoised_img = denoise(original_img, is_rgb=True)
-        dewarped_img = dewarp(denoised_img)
-        # imshow(DEWARPED_FILE, dewarped_img)
+        dewarped_img = dewarp(denoised_img, is_rgb=True)
+        imshow(DEWARPED_FILE, dewarped_img)
         cv.imwrite(DEWARPED_PATH, dewarped_img)
-
-    # TODO(LK): To be moved to the dewarping phase, it is here now
-    # for quick testing with the already saved semi dewarped image
-    findCornersHarris(dewarped_img)
-    foundBlocks, keypoints = findCorners(dewarped_img)
-    bgr_imshow(f"Found keypoints {keypoints}", foundBlocks)
-    dewarped_img = fixVerticals(dewarped_img, keypoints)
 
     # separate full sheet music into an image for each staff
     staffs = [Staff(s) for s in separate_staffs(dewarped_img)]

@@ -23,16 +23,23 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    INPUT_DIR = 'images/sheets/sonate/'
+    INPUT_DIR = 'images/sheets/chorale violin/'
     INPUT_PATH = INPUT_DIR + 'input.png'
     DEWARPED_FILE = 'dewarped.png'
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
     SHOW_STEPS = True
     FORCE_PREPRC = True
+    
+    # For evaluation
+    EVAL = True
+    ACTUAL_TIMES = ['4/4 time'] # list of time signatures per instrument (name of template i.e. '2/2 time')
+    ACTUAL_CLEFS = ['G'] # list of clef letters per instrument
 
+    # Check if file exists
     if not os.path.isfile(INPUT_PATH):
         raise FileNotFoundError
 
+    # Preprocessing steps
     if os.path.isfile(DEWARPED_PATH) and not FORCE_PREPRC:
         dewarped_img = cv.imread(DEWARPED_PATH, cv.IMREAD_COLOR)
     else:
@@ -60,27 +67,13 @@ def main():
     parts.sort()
 
     for staff_index in range(len(staffs)):
-        print(f"staff {staff_index}")
         current_staff: Staff = staffs[staff_index]
+        print(f"Staff {staff_index + 1}: {current_staff.nr_timewise}th staff for instrument {current_staff.nr_instrument}")
 
         if SHOW_STEPS:
             imcopy = current_staff.image.copy()
             for l in current_staff.lines:
                 cv.line(imcopy, (l[0], l[1]), (l[2], l[3]), (0,255,255), 1)
-
-            cv.line(imcopy, (2, current_staff.lines[4][1]), (2, current_staff.lines[4][1]+4*current_staff.dist), (255,255,0), 2)
-#        #for testing size of template
-#        if staff_index == 0:
-##            print(current_staff.dist)
-#            fclef = cv.imread('images/templates/clefs/hacky-g.png', cv.IMREAD_COLOR)
-#            fclef = imutils.resize(fclef, height=int(current_staff.dist * 4))
-#            fh, fw = fclef.shape[:2]
-#
-#            imf = current_staff.image.copy()
-#            ystart = current_staff.lines[4][1]
-#            imf[ystart:ystart+fh, 275:275+fw] = fclef
-##            imf[ystart:ystart+4*current_staff.dist, 200:300] = (0,0,255)
-#            imshow('test', imf)
 
         # Generate Time signature objects
         detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.5)
@@ -93,18 +86,29 @@ def main():
             for t in time_objects:
                 cv.rectangle(imcopy, (t.x, t.y), (t.x+t.w, t.y+t.h), (255,0,0), 1)
 
+        last_time = None
         if len(detected_times) == 0:
             if current_staff.nr_timewise == 1:
-                if SHOW_STEPS:
-                    imshow('staff lines and height', imcopy)
+                if EVAL:
+                    print(f"no time signature detected for staff {staff_index + 1}")
                     # kan gebruikt worden voor het testen van volgende stappen
-#                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
-                raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED ON THE FIRST LINE SEND HELP')
+                    timedict = {'2/2 time': AvailableTemplates.Time2_2.value, '2/4 time': AvailableTemplates.Time2_4.value, 
+                                '3/4 time': AvailableTemplates.Time3_4.value, '3/8 time': AvailableTemplates.Time3_8.value, 
+                                '4/4 time': AvailableTemplates.Time4_4.value, '5/4 time': AvailableTemplates.Time5_4.value, 
+                                '5/8 time': AvailableTemplates.Time5_8.value, '6/4 time': AvailableTemplates.Time6_4.value, 
+                                '6/8 time': AvailableTemplates.Time6_8.value, '7/8 time': AvailableTemplates.Time7_8.value, 
+                                '9/8 time': AvailableTemplates.Time9_8.value, '12/8 time': AvailableTemplates.Time12_8.value,
+                                '4/4 time C': AvailableTemplates.TimeC.value, 'alla breve': AvailableTemplates.TimeAllaBreve.value}
+                    last_time: 'Time' = Time(current_staff.x, current_staff.lines[4][1], timedict[ACTUAL_TIMES[current_staff.nr_instrument-1]])
+                else:
+                    if SHOW_STEPS:
+                        imshow('staff lines and height', imcopy)
+                    raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED ON THE FIRST LINE SEND HELP')
 
-            last_time: 'Time' = all_signatures[current_staff.nr_instrument]
+            else:
+                last_time: 'Time' = all_signatures[current_staff.nr_instrument]
 
-            # I really hope y isn't really used, and having x == 0 is okay
-            time_objects.append(Time(0, last_time.y, last_time.template))
+            time_objects.append(Time(last_time.x, last_time.y, last_time.template))
 
         # Store the last used time signature per voice number for potential later use
         all_signatures[current_staff.nr_instrument] = time_objects[-1]
@@ -210,7 +214,7 @@ def main():
 
         # Associate accidentals with a certain note
         global_key_per_measure: List[Accidental] = []
-        for measure in measures:
+        for i, measure in enumerate(measures):
             key_per_measure: List[Accidental] = global_key_per_measure.copy()
             for accidentals in group_accidentals(accidental_objects):
                 if len(accidentals) == 0:
@@ -229,12 +233,16 @@ def main():
             prev_clefs = [clef for clef in real_clefs if clef.x < measure.end]
 
             if len(prev_clefs) == 0:
-                if current_staff.nr_timewise == 1:
-                    # kan gebruikt worden voor het testen van volgende stappen
-#                    relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], AvailableTemplates.ClefG.value)
-                    if SHOW_STEPS:
-                        imshow('detected objects', imcopy)
-                    raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
+                if current_staff.nr_timewise == 1 and i==0:
+                    if EVAL:
+                        print(f"no clef detected for staff {staff_index + 1}")
+                        # kan gebruikt worden voor het testen van volgende stappen
+                        clefdict = {'G': AvailableTemplates.ClefG.value, 'F': AvailableTemplates.ClefF.value, 'C': AvailableTemplates.ClefC.value}
+                        relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], clefdict[ACTUAL_CLEFS[current_staff.nr_instrument-1]])
+                    else:
+                        if SHOW_STEPS:
+                            imshow('detected objects', imcopy)
+                        raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
                 else:
                     last_clef: 'Clef' = all_clefs[current_staff.nr_instrument]
                     relevant_clef = last_clef
@@ -247,15 +255,15 @@ def main():
 
             prev_times = [time for time in time_objects if time.x < measure.end]
             if len(prev_times) == 0:
-                if current_staff.nr_timewise == 1:
-                    # kan gebruikt worden voor het testen van volgende stappen
-#                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
-                    if SHOW_STEPS:
-                        imshow('detected objects', imcopy)
-                    raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
-                else:
-                    last_time: 'Time' = all_signatures[current_staff.nr_instrument]
-                    relevant_time = last_time
+#                if current_staff.nr_timewise == 1:
+#                    # kan gebruikt worden voor het testen van volgende stappen
+##                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
+#                    if SHOW_STEPS:
+#                        imshow('detected objects', imcopy)
+#                    raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
+#                else:
+#                    last_time: 'Time' = all_signatures[current_staff.nr_instrument]
+                relevant_time = last_time
             else:
                 relevant_time = max(prev_times, key=lambda time: time.x)
             all_signatures[current_staff.nr_instrument] = relevant_time
@@ -278,7 +286,8 @@ def main():
         for template in matches_rest.keys():
             for match in matches_rest[template]:
                 if (match[1] + template.h) < current_staff.lines[0][1] or match[1] > current_staff.lines[-1][1]:
-                    print('rest out of bounds')
+#                    print('rest out of bounds')
+                    pass
                 else:
                     rest_objects.append(Rest(match[0], match[1], template, current_staff))
 
@@ -328,7 +337,8 @@ def main():
         if SHOW_STEPS:
             for n in unique_notes:
                 cv.rectangle(imcopy, (n.x, n.y), (n.x+n.w, n.y+n.h), (150,0,0), 1)
-            imshow('found objects', imcopy)
+#            imshow('found objects', imcopy)
+            cv.imwrite(f"{INPUT_DIR}staff_{staff_index}.png", imcopy)
 
         # vanaf hier per measure
         for i, meas in enumerate(measures):

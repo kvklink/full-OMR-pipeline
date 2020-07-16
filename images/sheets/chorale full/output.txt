@@ -1,0 +1,10 @@
+Staff 1: 1th staff for instrument 1
+no clef detected for staff 1
+Staff 2: 1th staff for instrument 2
+no clef detected for staff 2
+Staff 3: 1th staff for instrument 3
+Staff 4: 1th staff for instrument 4
+Staff 5: 1th staff for instrument 5
+Staff 6: 1th staff for instrument 6
+Staff 7: 1th staff for instrument 7
+Done

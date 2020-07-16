@@ -1,0 +1,10 @@
+Staff 1: 1th staff for instrument 1
+Staff 2: 1th staff for instrument 2
+Staff 3: 1th staff for instrument 3
+Staff 4: 2th staff for instrument 1
+Staff 5: 2th staff for instrument 2
+Staff 6: 2th staff for instrument 3
+Staff 7: 3th staff for instrument 1
+Staff 8: 3th staff for instrument 2
+Staff 9: 3th staff for instrument 3
+Done

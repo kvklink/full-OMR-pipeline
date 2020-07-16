@@ -12,10 +12,10 @@ def find_pitch(staff: 'Staff', x: int, y: int) -> Optional[int]:
         line_vals.append(calc_y(line, x))
 
     if y < min(line_vals):
-        print(f'too high: {y}')
+#        print(f'too high: {y}')
         return None
     elif y > max(line_vals):
-        print(f'too low: {y}')
+#        print(f'too low: {y}')
         return None
     else:
         i = 0

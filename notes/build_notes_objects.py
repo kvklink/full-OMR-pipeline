@@ -223,15 +223,11 @@ def build_notes(heads: List['Head'], stems: List['Stem'], flags: List['Flag'], b
             x_start = accidental_arr[0].x
             x_end = accidental_arr[-1].x + staff.dist * 1.5
             for _note in notes:
-                # print(f'Note: {_note.note} Accidental: {accidental.note}')
                 if x_start <= _note.x < x_end and _note.note == accidental.note:
                     # Apply the accidental when it is in range, the same note,
                     # and non-local, or sufficiently close to the current note
                     if accidental.x < _note.x or not accidental.is_local:
-                        # print("apply 1")
                         _note.accidental = accidental
-                    else:
-                        print(f'dit had niet moeten gebeuren 🙀: {accidental.x}   {_note.x}   {staff.dist}')
 
     return notes
 

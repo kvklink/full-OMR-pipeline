@@ -158,75 +158,75 @@ def find_verticals(img, show=False):
     theta_deg = 0.1 # 0.1 degree
     threshold = int(height * 0.1) #100
     lines, coords = std_houghlines(img, rho=rho, theta_deg=theta_deg,
-                                threshold=threshold, show=True, save=False)
+                                threshold=threshold, show=False, save=False)
 
-    # Select 2 main vertical. One leftmost, one rightmost
+    # Collect 2 clusters of vertical lines: one leftmost, one rightmost
     max_slope = 45
     max_theta = to_radians(max_slope) #45)
     min_theta = to_radians(180 - max_slope)
 
-    left = None
-    right = None
+    lefts = None
+    rights = None
     all_verticals = []
     
     marg = 10 #px
     page_xc = width / 2
     for line, coord in zip(lines, coords):
+        line = tuple(line[0])
         line_theta = get_theta(line)
         seems_vertical = line_theta <= max_theta or line_theta >= min_theta
         if seems_vertical:
+            all_verticals.append((line, coord))
             this_xc = get_vertical_xcenter(coord, height)
 
-            if left is None:
-                left = (line, coord)
+            if lefts is None:
+                lefts = [(line, coord)]
             else:
                 on_left_half = this_xc < page_xc
                 if on_left_half:
-                    all_verticals.append((line, coord))
-                    left_line, left_coord = left
-                    left_theta = get_theta(left_line)
-                    left_xc = get_vertical_xcenter(left_coord, height)
+                    left_xc = np.mean([get_vertical_xcenter(coord,height) for
+                                line,coord in lefts])
 
                     is_lefter = this_xc < left_xc
                     is_close = (this_xc <= left_xc + marg and
                                 this_xc >= left_xc - marg)
-                    is_more_vertical = line_theta < left_theta
 
-                    if ((is_lefter and not is_close) or
-                        (is_close and is_more_vertical)):
-                        left = (line, coord)
+                    if is_lefter and not is_close:
+                        lefts = [(line, coord)]
+                    elif is_close:
+                        lefts.append((line, coord))
 
-            if right is None:
-                right = (line, coord)
+            if rights is None:
+                rights = [(line, coord)]
             else:
                 on_right_half = this_xc > page_xc
                 if on_right_half:
-                    right_line, right_coord = right
-                    right_theta = get_theta(right_line)
-                    right_xc = get_vertical_xcenter(right_coord, height)
+                    right_xc = np.mean([get_vertical_xcenter(coord,height) for
+                                line,coord in rights])
 
                     is_righter = this_xc > right_xc
                     is_close = (this_xc <= right_xc + marg and
                                 this_xc >= right_xc - marg)
-                    is_more_vertical = line_theta < right_theta
 
-                    if ((is_righter and not is_close) or
-                        (is_close and is_more_vertical)):
-                        right = (line, coord)
+                    if is_righter and not is_close:
+                        rights = [(line, coord)]
+                    elif is_close:
+                        rights.append((line, coord))
     
-    # show_points = all_verticals
-    show_points = [left, right]
+    lefts_coords = [coord for _,coord in lefts]
+    rights_coords = [coord for _,coord in rights]
+    avg_left_coords = get_avg_coords(lefts_coords)
+    avg_right_coords = get_avg_coords(rights_coords)
+    # show_points = lefts_coords + rights_coords
+    show_points = [avg_left_coords, avg_right_coords]
     if show:
         bgr_img = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
-        for _, (pt1, pt2) in show_points:
+        for (pt1, pt2) in show_points:
             cv.line(bgr_img, pt1, pt2, (0, 0, 255), thickness=1,
                             lineType=cv.LINE_AA)
             xc, yc = get_vertical_center((pt1, pt2), height)
             cv.circle(bgr_img, (xc,yc), radius=4, color=(0,255,0), thickness=1)
         bgr_imshow("main 2 verticals", bgr_img)
-
-    print(get_theta(left[0]))
-    print(get_theta(right[0]))
     return lines, coords
 
 def to_radians(degrees):
@@ -252,8 +252,22 @@ def get_vertical_xcenter(line_coords, page_height):
     xc, yc = get_vertical_center(line_coords, page_height)
     return xc
 
+def get_avg_coords(lines_coords):
+    lines_coords_downwards = []
+    for p1,p2 in lines_coords:
+        x1, y1 = p1
+        x2, y2 = p2
+        if y1 < y2:
+            downwards_coord = (p1,p2)
+        else:
+            downwards_coord = (p2,p1)
+        lines_coords_downwards.append(downwards_coord)
+    avg_coords = np.mean(lines_coords_downwards, axis=0)
+    avg_coord = avg_coords.astype(int)
+    return list(map(tuple, avg_coord))
+
 def get_theta(line):
-    return line[0][1]
+    return line[1]
 
 if __name__ == "__main__":
     # img = denoise(cv.imread(INPUT_PATH, cv.IMREAD_GRAYSCALE))

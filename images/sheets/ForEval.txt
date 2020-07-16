@@ -1,0 +1,19 @@
+digital
+- allemande
+- chorale full (test orchestra)
+- chorale violin (test 1 instrument)
+
+scan
+- 10church (slightly rotated at scanning, no straight lines for indicating instrument groups)
+- albumblatt piano (clean scan)
+- albumblatt violin (only violin part, staffs close together)
+
+photo straigt
+- ..
+- ..
+- ..
+
+photo bookpage
+- ..
+- ..
+- ..

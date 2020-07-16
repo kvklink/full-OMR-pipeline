@@ -8,7 +8,7 @@ def dewarp(img, is_rgb=False):
         img = cv.cvtColor(img, cv.COLOR_GRAY2RGB)
 
     dewarped_hor = dewarp_horizontal(img, extra_margins=True)
-    # imshow("dewarp horizontally", dewarped_hor)
+    imshow("dewarp horizontally", dewarped_hor)
     dewarped = dewarp_vertical(dewarped_hor)
     # imshow("dewarped whole", dewarped)
 

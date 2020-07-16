@@ -10,7 +10,8 @@
 ######################################################################
 # Edits by Lindsay Kempen (Summer 2020):
 # - Updated for python 3.7 and newer versions of OpenCV
-# - Tweaked for OMR purposes
+# - Tweaked params for OMR purposes
+# - Added spacious margins to allow space for severe warping
 ######################################################################
 
 import os
@@ -33,7 +34,6 @@ PAGE_MARGIN_X = 50       # reduced px to ignore near L/R edge
 PAGE_MARGIN_Y = 20       # reduced px to ignore near T/B edge
 
 OUTPUT_ZOOM = 1.0        # how much to zoom output relative to *original* image
-OUTPUT_DPI = 300         # just affects stated DPI of PNG, not appearance
 REMAP_DECIMATE = 16      # downscaling factor for remapping image
 
 ADAPTIVE_WINSZ = 55      # window size for adaptive threshold in reduced px
@@ -273,11 +273,8 @@ def get_page_extents(small, margins):
     height, width = shape
     y_marg, x_marg = margins
 
-    # if not extra_margins:
     page_margin_x = max(PAGE_MARGIN_X, x_marg)
     page_margin_y = max(PAGE_MARGIN_Y, y_marg)
-    # else:
-    #     page_margin_y, page_margin_x = getMargins(shape)
         
     xmin = page_margin_x
     ymin = page_margin_y
@@ -548,7 +545,7 @@ def assemble_spans(name, small, pagemask, cinfo_list, margins):
 
         # add if long enough
         shape = small.shape[:2]
-        img_height, img_width = getOriginalShape(shape, margins)
+        img_height, img_width = get_orig_shape(shape, margins)
         if img_height > img_width:
             span_min_width = SPAN_MIN_WIDTH_PERC_PORTRAIT
         else:
@@ -579,7 +576,7 @@ def sample_spans(shape, spans, margins):
             xmin, ymin = cinfo.rect[:2]
             # widt, heig = cinfo.rect[2:]
 
-            img_height, img_width = getOriginalShape(shape, margins)
+            img_height, img_width = get_orig_shape(shape, margins)
             
             if img_height > img_width:
                 span_step_perc = SPAN_STEP_PERC_PORTRAIT
@@ -872,38 +869,25 @@ def remap_image(name, img, small, page_dims, params):
                              interpolation=cv.INTER_AREA)
         debug_show(name, 6, 'output', display)
 
+    # LK: Tweaked this to output the remapped image, without any adaptive
+    # thresholding
     return threshfile, remapped
 
 
-def main():
-    if len(sys.argv) < 2:
-        print('usage:', sys.argv[0], 'IMAGE1 [IMAGE2 ...]')
-        sys.exit(0)
-
-    if DEBUG_LEVEL > 0 and DEBUG_OUTPUT != 'file':
-        cv.namedWindow(WINDOW_NAME)
-
-    outfiles = []
-    for imgfile in sys.argv[1:]:
-        outfile = dewarp_horizontal_at(imgfile)
-    #     outfiles.append(outfile)
-    #     print('  wrote', outfile)
-    #     print
-
-    # print('to convert to PDF (requires ImageMagick):')
-    # print('  convert -compress Group4 ' + ' '.join(outfiles) + ' output.pdf')
-
+# By LK
 def dewarp_horizontal_at(imgfile):
     img = cv.imread(imgfile)
     return dewarp_horizontal(img)
 
+
+# Tweaks by LK
 '''Assumes RGB input image'''
 def dewarp_horizontal(img, extra_margins=False):
     basename = "input_file" #os.path.basename(imgfile)
     name = "input" #name, _ = os.path.splitext(basename)
 
     if extra_margins:
-        img, margins = makeMargins(img)
+        img, margins = make_margins(img)
         # imshow("margins", img)
     else:
         margins = (0, 0)
@@ -950,8 +934,10 @@ def dewarp_horizontal(img, extra_margins=False):
     remapped = cv.cvtColor(remapped, cv.COLOR_BGR2RGB)
     return remapped
 
-def makeMargins(img):
-    def getMargins(shape):
+
+# By LK
+def make_margins(img):
+    def get_margins(shape):
         img_height, img_width = shape[:2]
 
         is_portrait = img_height > img_width
@@ -966,7 +952,7 @@ def makeMargins(img):
         hor = int(hor_factor / 100 * img_width)
         return ver, hor
 
-    margins = getMargins(img.shape[:2])
+    margins = get_margins(img.shape[:2])
     ver, hor = margins
     white = (255,255,255)
     margined = cv.copyMakeBorder(img, top=ver, bottom=ver, left=hor, right=hor,
@@ -974,58 +960,6 @@ def makeMargins(img):
     return margined, margins
 
 
-def getOriginalShape(shape, margins):
+# By LK
+def get_orig_shape(shape, margins):
     return shape[0] - margins[0]*2, shape[1] - margins[1]*2
-
-
-# def findCorners(img):
-#     rows, cols = img.shape[:2]
-#     im_inv = makeBlocks(img)
-#     img_row_sum: List = np.sum(im_inv, axis=1).tolist()
-    
-#     # Filter irrelevant blocks and get 1 set of global block coordinates
-#     threshold = 0.4 * cols
-#     im_inv_filtered = []
-#     topl, topr = None, None
-#     botl, botr = None, None
-#     # TODO(LK): Check if it works better if you use the leftmost, rightmost,
-#     # leftleast, and rightleast values  
-#     for y, row in enumerate(im_inv):
-#         if list(row).count(0) > threshold:
-#             new_row = np.zeros(cols)
-#         else:
-#             new_row = row
-#             start = (findStartInRow(row), y)
-#             end = (findEndInRow(row), y)
-#             if topl == None and topr == None:
-#                 topl = start
-#                 topr = end
-#             botl = start
-#             botr = end
-#         im_inv_filtered.append(new_row)
-
-#     im_inv_filtered = np.array(im_inv_filtered).astype(np.uint8)
-#     dst = cv.cvtColor(im_inv_filtered, cv.COLOR_GRAY2BGR)
-
-#     keypoints = (topl, topr, botl, botr)
-#     border = 20
-#     red = [0,0,255]
-#     for x,y in keypoints:
-#         dst[y-border:y+border, x-border:x+border] = red
-#     return dst, keypoints
-
-# def findStartInRow(row):
-#     for i, val in enumerate(row):
-#         if val > 0:
-#             return i
-#     return -1 # Should never happen
-
-# def findEndInRow(row):
-#     rev_row = reversed(row)
-#     index = findStartInRow(rev_row)
-#     return len(row)-1 - index
-
-if __name__ == '__main__':
-    imgpath = "example_input/trombone2rand.png"#linguistics_thesis_b_rot.jpg"#boston_cooking_a.jpg"
-    dewarped = dewarp_horizontal_at(imgpath)
-    # cv.imshow("Dewarped!", dewarped)

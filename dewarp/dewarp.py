@@ -1006,8 +1006,7 @@ def getOriginalShape(shape, margins):
 #     ver, hor = getMargins(shape)
 #     return height-2*ver, width-2*hor
 
-def findBlocks(img):
-    # def find_affine(img):
+def makeBlocks(img):
     rows, cols = img.shape[:2]
 
     img_struct = img.copy()
@@ -1015,12 +1014,21 @@ def findBlocks(img):
 
     (thresh, im_bw) = cv.threshold(gray, 200, 255, cv.THRESH_BINARY)# | cv.THRESH_OTSU)
 
-    erode_struct = cv.getStructuringElement(cv.MORPH_RECT, (1, 100))
+    erode_struct = cv.getStructuringElement(cv.MORPH_RECT, (1, 50))
     dilate_struct = cv.getStructuringElement(cv.MORPH_RECT, (20, 1))
-
-    step1 = cv.erode(im_bw, erode_struct, 1)
-    step2 = cv.dilate(step1, dilate_struct, 1)
+    
+    step1 = cv.dilate(im_bw, dilate_struct, 1)
+    bgr_imshow("dilate", step1)
+    step2 = cv.erode(step1, erode_struct, 1)
+    bgr_imshow("erode", step2)
     im_inv = cv.bitwise_not(step2)
+    bgr_imshow("blocks made", im_inv)
+    cv.imwrite("blocks.png", im_inv)
+    return im_inv
+
+def findCorners(img):
+    rows, cols = img.shape[:2]
+    im_inv = makeBlocks(img)
     img_row_sum: List = np.sum(im_inv, axis=1).tolist()
     
     # Filter irrelevant blocks and get 1 set of global block coordinates
@@ -1053,6 +1061,31 @@ def findBlocks(img):
     for x,y in keypoints:
         dst[y-border:y+border, x-border:x+border] = red
     return dst, keypoints
+
+def findCornersHarris(img):
+    im_inv = makeBlocks(img)
+
+    def cornerHarris_demo(val):
+        thresh = val
+        # Detector parameters
+        blockSize = 2
+        apertureSize = 3
+        k = 0.04
+        # Detecting corners
+        dst = cv.cornerHarris(im_inv, blockSize, apertureSize, k)
+        # Normalizing
+        dst_norm = np.empty(dst.shape, dtype=np.float32)
+        cv.normalize(dst, dst_norm, alpha=0, beta=255, norm_type=cv.NORM_MINMAX)
+        dst_norm_scaled = cv.convertScaleAbs(dst_norm)
+        # Drawing a circle around corners
+        for i in range(dst_norm.shape[0]):
+            for j in range(dst_norm.shape[1]):
+                if int(dst_norm[i,j]) > thresh:
+                    cv.circle(dst_norm_scaled, (j,i), 5, (0), 2)
+        # Showing the result
+        bgr_imshow('corners found', dst_norm_scaled)
+
+    cornerHarris_demo(200)
 
 def findStartInRow(row):
     for i, val in enumerate(row):

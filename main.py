@@ -5,7 +5,7 @@ import cv2 as cv
 import os.path
 
 from denoise.denoise import denoise
-from dewarp.dewarp import dewarp, findBlocks, fixVerticals
+from dewarp.dewarp import dewarp, findCorners, findCornersHarris, fixVerticals
 from dewarp.deskew import rotate
 from helpers.measure_helpers import split_measures, find_measure
 from helpers.note_helpers import find_pitch
@@ -24,7 +24,7 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    INPUT_DIR = 'images/sheets/trombone-quality2/'
+    INPUT_DIR = 'images/sheets/fmttm/'#trombone-quality2/'
     INPUT_PATH = INPUT_DIR + 'input.png'
     DEWARPED_FILE = 'dewarped.png'
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
@@ -45,7 +45,8 @@ def main():
 
     # TODO(LK): To be moved to the dewarping phase, it is here now
     # for quick testing with the already saved semi dewarped image
-    foundBlocks, keypoints = findBlocks(dewarped_img)
+    findCornersHarris(dewarped_img)
+    foundBlocks, keypoints = findCorners(dewarped_img)
     bgr_imshow(f"Found keypoints {keypoints}", foundBlocks)
     dewarped_img = fixVerticals(dewarped_img, keypoints)
 

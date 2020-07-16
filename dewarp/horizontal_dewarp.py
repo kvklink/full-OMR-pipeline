@@ -10,8 +10,9 @@
 ######################################################################
 # Edits by Lindsay Kempen (Summer 2020):
 # - Updated for python 3.7 and newer versions of OpenCV
-# - Tweaked params for OMR purposes
+# - Tweaked params and functions for OMR purposes
 # - Added spacious margins to allow space for severe warping
+# - Removed main()
 ######################################################################
 
 import os

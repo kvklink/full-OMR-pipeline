@@ -4,7 +4,7 @@ digital
 - chorale violin (test 1 instrument)
 
 scan
-- 10church (slightly rotated at scanning, no straight lines for indicating instrument groups)
+- sonate
 - albumblatt piano (clean scan)
 - albumblatt violin (only violin part, staffs close together)
 

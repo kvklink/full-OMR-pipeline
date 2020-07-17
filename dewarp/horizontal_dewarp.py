@@ -62,7 +62,7 @@ SPAN_STEP_PERC_LANDSCAPE = 1.5
 
 FOCAL_LENGTH = 1.2       # normalized focal length of camera
 
-DEBUG_LEVEL = 3          # 0=none, 1=some, 2=lots, 3=all
+DEBUG_LEVEL = 0          # 0=none, 1=some, 2=lots, 3=all
 DEBUG_OUTPUT = 'screen'  # file, screen, both
 
 WINDOW_NAME = 'Dewarp'   # Window name for visualization

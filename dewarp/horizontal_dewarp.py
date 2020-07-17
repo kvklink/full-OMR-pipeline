@@ -62,7 +62,7 @@ SPAN_STEP_PERC_LANDSCAPE = 1.5
 
 FOCAL_LENGTH = 1.2       # normalized focal length of camera
 
-DEBUG_LEVEL = 0          # 0=none, 1=some, 2=lots, 3=all
+DEBUG_LEVEL = 3          # 0=none, 1=some, 2=lots, 3=all
 DEBUG_OUTPUT = 'screen'  # file, screen, both
 
 WINDOW_NAME = 'Dewarp'   # Window name for visualization
@@ -294,7 +294,7 @@ def get_page_extents(small, margins):
     return page, outline
 
 
-def get_mask(name, small, pagemask, masktype):
+def get_mask(name, small, pagemask, masktype, erode_iterations):
 
     sgray = cv.cvtColor(small, cv.COLOR_RGB2GRAY)
 
@@ -328,7 +328,7 @@ def get_mask(name, small, pagemask, masktype):
         if DEBUG_LEVEL >= 3:
             debug_show(name, 0.4, 'thresholded', mask)
 
-        mask = cv.erode(mask, box(5, 1), iterations=3)
+        mask = cv.erode(mask, box(5, 1), iterations=erode_iterations)
 
         if DEBUG_LEVEL >= 3:
             debug_show(name, 0.5, 'eroded', mask)
@@ -459,9 +459,9 @@ def make_tight_mask(contour, xmin, ymin, width, height):
     return tight_mask
 
 
-def get_contours(name, small, pagemask, masktype):
+def get_contours(name, small, pagemask, masktype, erode_iterations):
 
-    mask = get_mask(name, small, pagemask, masktype)
+    mask = get_mask(name, small, pagemask, masktype, erode_iterations)
 
     contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL,
                                       cv.CHAIN_APPROX_NONE)
@@ -900,13 +900,18 @@ def dewarp_horizontal(img, extra_margins=False):
     if DEBUG_LEVEL >= 3:
         debug_show(name, 0.0, 'original', small)
 
-    pagemask, page_outline = get_page_extents(small, margins)
+    nspans = -1
+    erode_iterations = 3
+    while nspans < 1 and erode_iterations < 8:
+        pagemask, page_outline = get_page_extents(small, margins)
 
-    cinfo_list = get_contours(name, small, pagemask, 'line')
-    spans = assemble_spans(name, small, pagemask, cinfo_list, margins)
-    
-    if len(spans) < 1:
-        raise RuntimeError(f'Found too few lines ({len(spans)}) as guideline'
+        cinfo_list = get_contours(name, small, pagemask, 'line', erode_iterations)
+        spans = assemble_spans(name, small, pagemask, cinfo_list, margins)
+        nspans = len(spans)
+        erode_iterations += 1
+
+    if nspans < 1:
+        raise RuntimeError(f'Found too few lines ({nspans}) as guideline'
                            'for dewarping')
 
     span_points = sample_spans(small.shape, spans, margins)

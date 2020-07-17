@@ -23,7 +23,7 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    INPUT_DIR = 'images/sheets/chorale violin/'
+    INPUT_DIR = 'images/sheets/albumblatt violin/'
     INPUT_PATH = INPUT_DIR + 'input.png'
     DEWARPED_FILE = 'dewarped.png'
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE

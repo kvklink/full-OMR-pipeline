@@ -23,8 +23,8 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    INPUT_DIR = 'images/sheets/mscd-15/'
-    INPUT_PATH = INPUT_DIR + 'input.png'
+    INPUT_DIR = 'images/sheets/mscd-17/'
+    INPUT_PATH = INPUT_DIR + 'input.jpg'
     DEWARPED_FILE = 'dewarped.png'
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
     SHOW_STEPS = True

@@ -37,16 +37,13 @@ def separate_staffs(img) -> List:
 
     start = []
     end = []
-    full = []
     for i, val in enumerate(img_row_sum):
         if i == 0:
             continue
         if val >= threshold > img_row_sum[i - 1]:
             start.append(i)
-            full.append(i)
         elif val < threshold < img_row_sum[i - 1]:
             end.append(i)
-            full.append(i)
 
 
     if end[0] < start[0]:
@@ -74,7 +71,7 @@ def separate_staffs(img) -> List:
             j += 1
         xe.append(j)
 
-    imcopy = img.copy()#cv2.cvtColor(im_inv, cv2.COLOR_GRAY2BGR)
+    imcopy = img.copy()
     colours = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)]
     for i in range(len(start)):
         s = start[i]
@@ -82,28 +79,20 @@ def separate_staffs(img) -> List:
         x = xs[i]
         cv2.line(imcopy, (x, s), (cols, s), colours[i%4], 1)
         cv2.line(imcopy, (x, e), (cols, e), colours[i%4], 1)
-
-    ind = 0
-    while full[ind] not in start and full[ind] not in end:
-        ind += 1
-    for i in range(ind):
-        del full[i]
+#    imshow('staff boundaries', imcopy)
 
     cut = []
-    for i, val in enumerate(full):
+    for i in range(min(len(start), len(end))):
         if i == 0:
-            if val in start and full[i + 2] in start:
-                dist = full[i + 2] - val
-                cutloc_s = val - dist
-                cut.append([max(cutloc_s, 0), full[i + 2]])
-        elif i == len(full) - 2 and val in start and full[i - 1] in end and full[i + 1] in end:
-            dist = full[i + 1] - full[i - 1]
-            cutloc_e = full[i + 1] + dist
-            cut.append([full[i - 1], min(cutloc_e, len(img_row_sum) - 1)])
-        elif i == len(full) - 1:
-            break
-        elif val in start and full[i - 1] in end and full[i + 2] in start:
-            cut.append([full[i - 1], full[i + 2]])
+            dist = start[i+1] - start[i]
+            cutloc = start[i] - dist
+            cut.append([max(cutloc, 0), start[i+1]])
+        elif i == min(len(start), len(end)) - 1:
+            dist = end[i] - end[i-1]
+            cutloc = end[i] + dist
+            cut.append([end[i], min(cutloc, len(img_row_sum) - 1)])
+        else:
+            cut.append([end[i-1], start[i+1]])
     
     imcopy = img.copy()#cv2.cvtColor(im_inv, cv2.COLOR_GRAY2BGR)
     colours = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)]
@@ -112,6 +101,7 @@ def separate_staffs(img) -> List:
         e = cut[i][1]
         cv2.line(imcopy, (0, s), (cols, s), colours[i%4], 1)
         cv2.line(imcopy, (0, e), (cols, e), colours[i%4], 1)
+#    imshow('cut lines', imcopy)
 
     staffs = []
     for i in range(len(cut)):

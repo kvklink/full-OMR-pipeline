@@ -89,7 +89,7 @@ class Head:
         elif measure.clef.letter == 'F':
             self.octave = measure.octave - int((self.pitch) / 7)
         elif measure.clef.letter == 'C':
-            self.octave = measure.octave - int((self.pitch-1) / 7)
+            self.octave = measure.octave - int((self.pitch+1) / 7)
 
     def set_accidental(self, accidental: Accidental):
         self.accidental = accidental

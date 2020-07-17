@@ -902,7 +902,7 @@ def dewarp_horizontal(img, extra_margins=False):
 
     nspans = -1
     erode_iterations = 3
-    while nspans < 1 and erode_iterations < 8:
+    while nspans < 10 and erode_iterations < 8:
         pagemask, page_outline = get_page_extents(small, margins)
 
         cinfo_list = get_contours(name, small, pagemask, 'line', erode_iterations)

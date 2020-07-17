@@ -1,3 +1,13 @@
+loaded input_file with size 2307x2749
+and resized to 2307x2749
+  got 22 spans
+with 210 points.
+  initial objective is 0.0023723220175687113
+  optimizing 240 parameters...
+  optimization took 7.79 sec.
+  final objective is 0.000999101301053692
+  got page dims 1.1068793470103082 x 1.6611045237561928
+  output will be 1536x2288
 Staff 1: 1th staff for instrument 1
 no clef detected for staff 1
 Staff 2: 2th staff for instrument 1
@@ -11,4 +21,5 @@ Staff 9: 9th staff for instrument 1
 Staff 10: 10th staff for instrument 1
 Staff 11: 11th staff for instrument 1
 Staff 12: 12th staff for instrument 1
+Staff 13: 13th staff for instrument 1
 Done

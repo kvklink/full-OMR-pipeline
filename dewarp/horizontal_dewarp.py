@@ -900,6 +900,7 @@ def dewarp_horizontal(img, extra_margins=False):
     if DEBUG_LEVEL >= 3:
         debug_show(name, 0.0, 'original', small)
 
+    # Erode more until enough staff lines found
     nspans = -1
     erode_iterations = 3
     while nspans < 10 and erode_iterations < 8:

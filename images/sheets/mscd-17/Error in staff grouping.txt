@@ -1,0 +1,13 @@
+Staff 1: 1th staff for instrument 1
+no time signature detected for staff 1
+Staff 2: 2th staff for instrument 1
+Staff 3: 2th staff for instrument 2
+Staff 4: 3th staff for instrument 1
+Staff 5: 3th staff for instrument 2
+Staff 6: 3th staff for instrument 3
+Staff 7: 3th staff for instrument 4
+
+  File ".../ACVPR-OMR/main.py", line 109, in main
+    last_time: 'Time' = all_signatures[current_staff.nr_instrument]
+
+KeyError: 4

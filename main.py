@@ -23,16 +23,16 @@ from helpers.staff_fixers import fix_staff_relations
 
 
 def main():
-    INPUT_DIR = 'images/sheets/mscd-17/'
-    INPUT_PATH = INPUT_DIR + 'input.jpg'
+    INPUT_DIR = 'images/sheets/albumblatt violin/'
+    INPUT_PATH = INPUT_DIR + 'input.png'
     DEWARPED_FILE = 'dewarped.png'
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
     SHOW_STEPS = True
-    FORCE_PREPRC = True
+    FORCE_PREPRC = False
     
     # For evaluation
     EVAL = True
-    ACTUAL_TIMES = ['4/4 time'] # list of time signatures per instrument (name of template i.e. '2/2 time')
+    ACTUAL_TIMES = ['3/4 time'] # list of time signatures per instrument (name of template i.e. '2/2 time')
     ACTUAL_CLEFS = ['G'] # list of clef letters per instrument
 
     # Check if file exists

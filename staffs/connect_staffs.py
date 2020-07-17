@@ -69,6 +69,11 @@ def connect_staffs(img, staffs):
     connected = list(set(connected))
     connected.sort(key=lambda x: x[0])
     
+    if len(connected) == 0:
+        for i, s in enumerate(staffs):
+            s.set_bar_nrs(i+1, 1)
+        return
+    
     remove_connections = []
     for i in range(len(connected)):
         top = connected[i][0]

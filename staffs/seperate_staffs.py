@@ -90,7 +90,7 @@ def separate_staffs(img) -> List:
         elif i == min(len(start), len(end)) - 1:
             dist = end[i] - end[i-1]
             cutloc = end[i] + dist
-            cut.append([end[i], min(cutloc, len(img_row_sum) - 1)])
+            cut.append([end[i-1], min(cutloc, len(img_row_sum) - 1)])
         else:
             cut.append([end[i-1], start[i+1]])
     

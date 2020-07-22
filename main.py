@@ -103,7 +103,7 @@ def main():
                 else:
                     if SHOW_STEPS:
                         imshow('staff lines and height', imcopy)
-                    raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED ON THE FIRST LINE SEND HELP')
+                    raise ValueError('No time signature detected on first line')
 
             else:
                 last_time: 'Time' = all_signatures[current_staff.nr_instrument]

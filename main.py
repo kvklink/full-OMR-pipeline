@@ -1,13 +1,14 @@
+import os.path
 import xml.etree.cElementTree as ET
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import cv2 as cv
-import os.path
 
 from denoise.denoise import denoise
 from dewarp.dewarp import dewarp
 from helpers.measure_helpers import split_measures, find_measure
 from helpers.note_helpers import find_pitch
+from helpers.staff_fixers import fix_staff_relations
 from models.measure import Measure
 from models.note_objects import Accidental, Flag, Rest, Head
 from models.staff import Staff
@@ -18,8 +19,7 @@ from notes.find_beams import find_beams
 from staffs.connect_staffs import connect_staffs
 from staffs.seperate_staffs import separate_staffs
 from template_matching.template_matching import AvailableTemplates, template_matching_array
-from utils.util import imshow, bgr_imshow
-from helpers.staff_fixers import fix_staff_relations
+from utils.util import imshow
 
 
 def main():
@@ -29,11 +29,14 @@ def main():
     DEWARPED_PATH = INPUT_DIR + DEWARPED_FILE
     SHOW_STEPS = True
     FORCE_PREPRC = False
-    
+
     # For evaluation
     EVAL = True
-    ACTUAL_TIMES = ['4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time','4/4 time'] # list of time signatures per instrument (name of template i.e. '2/2 time')
-    ACTUAL_CLEFS = ['G','G','G','G','G','F','F','F','G','G','G','C','C','F'] # list of clef letters per instrument
+    ACTUAL_TIMES = ['4/4 time', '4/4 time', '4/4 time', '4/4 time', '4/4 time', '4/4 time', '4/4 time', '4/4 time',
+                    '4/4 time', '4/4 time', '4/4 time', '4/4 time', '4/4 time',
+                    '4/4 time']  # list of time signatures per instrument (name of template i.e. '2/2 time')
+    ACTUAL_CLEFS = ['G', 'G', 'G', 'G', 'G', 'F', 'F', 'F', 'G', 'G', 'G', 'C', 'C',
+                    'F']  # list of clef letters per instrument
 
     # Check if file exists
     if not os.path.isfile(INPUT_PATH):
@@ -68,12 +71,13 @@ def main():
 
     for staff_index in range(len(staffs)):
         current_staff: Staff = staffs[staff_index]
-        print(f"Staff {staff_index + 1}: {current_staff.nr_timewise}th staff for instrument {current_staff.nr_instrument}")
+        print(
+            f"Staff {staff_index + 1}: {current_staff.nr_timewise}th staff for instrument {current_staff.nr_instrument}")
 
         if SHOW_STEPS:
             imcopy = current_staff.image.copy()
             for l in current_staff.lines:
-                cv.line(imcopy, (l[0], l[1]), (l[2], l[3]), (0,255,255), 1)
+                cv.line(imcopy, (l[0], l[1]), (l[2], l[3]), (0, 255, 255), 1)
 
         # Generate Time signature objects
         detected_times = template_matching_array(AvailableTemplates.AllTimes.value, current_staff, 0.5)
@@ -84,29 +88,37 @@ def main():
 
         if SHOW_STEPS:
             for t in time_objects:
-                cv.rectangle(imcopy, (t.x, t.y), (t.x+t.w, t.y+t.h), (255,0,0), 1)
+                cv.rectangle(imcopy, (t.x, t.y), (t.x + t.w, t.y + t.h), (255, 0, 0), 1)
 
-        last_time = None
+        last_time: Optional['Time'] = None
         if len(detected_times) == 0:
             if current_staff.nr_timewise == 1:
                 if EVAL:
                     print(f"no time signature detected for staff {staff_index + 1}")
                     # kan gebruikt worden voor het testen van volgende stappen
-                    timedict = {'2/2 time': AvailableTemplates.Time2_2.value, '2/4 time': AvailableTemplates.Time2_4.value, 
-                                '3/4 time': AvailableTemplates.Time3_4.value, '3/8 time': AvailableTemplates.Time3_8.value, 
-                                '4/4 time': AvailableTemplates.Time4_4.value, '5/4 time': AvailableTemplates.Time5_4.value, 
-                                '5/8 time': AvailableTemplates.Time5_8.value, '6/4 time': AvailableTemplates.Time6_4.value, 
-                                '6/8 time': AvailableTemplates.Time6_8.value, '7/8 time': AvailableTemplates.Time7_8.value, 
-                                '9/8 time': AvailableTemplates.Time9_8.value, '12/8 time': AvailableTemplates.Time12_8.value,
-                                '4/4 time C': AvailableTemplates.TimeC.value, 'alla breve': AvailableTemplates.TimeAllaBreve.value}
-                    last_time: 'Time' = Time(current_staff.x, current_staff.lines[4][1], timedict[ACTUAL_TIMES[current_staff.nr_instrument-1]])
+                    timedict = {'2/2 time': AvailableTemplates.Time2_2.value,
+                                '2/4 time': AvailableTemplates.Time2_4.value,
+                                '3/4 time': AvailableTemplates.Time3_4.value,
+                                '3/8 time': AvailableTemplates.Time3_8.value,
+                                '4/4 time': AvailableTemplates.Time4_4.value,
+                                '5/4 time': AvailableTemplates.Time5_4.value,
+                                '5/8 time': AvailableTemplates.Time5_8.value,
+                                '6/4 time': AvailableTemplates.Time6_4.value,
+                                '6/8 time': AvailableTemplates.Time6_8.value,
+                                '7/8 time': AvailableTemplates.Time7_8.value,
+                                '9/8 time': AvailableTemplates.Time9_8.value,
+                                '12/8 time': AvailableTemplates.Time12_8.value,
+                                '4/4 time C': AvailableTemplates.TimeC.value,
+                                'alla breve': AvailableTemplates.TimeAllaBreve.value}
+                    last_time = Time(current_staff.x, current_staff.lines[4][1],
+                                     timedict[ACTUAL_TIMES[current_staff.nr_instrument - 1]])
                 else:
                     if SHOW_STEPS:
                         imshow('staff lines and height', imcopy)
                     raise ValueError('No time signature detected on first line')
 
             else:
-                last_time: 'Time' = all_signatures[current_staff.nr_instrument]
+                last_time = all_signatures[current_staff.nr_instrument]
 
             time_objects.append(Time(last_time.x, last_time.y, last_time.template))
 
@@ -126,7 +138,7 @@ def main():
 
         if SHOW_STEPS:
             for h in head_objects:
-                cv.rectangle(imcopy, (h.x, h.y), (h.x+h.w, h.y+h.h), (150,255,150), 1)
+                cv.rectangle(imcopy, (h.x, h.y), (h.x + h.w, h.y + h.h), (150, 255, 150), 1)
 
         delete_barlines = []
         for bar in barlines:
@@ -143,7 +155,7 @@ def main():
 
         if SHOW_STEPS:
             for b in real_barlines:
-                cv.line(imcopy, (b.x, b.y1), (b.x, b.y2), (0,0,255), 1)
+                cv.line(imcopy, (b.x, b.y1), (b.x, b.y2), (0, 0, 255), 1)
 
         measures = split_measures(real_barlines, current_staff)
 
@@ -154,7 +166,7 @@ def main():
 
         if SHOW_STEPS:
             for a in accidental_objects:
-                cv.rectangle(imcopy, (a.x, a.y), (a.x+a.w, a.y+a.h), (0,255,0), 1)
+                cv.rectangle(imcopy, (a.x, a.y), (a.x + a.w, a.y + a.h), (0, 255, 0), 1)
 
         # find clef
         clefs = template_matching_array(AvailableTemplates.AllClefs.value, current_staff, 0.5)
@@ -163,22 +175,20 @@ def main():
         if SHOW_STEPS:
             for temp in clefs:
                 for loc in clefs[temp]:
-                    cv.rectangle(imcopy, (loc[0], loc[1]), (loc[0]+temp.w, loc[1]+temp.h), (255,0,255), 1)
+                    cv.rectangle(imcopy, (loc[0], loc[1]), (loc[0] + temp.w, loc[1] + temp.h), (255, 0, 255), 1)
 
         # because of low threshold: eliminate non-clefs
         for i, template in enumerate(clefs.keys()):
             for match in clefs[template]:
-#                overlap = 0
+                #                overlap = 0
                 if find_measure(measures, match[0]) == find_measure(measures, match[0] + template.w):
-#                    for h in head_objects:
-#                        if match[0] <= h.x <= match[0] + template.w or match[0] <= h.x + h.w <= match[0] + template.w:
-#                            overlap += 1
-#                            print(h.x, h.y)
-#                    if overlap == 0:
+                    #                    for h in head_objects:
+                    #                        if match[0] <= h.x <= match[0] + template.w or match[0] <= h.x + h.w <= match[0] + template.w:
+                    #                            overlap += 1
+                    #                            print(h.x, h.y)
+                    #                    if overlap == 0:
                     curr_clef = Clef(match[0], match[1], template)
                     clef_objects.append(curr_clef)
-
-
 
         real_clefs = []
         remove_clefs = []
@@ -233,16 +243,18 @@ def main():
             prev_clefs = [clef for clef in real_clefs if clef.x < measure.end]
 
             if len(prev_clefs) == 0:
-                if current_staff.nr_timewise == 1 and i==0:
+                if current_staff.nr_timewise == 1 and i == 0:
                     if EVAL:
                         print(f"no clef detected for staff {staff_index + 1}")
                         # kan gebruikt worden voor het testen van volgende stappen
-                        clefdict = {'G': AvailableTemplates.ClefG.value, 'F': AvailableTemplates.ClefF.value, 'C': AvailableTemplates.ClefC.value}
-                        relevant_clef = Clef(measures[0].start, current_staff.lines[4][1], clefdict[ACTUAL_CLEFS[current_staff.nr_instrument-1]])
+                        clefdict = {'G': AvailableTemplates.ClefG.value, 'F': AvailableTemplates.ClefF.value,
+                                    'C': AvailableTemplates.ClefC.value}
+                        relevant_clef = Clef(measures[0].start, current_staff.lines[4][1],
+                                             clefdict[ACTUAL_CLEFS[current_staff.nr_instrument - 1]])
                     else:
                         if SHOW_STEPS:
                             imshow('detected objects', imcopy)
-                        raise ValueError('OH BOY NO CLEF WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
+                        raise ValueError('No time signature detected on first line')
                 else:
                     last_clef: 'Clef' = all_clefs[current_staff.nr_instrument]
                     relevant_clef = last_clef
@@ -255,14 +267,14 @@ def main():
 
             prev_times = [time for time in time_objects if time.x < measure.end]
             if len(prev_times) == 0:
-#                if current_staff.nr_timewise == 1:
-#                    # kan gebruikt worden voor het testen van volgende stappen
-##                    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
-#                    if SHOW_STEPS:
-#                        imshow('detected objects', imcopy)
-#                    raise ValueError('OH BOY NO TIME SIGNATURE WAS DETECTED AT THE START OF THE FIRST LINE SEND HELP')
-#                else:
-#                    last_time: 'Time' = all_signatures[current_staff.nr_instrument]
+                # if current_staff.nr_timewise == 1:
+                #    # kan gebruikt worden voor het testen van volgende stappen
+                #    relevant_time = Time(measures[0].start, current_staff.lines[4][1], AvailableTemplates.TimeC.value)
+                #    if SHOW_STEPS:
+                #        imshow('detected objects', imcopy)
+                #        raise ValueError('No time signature detected on first line')
+                #    else:
+                #        last_time: 'Time' = all_signatures[current_staff.nr_instrument]
                 relevant_time = last_time
             else:
                 relevant_time = max(prev_times, key=lambda time: time.x)
@@ -286,14 +298,14 @@ def main():
         for template in matches_rest.keys():
             for match in matches_rest[template]:
                 if (match[1] + template.h) < current_staff.lines[0][1] or match[1] > current_staff.lines[-1][1]:
-#                    print('rest out of bounds')
+                    #                    print('rest out of bounds')
                     pass
                 else:
                     rest_objects.append(Rest(match[0], match[1], template, current_staff))
 
         if SHOW_STEPS:
             for r in rest_objects:
-                cv.rectangle(imcopy, (r.x, r.y), (r.x+r.w, r.y+r.h), (255,150,0), 1)
+                cv.rectangle(imcopy, (r.x, r.y), (r.x + r.w, r.y + r.h), (255, 150, 0), 1)
 
         for head_obj in head_objects:
             head_obj.set_pitch(current_staff)  # determine the pitch based on the Staff line locations
@@ -301,11 +313,10 @@ def main():
                 continue
             relevant_measure = find_measure(measures, head_obj.x)
             if relevant_measure is not None:
-            # also here, first determine its corresponding measure, and use that to set the note
-            # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
+                # also here, first determine its corresponding measure, and use that to set the note
+                # Use the Staff_measure object to determine the note name corresponding to the y-location of the note
                 head_obj.set_note(relevant_measure)
                 head_obj.set_key(find_measure(measures, head_obj.x).key)
-
 
         # find note beams
         beam_objects = find_beams(current_staff)
@@ -336,8 +347,8 @@ def main():
 
         if SHOW_STEPS:
             for n in unique_notes:
-                cv.rectangle(imcopy, (n.x, n.y), (n.x+n.w, n.y+n.h), (150,0,0), 1)
-#            imshow('found objects', imcopy)
+                cv.rectangle(imcopy, (n.x, n.y), (n.x + n.w, n.y + n.h), (150, 0, 0), 1)
+            #            imshow('found objects', imcopy)
             cv.imwrite(f"{INPUT_DIR}staff_{staff_index}.png", imcopy)
 
         # vanaf hier per measure
@@ -346,8 +357,6 @@ def main():
             meas.find_backups()
 
         all_measures += measures
-
-
 
     meas_per_part = []
     for i in parts:
@@ -374,7 +383,7 @@ def main():
             all_parts.append(add_part(root, f"Instrument {k + 1}", k + 1))
         for j, meas in enumerate(part):
             voice = 1
-            meas1 = add_measure(all_parts[k], meas, j+1)
+            meas1 = add_measure(all_parts[k], meas, j + 1)
 
             for i, obj in enumerate(meas.get_objects()):
                 if i in meas.backup_locs:
@@ -390,7 +399,7 @@ def main():
                     add_rest(meas1, obj, voice)
 
     tree = ET.ElementTree(root)
-    with open(INPUT_DIR+'digitalized.xml', 'wb') as f:
+    with open(INPUT_DIR + 'digitalized.xml', 'wb') as f:
         f.write(
             '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
             'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(
@@ -401,35 +410,35 @@ def main():
 
     # -------------------------------------
 
-
-#    voice = 1
-#    # write XML file
-#    root = create_xml()
-#    part1 = create_firstpart(root, "Piano R")
-#    for meas in all_measures:
-#        meas1 = add_measure(part1, meas)
-#
-#        for i, obj in enumerate(meas.get_objects()):
-#            if i in meas.backup_locs:
-#                add_backup(meas1, meas.backup_times[i])
-#                voice = voice + 1  # hier eigenlijk nog weer op een manier soms terug naar vorige voice
-#            if obj.type == 'note':
-#                if i in meas.chord_locs:
-#                    add_note(meas1, obj, voice, True)
-#                else:
-#                    add_note(meas1, obj, voice)
-#            elif obj.type == 'rest':
-#                add_rest(meas1, obj, voice)
-#
-#    tree = ET.ElementTree(root)
-#
-#    with open('mxml/filename.xml', 'wb') as f:
-#        f.write(
-#            '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
-#            'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(
-#                'utf8'))
-#        tree.write(f, 'utf-8')
+    #    voice = 1
+    #    # write XML file
+    #    root = create_xml()
+    #    part1 = create_firstpart(root, "Piano R")
+    #    for meas in all_measures:
+    #        meas1 = add_measure(part1, meas)
+    #
+    #        for i, obj in enumerate(meas.get_objects()):
+    #            if i in meas.backup_locs:
+    #                add_backup(meas1, meas.backup_times[i])
+    #                voice = voice + 1  # hier eigenlijk nog weer op een manier soms terug naar vorige voice
+    #            if obj.type == 'note':
+    #                if i in meas.chord_locs:
+    #                    add_note(meas1, obj, voice, True)
+    #                else:
+    #                    add_note(meas1, obj, voice)
+    #            elif obj.type == 'rest':
+    #                add_rest(meas1, obj, voice)
+    #
+    #    tree = ET.ElementTree(root)
+    #
+    #    with open('mxml/filename.xml', 'wb') as f:
+    #        f.write(
+    #            '<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD '
+    #            'MusicXML 3.1Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">'.encode(
+    #                'utf8'))
+    #        tree.write(f, 'utf-8')
     print("Done")
+
 
 if __name__ == "__main__":
     main()
